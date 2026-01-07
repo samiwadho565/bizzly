@@ -1,6 +1,7 @@
 import 'package:bizly/views/auth/login_screen.dart';
 import 'package:bizly/views/auth/signup_screen.dart';
 import 'package:bizly/views/home/home_screen.dart';
+import 'package:bizly/views/nav_bar/main_screen.dart';
 import 'package:bizly/views/onboarding/onboarding.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -22,7 +23,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         textTheme: GoogleFonts.akatabTextTheme()
       ),
-      home:HomeScreen(),
+      home:MainScreen(),
     );
   }
 }

@@ -10,6 +10,11 @@ class CustomSearchDropdown extends StatelessWidget {
   final double height;
   final double width;
   final bool enableSearch;
+  final double? iconSize;
+  final double? horizontalPadding;
+  final double? verticalPadding;
+  final TextStyle? textStyle;
+  final TextStyle? popupTextStyle;
 
   const CustomSearchDropdown({
     super.key,
@@ -17,7 +22,12 @@ class CustomSearchDropdown extends StatelessWidget {
     required this.items,
     this.selectedItem,
     required this.onChanged,
-    this.height = 32, // 👈 recommended
+    this.height = 32,
+    this.iconSize,
+    this.horizontalPadding,
+    this.verticalPadding,
+    this.textStyle,
+    this.popupTextStyle,
     this.width = double.infinity,
     this.enableSearch = false,
   });
@@ -32,20 +42,19 @@ class CustomSearchDropdown extends StatelessWidget {
         selectedItem: selectedItem,
         onChanged: onChanged,
 
-        /// FIELD STYLE
         decoratorProps: DropDownDecoratorProps(
           decoration: InputDecoration(
-            isDense: true,
-            hintText: hintText,
-            hintStyle: const TextStyle(
-              fontSize: 8, // 👈 small hint
-              fontWeight: FontWeight.w500,
-            ),
+            // hintText: hintText,
+            hintStyle: textStyle ??
+                const TextStyle(
+                  fontSize: 8,
+                  fontWeight: FontWeight.w500,
+                ),
             filled: true,
-            fillColor: AppColors.lightGrey,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 4,
+            fillColor: AppColors.lightGrey.withOpacity(0.5),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: horizontalPadding ?? 8,
+              vertical: (height - 20) / 2,
             ),
             constraints: BoxConstraints(
               minHeight: height,
@@ -58,26 +67,56 @@ class CustomSearchDropdown extends StatelessWidget {
           ),
         ),
 
-        /// 🔥 Selected text style
         dropdownBuilder: (context, selectedItem) {
           return Align(
             alignment: Alignment.centerLeft,
-            child: Text(
-              selectedItem ?? hintText,
-              maxLines: 1,
-              // overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 12, // 👈 KEY FIX
-                fontWeight: FontWeight.w600,
-                color: Colors.black,
-              ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    selectedItem ?? hintText,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textStyle ??
+                        const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 4),
+                  child: Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: iconSize ?? 18,
+                  ),
+                ),
+              ],
             ),
           );
         },
 
-        /// POPUP
         popupProps: PopupProps.menu(
           showSearchBox: enableSearch,
+          itemBuilder: (context, item, isDisabled, isSelected) {
+            return Container(
+              padding: const EdgeInsets.symmetric(
+                  vertical: 10, horizontal: 12),
+              color: isSelected
+                  ? AppColors.primaryTeal.withOpacity(0.2)
+                  : Colors.transparent,
+              child: Text(
+                item,
+                style: popupTextStyle ??
+                    const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black,
+                    ),
+              ),
+            );
+          },
           fit: FlexFit.loose,
           constraints: const BoxConstraints(maxHeight: 250),
           menuProps: MenuProps(
@@ -86,11 +125,9 @@ class CustomSearchDropdown extends StatelessWidget {
           ),
         ),
 
-        /// ICON
         suffixProps: const DropdownSuffixProps(
           dropdownButtonProps: DropdownButtonProps(
-            iconClosed: Icon(Icons.keyboard_arrow_down_rounded, size: 18),
-            iconOpened: Icon(Icons.keyboard_arrow_up_rounded, size: 18),
+            isVisible: false,
           ),
         ),
       ),
