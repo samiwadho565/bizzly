@@ -4,6 +4,8 @@ import 'package:bizly/views/nav_bar/custom_nav_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../invoice_screen/invoice_screen.dart';
+import '../projects/projects_screen.dart';
 import '../tasks_screen/tasks_screen.dart';
 
 
@@ -44,11 +46,11 @@ class _MainScreenState extends State<MainScreen> {
       case 0:
         return HomeScreen();
       case 1:
-        return  TasksScreen();
+        return  ProjectsScreen();
       case 2:
-        return HomeScreen();
+        return TasksScreen();
       default:
-        return HomeScreen();
+        return InvoiceScreen();
     }
   }
 

@@ -1,3 +1,6 @@
+import 'package:bizly/routes/app_pages.dart';
+import 'package:bizly/routes/bindings.dart';
+import 'package:bizly/routes/routes.dart';
 import 'package:bizly/views/auth/login_screen.dart';
 import 'package:bizly/views/auth/signup_screen.dart';
 import 'package:bizly/views/home/home_screen.dart';
@@ -23,7 +26,10 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         textTheme: GoogleFonts.akatabTextTheme()
       ),
-      home:MainScreen(),
+      // initialBinding: InitialBindings(),
+      // getPages: AppPages.routes,
+      getPages: AppPages.routes,
+      initialRoute: Routes.onBoardingScreen,
     );
   }
 }

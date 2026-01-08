@@ -64,10 +64,10 @@ class _DashedRoundedPainter extends CustomPainter {
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 
-    const dashLength = 8.0;
-    const dashSpace = 4.0;
+    const dashLength = 9.5;
+    const dashSpace = 2.0;
 
-    final radius = size.width / 2;
+    final radius = size.width / 7;
 
     final path = Path()
     // 🔹 LEFT side (straight)

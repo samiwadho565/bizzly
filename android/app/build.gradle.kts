@@ -25,7 +25,8 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        // Latest devices ke liye target set karein (Android 14 = 34)
+        targetSdk = 34
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

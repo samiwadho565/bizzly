@@ -35,14 +35,19 @@ class CategoryCard extends StatelessWidget {
           ),
           const SizedBox(height: 5),
           // Title Text
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
             ),
-          ),
+          )
+
         ],
       ),
     );

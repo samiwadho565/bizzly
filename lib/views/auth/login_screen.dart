@@ -1,5 +1,8 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
+import '../../routes/routes.dart';
 import '../../utils/app_colors.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_drop_down.dart';
@@ -110,7 +113,7 @@ class LoginScreen extends StatelessWidget {
                           ],
                         ),
 
-                        const Spacer(), // Ye bari screen par extra space ko fill kar lega
+                        SizedBox(height: screenHeight * 0.04), // Ye bari screen par extra space ko fill kar lega
 
                         // Sign In Button
                         // Login Screen mein Sign In button ki jagah ye use karein:
@@ -118,11 +121,12 @@ class LoginScreen extends StatelessWidget {
                           text: "Sign In",
                           // height: 55, // Aap apni marzi ki height de sakte hain
                           onPressed: () {
+                            Get.offAllNamed(Routes.mainScreen);
                             print("Sign In Pressed");
                           },
                         ),
 
-                        const Spacer(),
+                        SizedBox(height: screenHeight * 0.04),
 
                         // Bottom Section
                         Row(
@@ -130,7 +134,11 @@ class LoginScreen extends StatelessWidget {
                           children: [
                             const Text("Don't have an account? ", style: TextStyle(color: Colors.grey, fontSize: 13)),
                             GestureDetector(
-                              onTap: () {},
+                              onTap: () {
+                                
+                                print("tapped");
+                                Get.offAllNamed(Routes.sigUpScreen);
+                              },
                               child: const Text(
                                 "Sign Up",
                                 style: TextStyle(color: Color(0xFF0D5D5D), fontWeight: FontWeight.bold, decoration: TextDecoration.underline, fontSize: 13),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-Widget addButton() {
+Widget addButton(String title) {
   return InkWell(
     onTap: () {
       // Button click logic yahan ayegi
@@ -14,7 +14,7 @@ Widget addButton() {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min, // Jitni zaroorat ho utni width le
-        children: const [
+        children:  [
           Icon(
             Icons.add,
             color: Colors.black54,
@@ -22,7 +22,7 @@ Widget addButton() {
           ),
           SizedBox(width: 8), // Icon aur text ke beech ka gap
           Text(
-            "Add Task",
+            title,
             style: TextStyle(
               color: Colors.black,
               fontSize: 16,

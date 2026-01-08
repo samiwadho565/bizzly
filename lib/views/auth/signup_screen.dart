@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
+import '../../routes/routes.dart';
 import '../../utils/app_colors.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 
-class SignupScreen extends StatelessWidget {
-  const SignupScreen({super.key});
+class SignUpScreen extends StatelessWidget {
+  const SignUpScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -65,38 +68,8 @@ class SignupScreen extends StatelessWidget {
                           hintText: "Confirm  Password",
                           isPassword: true,
                         ),
-                        const SizedBox(height: 12),
 
-                        // Remember Me Row
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                SizedBox(
-                                  height: 24, width: 24,
-                                  child: Checkbox(
-                                    value: true,
-                                    activeColor: const Color(0xFF0D5D5D),
-                                    onChanged: (val) {},
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                const Text("Remember Me"),
-                              ],
-                            ),
-                            TextButton(
-                              onPressed: () {},
-                              child: const Text(
-                                "Forgot Password",
-                                style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500, fontSize: 13),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const Spacer(), // Ye bari screen par extra space ko fill kar lega
+                        SizedBox(height: screenHeight * 0.05), // Ye bari screen par extra space ko fill kar lega
 
                         // Sign In Button
                         // Login Screen mein Sign In button ki jagah ye use karein:
@@ -107,8 +80,8 @@ class SignupScreen extends StatelessWidget {
                             print("Sign In Pressed");
                           },
                         ),
-                        const SizedBox(height: 20),
-                        const Spacer(),
+                        // const SizedBox(height: 20),
+                        SizedBox(height: screenHeight * 0.05),
 
                         // Bottom Section
                         Row(
@@ -116,9 +89,11 @@ class SignupScreen extends StatelessWidget {
                           children: [
                             const Text("Don't have an account? ", style: TextStyle(color: Colors.grey, fontSize: 13)),
                             GestureDetector(
-                              onTap: () {},
+                              onTap: () {
+                                Get.offAllNamed(Routes.loginScreen);
+                              },
                               child: const Text(
-                                "Sign Up",
+                                "Sign In",
                                 style: TextStyle(color: Color(0xFF0D5D5D), fontWeight: FontWeight.bold, decoration: TextDecoration.underline, fontSize: 13),
                               ),
                             ),

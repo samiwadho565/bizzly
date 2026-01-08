@@ -54,7 +54,7 @@ class CustomBottomNavBar extends StatelessWidget {
                     label: 'Projects',
                     icon: Stack(
                       children: [
-                        Icon(Icons.grid_view_rounded,),
+                        Icon(Icons.grid_view)
                         // BlocBuilder<ServicesBloc, ServicesState>(
                         //   buildWhen: (pre, nxt) =>
                         //   pre.newOrdersCount != nxt.newOrdersCount,
@@ -80,7 +80,7 @@ class CustomBottomNavBar extends StatelessWidget {
                       ],
 
                     ),
-                    activeIcon: Icon(Icons.grid_view)
+                    activeIcon:      Icon(Icons.grid_view_rounded,),
                   ),
                   BottomNavigationBarItem(
                     label: "Tasks",

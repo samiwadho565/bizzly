@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 
 import '../../controllers/on_boarding_controller.dart';
+import '../../routes/routes.dart';
 import '../../widgets/vertical_widget.dart';
 class OnboardingScreen extends StatelessWidget {
   final controller = Get.put(OnboardingController());
@@ -30,6 +31,25 @@ class OnboardingScreen extends StatelessWidget {
           const IgnorePointer(
             child: OnboardingContent(),
           ),
+          Positioned(
+            bottom: 0,
+            left: 20,
+            child:  VerticalIndicatorWidget(),
+          ),
+          Positioned(
+            bottom: 70,
+            right: 40,
+            child: InkWell(
+              onTap: () {
+                print("skip:::");
+                Get.offAllNamed(Routes.loginScreen);
+              },
+              child: const Text(
+                "Skip",
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -44,104 +64,94 @@ class OnboardingContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<OnboardingController>();
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        SizedBox(
-          height: 200,
-          child: Image.asset(AppImages.logo, width: 200),
-        ),
-
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppColors.primaryTeal,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(30),
-                topRight: Radius.circular(30),
-              ),
-            ),
-            padding: const EdgeInsets.only(left: 30, right: 30, top: 80, ),
-
-            child: Obx(() {
-              final data =
-              controller.onboardingData[controller.currentIndex.value];
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-
-                  /// 🔥 TITLE (animated swap)
-                  /// 🔥 TITLE
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    child: Text(
-                      data['title']!,
-                      key: ValueKey(data['title']),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 10,),
-                  /// 🔥 SUBTITLE
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    child: Text(
-                      data['subtitle']!,
-                      key: ValueKey(data['subtitle']),
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 30,),
-                  /// 🔥 DOTS
-                  Row(
-                    children: List.generate(
-                      controller.onboardingData.length,
-                          (i) => Obx(() => Container(
-                        height: 8,
-                        width: controller.currentIndex.value == i ? 24 : 8,
-                        margin: const EdgeInsets.only(right: 5),
-                        decoration: BoxDecoration(
-                          color: controller.currentIndex.value == i
-                              ? Colors.white
-                              : Colors.white38,
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                      )),
-                    ),
-                  ),
-
-                  Spacer(),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      VerticalIndicatorWidget(),
-                      Align(
-                        alignment: Alignment.bottomRight,
-                        child: GestureDetector(
-                          onTap: () => Get.offAllNamed('/login'),
-                          child: const Text(
-                            "Skip",
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-
-                ],
-              );
-            }),
+    return SafeArea(
+      top: true,
+      bottom: false,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          // SizedBox(height: 40,)
+            SizedBox(
+            height: 300,
+            child: Image.asset(AppImages. bizzlyLogo, width: 200),
           ),
-        ),
-      ],
+      
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.primaryTeal,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(30),
+                  topRight: Radius.circular(30),
+                ),
+              ),
+              padding: const EdgeInsets.only(left: 30, right: 30, top: 80, ),
+      
+              child: Obx(() {
+                final data =
+                controller.onboardingData[controller.currentIndex.value];
+      
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+      
+
+                    ///  TITLE
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: Text(
+                        data['title']!,
+                        key: ValueKey(data['title']),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 10,),
+                    ///  SUBTITLE
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: Text(
+                        data['subtitle']!,
+                        key: ValueKey(data['subtitle']),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 30,),
+                    ///  DOTS
+                    Row(
+                      children: List.generate(
+                        controller.onboardingData.length,
+                            (i) => Obx(() => Container(
+                          height: 8,
+                          width: controller.currentIndex.value == i ? 24 : 8,
+                          margin: const EdgeInsets.only(right: 5),
+                          decoration: BoxDecoration(
+                            color: controller.currentIndex.value == i
+                                ? Colors.white
+                                : Colors.white38,
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                        )),
+                      ),
+                    ),
+      
+
+
+      
+      
+                  ],
+                );
+              }),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -6,10 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 
+import '../../routes/routes.dart';
 import '../../widgets/add_button.dart';
 import '../../widgets/custom_drop_down.dart';
 import '../../widgets/custom_tab_bar.dart';
 import '../../widgets/custom_toggle_button.dart';
+import '../../widgets/drop_down_menu/drop_down_menu.dart';
 import '../../widgets/home_widgets/bussiness_card.dart';
 import '../../widgets/home_widgets/custom_app_bar.dart';
 import '../../widgets/home_widgets/custom_revenue_chart.dart';
@@ -30,52 +32,19 @@ class _HomeScreenState extends State<HomeScreen> {
     {'title': 'HR', 'icon': Icons.people_alt_outlined},
     {'title': 'IT', 'icon': Icons.computer_outlined},
     {'title': 'Logistics', 'icon': Icons.local_shipping_outlined},
+    {'title': 'Manufacturing', 'icon': Icons.settings_outlined},
+    {'title': 'Finance', 'icon': Icons.attach_money_outlined},
+    {'title': 'Marketing', 'icon': Icons.campaign_outlined},
+    {'title': 'HR', 'icon': Icons.people_alt_outlined},
+    {'title': 'IT', 'icon': Icons.computer_outlined},
+    {'title': 'Logistics', 'icon': Icons.local_shipping_outlined},
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: CustomAppBar(
-        title:Text( "Dashboard",style: TextStyle(fontSize: 18,color: Colors.black,fontWeight: FontWeight.w500),),
-        // leading:  const Icon(Icons.menu_open,color: Colors.black, size: 30), // Menu icon jaisa image mein hai
-        trailing: Row(
-          children: [
-       CircleIcon(
-         circleSize: 37,
-         circleColor: Colors.white,
-         icon: Icons.notifications,
-          iconColor: Colors.black,
-          size: 20,
-       ),
-      SizedBox(width: 10,),
-      CircleAvatar(
-              radius: 18,
-            backgroundImage: AssetImage(AppImages.profilePlaceholder),
-              backgroundColor: Colors.red
-            ),
-
-            // Positioned(
-            //   // right: 8,
-            //   // top: 8,
-            //   child: const CircleAvatar(
-            //     radius: 18,
-            //     backgroundImage: NetworkImage(
-            //         "https://your-image-url.com/notification_icon.png"),
-            //     backgroundColor: Colors.transparent,
-            //   ),
-            // ),
-          ],
-        )
-        //
-        // hasNotification: true, // Dot dikhane ke liye
-        // onNotificationTap: () {
-        //   print("Notification clicked!");
-        // },
-        // onProfileTap: () {
-        //   print("Profile clicked!");
-        // },
-      ),
+      appBar:  CustomAppBar(title: "Dashboard"),
       body: Column(
         children: [
 
@@ -102,53 +71,87 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 20),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: CustomSearchDropdown(
-                      height: 40,
-                      horizontalPadding: 12,
-                      verticalPadding: 20,
-                      iconSize: 25,
-                      textStyle: const TextStyle(fontSize: 16, color: Colors.black),
-                      enableSearch: true,
-                      hintText: "Select Business",
-                      items: const ["Fixonto", "SilverSpoon", "TechNova", "GreenLeaf"],
-                      onChanged: (value) {},
-                    ),
+                    child: addDropdownButton(leftText: 'Quick Actions')
                   ),
-                  const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: WeeklyRevenueChart(),
-                  ),
-                  const SizedBox(height: 20),
-                  // addButton(),
-                  // CustomTabBar(items: ["tasks","test","test"], onTabChanged: (int ) {  },),
-                  // CustomToggleButton(items: ["tasks","test","test"], onSelected: (int ) {  },),
-                  //
-                  // ---------------- GridView ----------------
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 30),
-                      child: GridView.builder(
-                        itemCount: categories.length,
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3, // 2 columns
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: 1, // Width / Height ratio
-                        ),
-                        itemBuilder: (context, index) {
-                          final category = categories[index];
-                          return CategoryCard(
-                            title: category['title'],
-                            icon: category['icon'],
-                            onTap: () {
-                              print("${category['title']} clicked");
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                  ),
+
+                  const SizedBox(height: 10),
+               Expanded(
+                 child: SingleChildScrollView(
+                   child: Column(
+                     children: [
+                       Align(
+                         alignment: Alignment.centerLeft,
+                         child: Padding(
+                           padding: const EdgeInsets.symmetric(horizontal: 20),
+                           child: SizedBox(
+                             width: Get.width/1.5,
+                             child: CustomSearchDropdown(
+                               height: 40,
+                               horizontalPadding: 12,
+                               verticalPadding: 20,
+                               iconSize: 25,
+                               textStyle: const TextStyle(fontSize: 16, color: Colors.black),
+                               enableSearch: true,
+                               hintText: "Select Business",
+                               items: const ["Fixonto", "SilverSpoon", "TechNova", "GreenLeaf"],
+                               onChanged: (value) {},
+                             ),
+                           ),
+                         ),
+                       ),
+                       const SizedBox(height: 20),
+                       Padding(
+                         padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                         child: WeeklyRevenueChart(),
+                       ),
+                       const SizedBox(height: 20),
+                       // addButton(),
+                       // CustomTabBar(items: ["tasks","test","test"], onTabChanged: (int ) {  },),
+                       // CustomToggleButton(items: ["tasks","test","test"], onSelected: (int ) {  },),
+                       //
+                       Padding(
+                         padding: const EdgeInsets.symmetric(horizontal: 35),
+                         child: Row(
+                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                           children: [
+                             Text("All Businesses",style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),),
+
+                             TextButton(onPressed: (){}, child: Text("View All"),)
+                           ],
+                         ),
+                       ),
+                       SizedBox(height: 15,),
+                       // ---------------- GridView ----------------
+                       Padding(
+                         padding: const EdgeInsets.symmetric(horizontal: 30),
+                         child: GridView.builder(
+                           physics: const NeverScrollableScrollPhysics(), // Scroll disable
+                           shrinkWrap: true,
+                           itemCount: categories.length,
+                           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                               crossAxisCount: 4, // 2 columns
+                               // crossAxisSpacing: 3,
+                               mainAxisSpacing: 9,
+                               childAspectRatio: 0.9 // Width / Height ratio
+                           ),
+                           itemBuilder: (context, index) {
+                             final category = categories[index];
+                             return CategoryCard(
+                               title: category['title'],
+                               icon: category['icon'],
+                               onTap: () {
+                                 print("tapped::${category['title']} clicked");
+                                 Get.toNamed(Routes.businessDetailScreen,);
+
+                               },
+                             );
+                           },
+                         ),
+                       ),
+                     ],
+                   ),
+                 ),
+               )
                 ],
               ),
             ),
@@ -158,4 +161,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+
 }

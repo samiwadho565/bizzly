@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../utils/app_colors.dart';
+
 class TaskCardWidget extends StatelessWidget {
   final String title;
   final String subtitle;
@@ -21,9 +23,9 @@ class TaskCardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding:  EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5), // Light grey background jaisa image mein hai
+        color: AppColors.lightGrey, // Light grey background jaisa image mein hai
         borderRadius: BorderRadius.circular(25),
       ),
       child: Column(
@@ -68,6 +70,7 @@ class TaskCardWidget extends StatelessWidget {
                   status,
                   style: const TextStyle(
                     fontSize: 12,
+                    color: Colors.black,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
