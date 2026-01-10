@@ -70,12 +70,15 @@ class OnboardingContent extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          // SizedBox(height: 40,)
+          SizedBox(height: 20,),
             SizedBox(
-            height: 300,
+            height: Get.height * 0.28,
             child: Image.asset(AppImages. bizzlyLogo, width: 200),
           ),
-      
+          // SizedBox(height: 10,),
+          // Text("Smart Money.Simplified.",style: TextStyle(color: Colors.amber),),
+          //
+          SizedBox(height: 20,),
           Expanded(
             child: Container(
               decoration: BoxDecoration(

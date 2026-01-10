@@ -58,74 +58,67 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar:  CustomAppBar(title: "Projects"),
-      body: Column(
-        children: [
+      body:     Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.only(
+              topRight: Radius.circular(40),
+              topLeft: Radius.circular(40)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              blurRadius: 5,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
 
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.only(
-                    topRight: Radius.circular(40),
-                    topLeft: Radius.circular(40)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
-                  ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Status",style: TextStyle(fontSize:21,color: Colors.black,fontWeight: FontWeight.w600),),
+                  addButton("Add Project"),
                 ],
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20,),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 20),
+              SizedBox(height: 10,),
+              // Align(
+              //     alignment: Alignment.centerLeft,
+              //     child: Text("Status",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 18),)),
+              //
+              SizedBox(height: 10,),
+              CustomTabBar(
+                borderRadius: 12,
+                items: ["Active","Completed",], onTabChanged: (int ) {  },),
 
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text("Status",style: TextStyle(fontSize:21,color: Colors.black,fontWeight: FontWeight.w600),),
-                        addButton("Add Project"),
-                      ],
-                    ),
-                    SizedBox(height: 10,),
-                    // Align(
-                    //     alignment: Alignment.centerLeft,
-                    //     child: Text("Status",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 18),)),
-                    //
-                    SizedBox(height: 10,),
-                    CustomTabBar(
-                      borderRadius: 12,
-                      items: ["Active","Completed",], onTabChanged: (int ) {  },),
-                    SizedBox(height: 20,),
-                    // ---------------- GridView ----------------
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: projects.length,
-                        itemBuilder: (context, index) {
-                          final project = projects[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: ProjectDetailCard(
-                              title: project["title"]!,
-                              ownerName: project["owner"]!,
-                              status: project["status"]!,
-                              dateRange: project["date"]!,
-                            ),
-                          );
-                        },
+              // ---------------- GridView ----------------
+              Expanded(
+                child: ListView.builder(
+                  padding: EdgeInsets.only(top: 20,bottom: 70),
+                  itemCount: projects.length,
+                  itemBuilder: (context, index) {
+                    final project = projects[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: ProjectDetailCard(
+                        title: project["title"]!,
+                        ownerName: project["owner"]!,
+                        status: project["status"]!,
+                        dateRange: project["date"]!,
                       ),
-                    ),
-
-
-                  ],
+                    );
+                  },
                 ),
               ),
-            ),
-          ),
 
-        ],
+
+            ],
+          ),
+        ),
       ),
     );
   }

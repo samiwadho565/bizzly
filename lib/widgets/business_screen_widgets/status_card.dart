@@ -21,7 +21,7 @@ class StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: Get.size.height*0.1,
+      height: Get.size.height*0.14,
       width: Get.size.width*0.42,
       // padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(

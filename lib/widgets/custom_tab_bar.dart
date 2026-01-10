@@ -14,7 +14,7 @@ final double fontSize;
   const CustomTabBar({
     super.key,
     required this.items,
-    this.fontSize = 14,
+    this.fontSize = 12,
     this.width,
     this.height,
     this.borderRadius =25,
@@ -78,7 +78,7 @@ class _CustomTabBar extends State<CustomTabBar> {
                       widget.items[index],
                       style: TextStyle(
                         color: isSelected ? widget.selectedTextColor : Colors.black87,
-                        fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
+                        fontWeight:  FontWeight.normal,
                         fontSize: widget.fontSize,
                       ),
                     ),

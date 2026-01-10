@@ -2,12 +2,13 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
+import '../../assets/images.dart';
 import '../../routes/routes.dart';
 import '../../utils/app_colors.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_drop_down.dart';
 import '../../widgets/custom_text_field.dart';
-
+import 'package:bizly/widgets/curved_container.dart';
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 

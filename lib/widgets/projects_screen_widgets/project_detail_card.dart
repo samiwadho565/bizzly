@@ -26,11 +26,11 @@ class ProjectDetailCard extends StatelessWidget {
         color: AppColors.lightGrey,
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.13),
-            blurRadius: 7,
-            offset: const Offset(0, 4),
-          ),
+          // BoxShadow(
+          //   color: Colors.black.withOpacity(0.13),
+          //   blurRadius: 7,
+          //   offset: const Offset(0, 4),
+          // ),
         ],
       ),
       child: Row(

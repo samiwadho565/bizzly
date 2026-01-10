@@ -61,128 +61,120 @@ class _TasksScreenState extends State<TasksScreen > {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar:  CustomAppBar(title: "Tasks"),
-      body: Column(
-        children: [
+      body: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.only(
+              topRight: Radius.circular(40),
+              topLeft: Radius.circular(40)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              blurRadius: 5,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20,),
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
 
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.only(
-                    topRight: Radius.circular(40),
-                    topLeft: Radius.circular(40)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
-                  ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Tasks",style: TextStyle(fontSize:21,color: Colors.black,fontWeight: FontWeight.w600),),
+                  addButton("Add Task"),
                 ],
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20,),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 20),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text("Tasks",style: TextStyle(fontSize:21,color: Colors.black,fontWeight: FontWeight.w600),),
-                        addButton("Add Task"),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
+              const SizedBox(height: 20),
 
 
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("Due Date",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 18),),
-                            SizedBox(
-                              height: 10,
-                            ),
-
-                            CustomTabBar(
-                              fontSize: 12,
-                              height: 35,
-                              width: Get.size.height/4.4,
-
-                              borderRadius: 20,
-                              selectedTextColor: Colors.black,
-                              selectedColor:  AppColors.lightGrey,
-                              items: ["Today","Tomorrow","This Week"], onTabChanged: (int p1) {  },),
-                          ],
-                        ),
-                        // CustomToggleButton(items: ["Today","Tomorrow","This Week"], onSelected: (int ) {  },),
-
-                        SizedBox(width: 20,),
-
-
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text("Priority",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 18),),
-                              SizedBox(
-                                height: 10,
-                              ),
-                              CustomTabBar(
-                                fontSize: 12,
-                                height: 35,
-                                // width: 220,
-                                borderRadius: 20,
-                                selectedTextColor: Colors.black,
-                                selectedColor:  AppColors.lightGrey,
-                                items:["Low","Medium","High"], onTabChanged: (int p1) {  },),
-                            ],
-                          ),
-                        ),
-
-                        // CustomToggleButton(items: ["Low","Medium","High"], onSelected: (int ) {  },),
-                        //
-                      ],
-                    ),
-                    SizedBox(height: 20,),
-                    Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text("Status",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 18),)),
-                    SizedBox(height: 10,),
-                    CustomTabBar(
-                      borderRadius: 12,
-                      items: ["Done","In Process","To-Do"], onTabChanged: (int ) {  },),
-                    SizedBox(height: 20,),
-                    // ---------------- List View ----------------
-
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: tasks.length,
-                        itemBuilder: (context, index) {
-                          final task = tasks[index];
-
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: TaskCardWidget(
-                              title: task["title"]!,
-                              subtitle: task["subtitle"]!,
-                              date: task["date"]!,
-                              userName: task["user"]!,
-                              status: task["status"]!,
-                            ),
-                          );
-                        },
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Due Date",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 18),),
+                      SizedBox(
+                        height: 10,
                       ),
+
+                      CustomTabBar(
+                        fontSize: 12,
+                        height: 35,
+                        width: Get.size.height/4.4,
+
+                        borderRadius: 20,
+                        selectedTextColor: Colors.black,
+                        selectedColor:  AppColors.lightGrey,
+                        items: ["Today","Tomorrow","This Week"], onTabChanged: (int p1) {  },),
+                    ],
+                  ),
+                  // CustomToggleButton(items: ["Today","Tomorrow","This Week"], onSelected: (int ) {  },),
+
+                  SizedBox(width: 20,),
+
+
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Priority",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 18),),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        CustomTabBar(
+                          fontSize: 12,
+                          height: 35,
+                          // width: 220,
+                          borderRadius: 20,
+                          selectedTextColor: Colors.black,
+                          selectedColor:  AppColors.lightGrey,
+                          items:["Low","Medium","High"], onTabChanged: (int p1) {  },),
+                      ],
                     ),
-                  ],
+                  ),
+
+                  // CustomToggleButton(items: ["Low","Medium","High"], onSelected: (int ) {  },),
+                  //
+                ],
+              ),
+              SizedBox(height: 20,),
+              Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text("Status",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 18),)),
+              SizedBox(height: 10,),
+              CustomTabBar(
+                borderRadius: 12,
+                items: ["Done","In Process","To-Do"], onTabChanged: (int ) {  },),
+              SizedBox(height: 20,),
+              // ---------------- List View ----------------
+
+              Expanded(
+                child: ListView.builder(
+                  itemCount: tasks.length,
+                  itemBuilder: (context, index) {
+                    final task = tasks[index];
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: TaskCardWidget(
+                        title: task["title"]!,
+                        subtitle: task["subtitle"]!,
+                        date: task["date"]!,
+                        userName: task["user"]!,
+                        status: task["status"]!,
+                      ),
+                    );
+                  },
                 ),
               ),
-            ),
+            ],
           ),
-
-        ],
+        ),
       ),
     );
   }

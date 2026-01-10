@@ -16,7 +16,7 @@ class CategoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Column(
+      child:Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           // Icon Container

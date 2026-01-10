@@ -86,7 +86,6 @@ class _CustomToggleButtonState extends State<CustomToggleButton> {
     );
   }
 
-  // Corners ko round rakhne ke liye logic
   BorderRadius _getBorderRadius(int index, int total) {
     if (index == 0) {
       return const BorderRadius.horizontal(left: Radius.circular(30));

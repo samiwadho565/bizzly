@@ -125,6 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
                        Padding(
                          padding: const EdgeInsets.symmetric(horizontal: 30),
                          child: GridView.builder(
+                           padding: EdgeInsets.only(bottom: 80),
                            physics: const NeverScrollableScrollPhysics(), // Scroll disable
                            shrinkWrap: true,
                            itemCount: categories.length,
@@ -132,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                crossAxisCount: 4, // 2 columns
                                // crossAxisSpacing: 3,
                                mainAxisSpacing: 9,
-                               childAspectRatio: 0.9 // Width / Height ratio
+                               childAspectRatio: 0.83 // Width / Height ratio
                            ),
                            itemBuilder: (context, index) {
                              final category = categories[index];
