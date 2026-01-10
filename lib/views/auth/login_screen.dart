@@ -95,7 +95,7 @@ class LoginScreen extends StatelessWidget {
                                   height: 24, width: 24,
                                   child: Checkbox(
                                     value: true,
-                                    activeColor: const Color(0xFF0D5D5D),
+                                    activeColor: AppColors.primary,
                                     onChanged: (val) {},
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                                   ),
@@ -142,7 +142,7 @@ class LoginScreen extends StatelessWidget {
                               },
                               child: const Text(
                                 "Sign Up",
-                                style: TextStyle(color: Color(0xFF0D5D5D), fontWeight: FontWeight.bold, decoration: TextDecoration.underline, fontSize: 13),
+                                style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, decoration: TextDecoration.underline, fontSize: 13),
                               ),
                             ),
                           ],

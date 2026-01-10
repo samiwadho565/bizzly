@@ -43,7 +43,7 @@ class TaskCardWidget extends StatelessWidget {
                     Text(
                       title,
                       style: const TextStyle(
-                        fontSize: 22,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.black,
                       ),
@@ -52,7 +52,7 @@ class TaskCardWidget extends StatelessWidget {
                     Text(
                       subtitle,
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 12,
                         color: Colors.grey.shade600,
                       ),
                     ),
@@ -69,7 +69,7 @@ class TaskCardWidget extends StatelessWidget {
                 child: Text(
                   status,
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 10,
                     color: Colors.black,
                     fontWeight: FontWeight.w500,
                   ),
@@ -77,16 +77,16 @@ class TaskCardWidget extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
 
           // Date Row
           Row(
             children: [
-              Icon(Icons.calendar_month_outlined, size: 20, color: Colors.grey.shade700),
+              Icon(Icons.calendar_month_outlined, size: 15, color: Colors.grey.shade700),
               const SizedBox(width: 8),
               Text(
                 date,
-                style: const TextStyle(fontSize: 15, color:Colors.black,fontWeight: FontWeight.w500),
+                style: const TextStyle(fontSize: 11, color:Colors.black,fontWeight: FontWeight.w500),
               ),
             ],
           ),
@@ -96,13 +96,13 @@ class TaskCardWidget extends StatelessWidget {
           Row(
             children: [
               CircleAvatar(
-                radius: 12,
+                radius: 10,
                 backgroundImage: NetworkImage(userImageUrl),
               ),
               const SizedBox(width: 8),
               Text(
                 userName,
-                style: const TextStyle(fontSize: 15,  color:Colors.black,fontWeight: FontWeight.w500),
+                style: const TextStyle(fontSize: 12,  color:Colors.black,fontWeight: FontWeight.w500),
               ),
             ],
           ),

@@ -100,8 +100,8 @@ class WeeklyRevenueChart extends StatelessWidget {
                         height: calculatedHeight,
                         decoration: BoxDecoration(
                           color: bar.isSelected.value
-                              ? AppColors.primaryTeal
-                              : AppColors.primaryLightTeal.withOpacity(0.4),
+                              ? AppColors.primary
+                              : AppColors.primary.withOpacity(0.4),
                           borderRadius: const BorderRadius.vertical(
                               top: Radius.circular(20)),
                         ),
@@ -128,7 +128,7 @@ class WeeklyRevenueChart extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.primaryTeal,
+        color: AppColors.primary,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(

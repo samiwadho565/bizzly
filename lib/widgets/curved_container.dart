@@ -32,10 +32,11 @@ class   CurvedContainer  extends StatelessWidget {
               decoration:  BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Color(0xFF307B80),
-                    AppColors.primaryTeal, // Darkest Blue (Shuruat)
+                    AppColors.primary,
+                    // Color(0xFF307B80),
+                    AppColors.primary.withOpacity(0.5), // Darkest Blue (Shuruat)
                    // Light "Shine" Color (Darmiyan mein)
-                  AppColors.primaryLightTeal // Deep Blue (Ikhtitam)
+                  // AppColors.primaryLightTeal // Deep Blue (Ikhtitam)
                   ],
                   begin: Alignment.topRight,
                   end: Alignment.bottomLeft,

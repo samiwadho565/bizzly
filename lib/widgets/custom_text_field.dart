@@ -42,7 +42,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
               ? IconButton(
             icon: Icon(
               _obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-              color: const Color(0xFF8DA4A4), // Image wala icon color
+              color:  AppColors.primary.withOpacity(0.5), // Image wala icon color
             ),
             onPressed: () {
               setState(() {

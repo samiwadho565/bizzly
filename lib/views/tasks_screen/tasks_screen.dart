@@ -84,64 +84,61 @@ class _TasksScreenState extends State<TasksScreen > {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("Tasks",style: TextStyle(fontSize:21,color: Colors.black,fontWeight: FontWeight.w600),),
+                  Text("Tasks",style: TextStyle(fontSize:17,color: Colors.black,fontWeight: FontWeight.w600),),
                   addButton("Add Task"),
                 ],
               ),
               const SizedBox(height: 20),
 
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("Due Date",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 18),),
-                      SizedBox(
-                        height: 10,
-                      ),
-
-                      CustomTabBar(
-                        fontSize: 12,
-                        height: 35,
-                        width: Get.size.height/4.4,
-
-                        borderRadius: 20,
-                        selectedTextColor: Colors.black,
-                        selectedColor:  AppColors.lightGrey,
-                        items: ["Today","Tomorrow","This Week"], onTabChanged: (int p1) {  },),
-                    ],
-                  ),
-                  // CustomToggleButton(items: ["Today","Tomorrow","This Week"], onSelected: (int ) {  },),
-
-                  SizedBox(width: 20,),
-
-
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Priority",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 18),),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        CustomTabBar(
-                          fontSize: 12,
-                          height: 35,
-                          // width: 220,
-                          borderRadius: 20,
-                          selectedTextColor: Colors.black,
-                          selectedColor:  AppColors.lightGrey,
-                          items:["Low","Medium","High"], onTabChanged: (int p1) {  },),
-                      ],
-                    ),
-                  ),
-
-                  // CustomToggleButton(items: ["Low","Medium","High"], onSelected: (int ) {  },),
-                  //
-                ],
+              // Row(
+              //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //   children: [
+              //     Column(
+              //       crossAxisAlignment: CrossAxisAlignment.start,
+              //       children: [
+              //
+              //
+              //
+              //       ],
+              //     ),
+              //
+              //
+              //     // CustomToggleButton(items: ["Low","Medium","High"], onSelected: (int ) {  },),
+              //     //
+              //   ],
+              // ),
+              Text("Due Date",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 13),),
+              SizedBox(
+                height: 10,
               ),
+
+              CustomTabBar(
+                items: [
+                  "Today",
+                  "Tomorrow",
+                  "This Week",
+                  "Very Long Custom Tab Name"
+                ],
+                onTabChanged: (i) {},
+              ),
+              // CustomToggleButton(items: ["Today","Tomorrow","This Week"], onSelected: (int ) {  },),
+
+              SizedBox(width: 20,),
+
+
+              Text("Priority",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 13),),
+              SizedBox(
+                height: 10,
+              ),
+              CustomTabBar(
+                fontSize: 11,
+                height: 35,
+                // width: 220,
+                borderRadius: 20,
+                selectedTextColor: Colors.black,
+                selectedColor:  AppColors.lightGrey,
+                items:["Low","Medium","High"], onTabChanged: (int p1) {  },),
               SizedBox(height: 20,),
               Align(
                   alignment: Alignment.centerLeft,

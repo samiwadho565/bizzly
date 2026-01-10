@@ -18,14 +18,14 @@ Widget addButton(String title) {
           Icon(
             Icons.add,
             color: Colors.black54,
-            size: 20,
+            size: 17,
           ),
           SizedBox(width: 8), // Icon aur text ke beech ka gap
           Text(
             title,
             style: TextStyle(
               color: Colors.black,
-              fontSize: 16,
+              fontSize: 13,
               fontWeight: FontWeight.w500,
             ),
           ),

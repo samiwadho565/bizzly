@@ -94,7 +94,7 @@ class SignUpScreen extends StatelessWidget {
                               },
                               child: const Text(
                                 "Sign In",
-                                style: TextStyle(color: Color(0xFF0D5D5D), fontWeight: FontWeight.bold, decoration: TextDecoration.underline, fontSize: 13),
+                                style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, decoration: TextDecoration.underline, fontSize: 13),
                               ),
                             ),
                           ],

@@ -105,6 +105,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: ProjectDetailCard(
+
                         title: project["title"]!,
                         ownerName: project["owner"]!,
                         status: project["status"]!,

@@ -104,7 +104,7 @@ class CustomSearchDropdown extends StatelessWidget {
               padding: const EdgeInsets.symmetric(
                   vertical: 10, horizontal: 12),
               color: isSelected
-                  ? AppColors.primaryTeal.withOpacity(0.2)
+                  ? AppColors.primary.withOpacity(0.2)
                   : Colors.transparent,
               child: Text(
                 item,

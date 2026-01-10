@@ -90,7 +90,7 @@ class ProfileScreen extends StatelessWidget {
                   ProfileTile(title: "Terms and Conditions", onTap: () {}),
                   ProfileTile(
                       title: "Log Out",
-                      textColor: Colors.teal,
+                      textColor: AppColors.primary.withOpacity(0.7),
                       onTap: () {}
                   ),
                   ProfileTile(

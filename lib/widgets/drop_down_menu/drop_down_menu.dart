@@ -53,7 +53,7 @@ Widget addDropdownButton({required String leftText}) {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           decoration: BoxDecoration(
-            color: AppColors.primaryLightTeal,
+            color: AppColors.primary.withOpacity(0.9),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Row(

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../utils/app_colors.dart';
+
 class CategoryCard extends StatelessWidget {
   final String title;
   final IconData icon; // Aap yahan String path bhi de sakte hain agar image use karni ho
@@ -30,7 +32,7 @@ class CategoryCard extends StatelessWidget {
             child: Icon(
               icon,
               size: 34,
-              color: const Color(0xFF005F5F), // Teal color jo aapki image mein hai
+              color:  AppColors.primary.withOpacity(0.8),// Teal color jo aapki image mein hai
             ),
           ),
           const SizedBox(height: 5),

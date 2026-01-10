@@ -63,10 +63,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   onTap: (){
                     Get.toNamed(Routes.profileScreen );
                   },
-                  child: const CircleAvatar(
+                  child:CircleAvatar(
                     radius: 18,
                     backgroundImage: AssetImage(AppImages.profilePlaceholder),
-                    backgroundColor: Colors.red,
+                    backgroundColor: Colors.grey.shade400
                   ),
                 ),
               ],

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../utils/app_colors.dart';
+
 class InvoiceCard extends StatelessWidget {
   final String clientName;
   final String businessName;
@@ -19,11 +21,11 @@ class InvoiceCard extends StatelessWidget {
   Color getStatusColor() {
     switch (status.toLowerCase()) {
       case "paid":
-        return  Colors.green.shade200;// green
+        return  AppColors.statusPaid;// green
       case "sent":
-        return const Color(0xFFE0E7FF); // blue
+        return  AppColors.statusSent; // blue
       case "pending":
-        return const Color(0xFFFFF3CD); // yellow
+        return  AppColors.statusPending;// yellow
       default:
         return Colors.grey.shade300;
     }

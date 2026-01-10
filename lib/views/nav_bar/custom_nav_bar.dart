@@ -33,7 +33,7 @@ class CustomBottomNavBar extends StatelessWidget {
               decoration: BoxDecoration(
                 // color: Colors.white.withValues(alpha:0.1),
                 borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: AppColors.primaryTeal.withValues(alpha:0.3)),
+                border: Border.all(color: AppColors.primary.withValues(alpha:0.3)),
               ),
               child: BottomNavigationBar(
                 type: BottomNavigationBarType.fixed,
@@ -41,7 +41,7 @@ class CustomBottomNavBar extends StatelessWidget {
                 backgroundColor: Colors.transparent,
                 currentIndex: currentIndex,
                 onTap: onTap,
-                selectedItemColor: AppColors.primaryTeal,
+                selectedItemColor: AppColors.primary,
                 unselectedItemColor: Colors.black,
                 showUnselectedLabels: true,
                 items: [

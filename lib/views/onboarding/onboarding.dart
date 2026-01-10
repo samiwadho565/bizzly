@@ -63,7 +63,6 @@ class OnboardingContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<OnboardingController>();
-
     return SafeArea(
       top: true,
       bottom: false,
@@ -82,7 +81,7 @@ class OnboardingContent extends StatelessWidget {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: AppColors.primaryTeal,
+                color: AppColors.primary,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(30),
                   topRight: Radius.circular(30),

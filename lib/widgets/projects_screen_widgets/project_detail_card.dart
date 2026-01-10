@@ -9,13 +9,14 @@ class ProjectDetailCard extends StatelessWidget {
   final String status;
   final Color statusColor;
 
-  const ProjectDetailCard ({
+
+  ProjectDetailCard ({
     super.key,
     required this.title,
     required this.ownerName,
     required this.dateRange,
     this.status = "Active",
-    this.statusColor =AppColors.primaryLightTeal
+    this.statusColor =AppColors.primary,
   });
 
   @override
@@ -44,7 +45,7 @@ class ProjectDetailCard extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 17,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -52,7 +53,7 @@ class ProjectDetailCard extends StatelessWidget {
                 Text(
                   ownerName,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 12,
                     color: Colors.grey.shade700,
                   ),
                 ),
@@ -61,14 +62,14 @@ class ProjectDetailCard extends StatelessWidget {
                   children: [
                     Icon(
                       Icons.calendar_month,
-                      size: 18,
+                      size: 15,
                       color: Colors.grey.shade600,
                     ),
                     const SizedBox(width: 6),
                     Text(
                       dateRange,
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 10,
                         color: Colors.grey.shade600,
                       ),
                     ),
@@ -80,14 +81,15 @@ class ProjectDetailCard extends StatelessWidget {
 
           /// Status Chip
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding:  EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
-              color: statusColor,
-              borderRadius: BorderRadius.circular(30),
+              color: status=="Active"?AppColors.active.withOpacity(0.7):status=="Low"?AppColors.priorityLow.withOpacity(0.7):status=="High"?AppColors.priorityHigh.withOpacity(0.7):AppColors.statusCompleted.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
               status,
               style: const TextStyle(
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
               ),
