@@ -1,91 +1,66 @@
+import 'package:bizly/utils/app_colors.dart';
 import 'package:flutter/material.dart';
-import '../utils/app_colors.dart';
 
-class CustomTabBar extends StatefulWidget {
-  final List<String> items;
-  final Function(int) onTabChanged;
-  final Color selectedColor;
-  final Color selectedTextColor;
-  final Color unselectedColor;
-  final double fontSize;
-  final double? height;
-  final double borderRadius;
+class CustomTabBar extends StatelessWidget {
+  final List<String> options;
+  final String selectedOption;
+  final Function(String) onSelect;
+  final bool isSmall;
 
   const CustomTabBar({
     super.key,
-    required this.items,
-    required this.onTabChanged,
-    this.fontSize = 12,
-    this.height = 40,
-    this.borderRadius = 25,
-    this.selectedTextColor = Colors.white,
-    this.selectedColor = AppColors.primary,
-    this.unselectedColor = Colors.white,
+    this.isSmall = false,
+    required this.options,
+    required this.selectedOption,
+    required this.onSelect,
   });
 
   @override
-  State<CustomTabBar> createState() => _CustomTabBarState();
-}
-
-class _CustomTabBarState extends State<CustomTabBar> {
-  int _currentIndex = 0;
-
-  @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal, // 🔥 long text safe
-      child: Container(
-        height: widget.height,
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(widget.borderRadius),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 5,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
+    return Container(
+      height:isSmall?30: 50,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 10,
+            // offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(15),
         child: Row(
-          mainAxisSize: MainAxisSize.min, // 🔥 width text ke hisaab se
-          children: List.generate(widget.items.length, (index) {
-            final isSelected = _currentIndex == index;
-
-            return GestureDetector(
-              onTap: () {
-                setState(() => _currentIndex = index);
-                widget.onTabChanged(index);
-              },
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16, // 🔥 tab width control
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? widget.selectedColor
-                      : widget.unselectedColor,
-                  borderRadius: BorderRadius.circular(widget.borderRadius),
-                ),
-                child: Text(
-                  widget.items[index],
-                  maxLines: 1, // ✅ one line only
-                  overflow: TextOverflow.visible,
-                  softWrap: false,
-                  style: TextStyle(
-                    fontSize: widget.fontSize,
-                    fontWeight: FontWeight.w500,
-                    color: isSelected
-                        ? widget.selectedTextColor
-                        : Colors.black87,
+          children: options.map((option) {
+            bool isSelected = selectedOption == option;
+            return Expanded(
+              child: GestureDetector(
+                onTap: () => onSelect(option),
+                child: Container(
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: isSelected ? AppColors.primary.withOpacity(0.9) : Colors.transparent, // Teal color
+                    border: Border(
+                      right: BorderSide(
+                        color: options.last == option ? Colors.transparent : Colors.grey.withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  child: Text(
+                    option,
+                    style: TextStyle(
+                      fontSize: isSmall?11:14,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                      color: isSelected ? Colors.white : Colors.black87,
+                    ),
                   ),
                 ),
               ),
             );
-          }),
+          }).toList(),
         ),
       ),
     );

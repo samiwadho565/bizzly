@@ -71,7 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 20),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: addDropdownButton(leftText: 'Quick Actions')
+                    child: addDropdownButton(leftText: 'Quick Actions',title: "Add")
                   ),
 
                   const SizedBox(height: 10),

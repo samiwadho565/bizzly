@@ -1,69 +1,35 @@
-import 'package:bizly/assets/images.dart';
-import 'package:bizly/utils/app_colors.dart';
-import 'package:bizly/widgets/circle_icon_widget.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_instance/src/extension_instance.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 
+import '../../controllers/projects_screen_controller.dart';
+import '../../utils/app_colors.dart';
 import '../../widgets/add_button.dart';
-import '../../widgets/custom_drop_down.dart';
+import '../../widgets/custom_search_field.dart';
 import '../../widgets/custom_tab_bar.dart';
-import '../../widgets/custom_toggle_button.dart';
-import '../../widgets/home_widgets/bussiness_card.dart';
 import '../../widgets/home_widgets/custom_app_bar.dart';
-import '../../widgets/home_widgets/custom_revenue_chart.dart';
-import '../../widgets/home_widgets/flow_chart.dart';
 import '../../widgets/projects_screen_widgets/project_detail_card.dart';
-import '../../widgets/task_card_widget.dart';
 
-class ProjectsScreen extends StatefulWidget {
-  const ProjectsScreen ({super.key});
+class ProjectsScreen extends StatelessWidget {
+  ProjectsScreen({super.key});
 
-  @override
-  State<ProjectsScreen > createState() => _ProjectsScreenState();
-}
-
-class _ProjectsScreenState extends State<ProjectsScreen> {
-  final List<Map<String, String>> projects = [
-    {
-      "title": "Inventory Management",
-      "owner": "John Deo",
-      "status": "Low",
-      "date": "10-02-2025 - 10-02-2026",
-    },
-    {
-      "title": "Crypto Trading App",
-      "owner": "Ali Traders",
-      "status": "Active",
-      "date": "26-11-2025 - 02-12-2025",
-    },
-    {
-      "title": "E-Commerce Website",
-      "owner": "Fixonto",
-      "status": "Completed",
-      "date": "01-01-2025 - 01-06-2025",
-    },
-    {
-      "title": "HR Management System",
-      "owner": "TechNova",
-      "status": "High",
-      "date": "15-03-2025 - 15-09-2025",
-    },
-  ];
-
+  final ProjectsScreenController controller =
+  Get.put(ProjectsScreenController());
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar:  CustomAppBar(title: "Projects"),
-      body:     Container(
+      appBar: CustomAppBar(title: "Projects"),
+      body: Container(
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: const BorderRadius.only(
-              topRight: Radius.circular(40),
-              topLeft: Radius.circular(40)),
+            topRight: Radius.circular(40),
+            topLeft: Radius.circular(40),
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.grey.withOpacity(0.2),
@@ -75,37 +41,148 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 20),
 
+              addButton("Add Project"),
+              const SizedBox(height: 20),
+
+              /// 🔍 Search + Filter
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("Status",style: TextStyle(fontSize:21,color: Colors.black,fontWeight: FontWeight.w600),),
-                  addButton("Add Project"),
+                  Expanded(
+                    child: CustomSearchField(
+                      hintText: "Search here...",
+                      controller: controller.searchController,
+                      onChanged: (val) {
+                        print("Searching: $val");
+                      },
+                      onClear: () {
+                        print("Search cleared");
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+
+                  /// Filter Button
+                  Obx(() => GestureDetector(
+                    onTap: controller.toggleFilter,
+                    child: Container(
+                      width: 90,
+                      decoration: BoxDecoration(
+                        color: AppColors.lightGrey,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 9, horizontal: 5),
+                        child: Row(
+                          children: [
+                            Icon(Icons.filter_list_outlined,
+                                size: 20,
+                                color: Colors.grey.shade600),
+                            const SizedBox(width: 5),
+                            Text(
+                              controller.showFilter.value
+                                  ? "Hide"
+                                  : "Filters",
+                              style: const TextStyle(fontSize: 15),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )),
                 ],
               ),
-              SizedBox(height: 10,),
-              // Align(
-              //     alignment: Alignment.centerLeft,
-              //     child: Text("Status",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 18),)),
-              //
-              SizedBox(height: 10,),
-              CustomTabBar(
-                borderRadius: 12,
-                items: ["Active","Completed",], onTabChanged: (int ) {  },),
 
-              // ---------------- GridView ----------------
+              /// Filters Section
+              Obx(() => controller.showFilter.value
+                  ? Column(
+                children: [
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Due Date",
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 10),
+                            CustomTabBar(
+                              isSmall: true,
+                              options: const [
+                                "Today",
+                                "Tomorrow",
+                                "This Week"
+                              ],
+                              selectedOption:
+                              controller.selectedDue.value,
+                              onSelect: controller.setDue,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Priority",
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 10),
+                            CustomTabBar(
+                              isSmall: true,
+                              options: const [
+                                "Low",
+                                "Medium",
+                                "High"
+                              ],
+                              selectedOption:
+                              controller.selectedPriority.value,
+                              onSelect: controller.setPriority,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              )
+                  : const SizedBox()),
+
+              const SizedBox(height: 20),
+
+              /// Status Tabs
+              Obx(() => CustomTabBar(
+                options: const ["Active", "Completed"],
+                selectedOption: controller.selectedStatus.value,
+                onSelect: controller.setStatus,
+              )),
+
+              const SizedBox(height: 20),
+
+              /// Projects List
               Expanded(
-                child: ListView.builder(
-                  padding: EdgeInsets.only(top: 20,bottom: 70),
-                  itemCount: projects.length,
+                child: Obx(() => ListView.builder(
+                  padding:
+                  const EdgeInsets.only(top: 20, bottom: 70),
+                  itemCount: controller.projects.length,
                   itemBuilder: (context, index) {
-                    final project = projects[index];
+                    final project = controller.projects[index];
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: ProjectDetailCard(
-
                         title: project["title"]!,
                         ownerName: project["owner"]!,
                         status: project["status"]!,
@@ -113,10 +190,8 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                       ),
                     );
                   },
-                ),
+                )),
               ),
-
-
             ],
           ),
         ),

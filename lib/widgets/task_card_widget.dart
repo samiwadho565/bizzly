@@ -32,34 +32,28 @@ class TaskCardWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header: Title aur Status Tag
+
+          // Row(
+          //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          //   crossAxisAlignment: CrossAxisAlignment.start,
+          //   children: [
+          //
+          //
+          //     // Status Tag (e.g., Low)
+          //
+          //   ],
+          // ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
                 ),
               ),
-              // Status Tag (e.g., Low)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 decoration: BoxDecoration(
@@ -69,7 +63,7 @@ class TaskCardWidget extends StatelessWidget {
                 child: Text(
                   status,
                   style: const TextStyle(
-                    fontSize: 10,
+                    fontSize: 11,
                     color: Colors.black,
                     fontWeight: FontWeight.w500,
                   ),
@@ -77,12 +71,24 @@ class TaskCardWidget extends StatelessWidget {
               ),
             ],
           ),
+          Text(
+            userName,
+            style: const TextStyle(fontSize: 13,  color:Colors.black,fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade600,
+            ),
+          ),
           const SizedBox(height: 10),
 
           // Date Row
           Row(
             children: [
-              Icon(Icons.calendar_month_outlined, size: 15, color: Colors.grey.shade700),
+              Icon(Icons.calendar_month_outlined, size: 18, color: Colors.grey.shade700),
               const SizedBox(width: 8),
               Text(
                 date,
@@ -90,22 +96,22 @@ class TaskCardWidget extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          // const SizedBox(height: 12),
 
           // User/Assignee Row
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 10,
-                backgroundImage: NetworkImage(userImageUrl),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                userName,
-                style: const TextStyle(fontSize: 12,  color:Colors.black,fontWeight: FontWeight.w500),
-              ),
-            ],
-          ),
+          // Row(
+          //   children: [
+          //     CircleAvatar(
+          //       radius: 13,
+          //       backgroundImage: NetworkImage(userImageUrl),
+          //     ),
+          //     const SizedBox(width: 8),
+          //     Text(
+          //       userName,
+          //       style: const TextStyle(fontSize: 13,  color:Colors.black,fontWeight: FontWeight.w500),
+          //     ),
+          //   ],
+          // ),
         ],
       ),
     );

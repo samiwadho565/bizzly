@@ -41,8 +41,8 @@ class CategoryCard extends StatelessWidget {
             child: Text(
               title,
               style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
                 color: Colors.black,
               ),
               overflow: TextOverflow.ellipsis,

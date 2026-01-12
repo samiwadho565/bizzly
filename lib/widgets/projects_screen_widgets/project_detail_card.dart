@@ -45,7 +45,7 @@ class ProjectDetailCard extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 14,
+                    fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -53,7 +53,7 @@ class ProjectDetailCard extends StatelessWidget {
                 Text(
                   ownerName,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 14,
                     color: Colors.grey.shade700,
                   ),
                 ),
@@ -62,14 +62,14 @@ class ProjectDetailCard extends StatelessWidget {
                   children: [
                     Icon(
                       Icons.calendar_month,
-                      size: 15,
+                      size: 16,
                       color: Colors.grey.shade600,
                     ),
                     const SizedBox(width: 6),
                     Text(
                       dateRange,
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: 13,
                         color: Colors.grey.shade600,
                       ),
                     ),
