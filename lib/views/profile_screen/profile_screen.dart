@@ -71,12 +71,20 @@ class ProfileScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionTitle("Financial and Invoice Settings"),
+                  Text(
+                    "Account Settings",
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _buildSectionTitle("Financial"),
                   ProfileTile(title: "Expense Categories", onTap: () {}),
                   ProfileTile(title: "Invoice Customization", onTap: () {}),
 
                   const SizedBox(height: 10),
-                  _buildSectionTitle("Security Settings"),
+                  _buildSectionTitle("Security "),
                   ProfileTile(title: "Change Password", onTap: () {}),
 
                   const SizedBox(height: 10),
@@ -113,10 +121,10 @@ class ProfileScreen extends StatelessWidget {
       padding: const EdgeInsets.only(left: 4, bottom: 10, top: 10),
       child: Text(
         title,
-        style: const TextStyle(
-          color: Colors.grey,
+        style:  TextStyle(
+          color: Colors.grey.shade600,
           fontSize: 14,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
