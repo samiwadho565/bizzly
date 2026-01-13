@@ -72,11 +72,12 @@ class InvoiceScreen extends StatelessWidget {
                       onSelect: controller.setStatus,
                     )),
 
-                    const SizedBox(height: 20),
+                    // const SizedBox(height: 20),
 
                     /// Invoice List
                     Expanded(
                       child: Obx(() => ListView.builder(
+                        padding: EdgeInsets.only(top: 20,bottom: 100),
                         itemCount: controller.invoices.length,
                         itemBuilder: (context, index) {
                           final invoice =

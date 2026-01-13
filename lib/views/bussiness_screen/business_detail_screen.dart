@@ -50,10 +50,10 @@ class BusinessDetailScreen extends StatelessWidget {
                           contentColor: Colors.green,
                         ),
                         StatCard(
-                          title: "Active Projects",
+                          title: "Team Members",
                           value: "2",
                           icon: Icon(
-                            Icons.bar_chart_rounded,
+                            Icons.groups,
                             color: Colors.blue,
                           ),
                           backgroundColor: Color(0xFFF1F7FF),
@@ -97,17 +97,17 @@ class BusinessDetailScreen extends StatelessWidget {
             /// --- Sticky TabBar ---
             SliverPersistentHeader(
               pinned: true,
-              delegate: _StickyTabBarDelegate(
+              delegate: StickyTabBarDelegate(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Obx(
                     () => CustomTabBar(
                       options: const [
-                        "Overview",
+                        // "Overview",
                         "Invoices",
                         "Expenses",
                         "Tasks",
-                        "Projects",
+                        "Team",
                       ],
                       selectedOption: controller.selectedTab.value,
                       onSelect: controller.changeTab,
@@ -128,11 +128,11 @@ class BusinessDetailScreen extends StatelessWidget {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: TaskCardWidget(
-                          title: task["title"]!,
-                          subtitle: task["subtitle"]!,
-                          date: task["date"]!,
-                          userName: task["user"]!,
-                          status: task["status"]!,
+                          title: task.title,
+                          subtitle: task.description,
+                          date: task.dueDate.toString(),
+                          assignTo: task.assignedTo,
+                          status: task.status,
                         ),
                       );
                     }, childCount: controller.tasks.length),
@@ -177,21 +177,22 @@ class BusinessDetailScreen extends StatelessWidget {
   }
 }
 
-class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
+class StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
   final Widget child;
-  _StickyTabBarDelegate({required this.child});
+
+  StickyTabBarDelegate({required this.child});
 
   @override
-  double get minExtent => 60.0; // TabBar ki height + padding
+  double get minExtent => 90.0; // TabBar ki height + padding
   @override
-  double get maxExtent => 60.0;
+  double get maxExtent => 90.0;
 
   @override
   Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
+      BuildContext context,
+      double shrinkOffset,
+      bool overlapsContent,
+      ) {
     return Container(
       color: Colors.white, // Sticky hone par background color
       alignment: Alignment.center,
@@ -200,5 +201,5 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  bool shouldRebuild(_StickyTabBarDelegate oldDelegate) => false;
+  bool shouldRebuild(covariant StickyTabBarDelegate oldDelegate) => false;
 }

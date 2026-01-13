@@ -170,7 +170,7 @@ class ProjectsScreen extends StatelessWidget {
                 onSelect: controller.setStatus,
               )),
 
-              const SizedBox(height: 20),
+              // const SizedBox(height: 20),
 
               /// Projects List
               Expanded(

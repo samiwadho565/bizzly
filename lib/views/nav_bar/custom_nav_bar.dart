@@ -32,7 +32,7 @@ class CustomBottomNavBar extends StatelessWidget {
               height: navBarHeight,
               decoration: BoxDecoration(
                 // color: Colors.white.withValues(alpha:0.1),
-                borderRadius: BorderRadius.circular(15),
+                borderRadius: BorderRadius.circular(35),
                 border: Border.all(color: AppColors.primary.withValues(alpha:0.3)),
               ),
               child: BottomNavigationBar(
@@ -41,7 +41,7 @@ class CustomBottomNavBar extends StatelessWidget {
                 backgroundColor: Colors.transparent,
                 currentIndex: currentIndex,
                 onTap: onTap,
-                selectedItemColor: AppColors.primary,
+                selectedItemColor: AppColors.primaryNavBar,
                 unselectedItemColor: Colors.black,
                 showUnselectedLabels: true,
                 items: [
@@ -51,10 +51,10 @@ class CustomBottomNavBar extends StatelessWidget {
                     activeIcon: Icon(Icons.home,),
                   ),
                   BottomNavigationBarItem(
-                    label: 'Projects',
+                    label: 'Expenses',
                     icon: Stack(
                       children: [
-                        Icon(Icons.grid_view)
+                        Icon(Icons.monetization_on_outlined)
                         // BlocBuilder<ServicesBloc, ServicesState>(
                         //   buildWhen: (pre, nxt) =>
                         //   pre.newOrdersCount != nxt.newOrdersCount,
@@ -80,7 +80,7 @@ class CustomBottomNavBar extends StatelessWidget {
                       ],
 
                     ),
-                    activeIcon:      Icon(Icons.grid_view_rounded,),
+                    activeIcon:       Icon(Icons.monetization_on)
                   ),
                   BottomNavigationBarItem(
                     label: "Tasks",

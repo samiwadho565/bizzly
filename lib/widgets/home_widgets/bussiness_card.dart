@@ -26,7 +26,7 @@ class CategoryCard extends StatelessWidget {
             height: 70, // Aap apni requirement ke mutabiq adjust kar sakte hain
             width: 70,
             decoration: BoxDecoration(
-              color: const Color(0xFFF5F5F5), // Light grey background
+              color: AppColors.greyCard,// Light grey background
               borderRadius: BorderRadius.circular(10), // Rounded corners
             ),
             child: Icon(

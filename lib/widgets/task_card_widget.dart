@@ -6,7 +6,7 @@ class TaskCardWidget extends StatelessWidget {
   final String title;
   final String subtitle;
   final String date;
-  final String userName;
+  final String assignTo;
   final String status;
   final String userImageUrl;
 
@@ -15,7 +15,7 @@ class TaskCardWidget extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.date,
-    required this.userName,
+    required this.assignTo,
     required this.status,
     this.userImageUrl = 'https://i.pravatar.cc/150?u=a042581f4e29026704d', // Dummy image
   });
@@ -25,7 +25,7 @@ class TaskCardWidget extends StatelessWidget {
     return Container(
       padding:  EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.lightGrey, // Light grey background jaisa image mein hai
+        color: AppColors.greyCard, // Light grey background jaisa image mein hai
         borderRadius: BorderRadius.circular(25),
       ),
       child: Column(
@@ -72,7 +72,7 @@ class TaskCardWidget extends StatelessWidget {
             ],
           ),
           Text(
-            userName,
+            assignTo,
             style: const TextStyle(fontSize: 13,  color:Colors.black,fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 4),
@@ -80,7 +80,7 @@ class TaskCardWidget extends StatelessWidget {
             subtitle,
             style: TextStyle(
               fontSize: 14,
-              color: Colors.grey.shade600,
+              color: Colors.grey.shade700,
             ),
           ),
           const SizedBox(height: 10),
@@ -107,7 +107,7 @@ class TaskCardWidget extends StatelessWidget {
           //     ),
           //     const SizedBox(width: 8),
           //     Text(
-          //       userName,
+          //       assignTo,
           //       style: const TextStyle(fontSize: 13,  color:Colors.black,fontWeight: FontWeight.w500),
           //     ),
           //   ],

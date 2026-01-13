@@ -117,7 +117,7 @@ class WeeklyRevenueChart extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 5),
-            Text(bar.day, style: const TextStyle(fontSize: 12)),
+            Text(bar.day, style: const TextStyle(color:Colors.black,fontSize: 12)),
           ],
         ),
       ),
@@ -134,7 +134,7 @@ class WeeklyRevenueChart extends StatelessWidget {
       child: Text(
         "\$$value",
         style: const TextStyle(
-            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10),
+            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
       ),
     );
   }

@@ -27,8 +27,8 @@ class CustomSearchField extends StatelessWidget {
         onChanged: onChanged,
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: const TextStyle(
-            color: Colors.grey,
+          hintStyle: TextStyle(
+            color: Colors.grey.shade700,
             fontSize: 15,
           ),
           contentPadding:

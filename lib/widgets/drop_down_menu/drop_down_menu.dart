@@ -9,8 +9,8 @@ Widget addDropdownButton({required String leftText,required String title}) {
   final List<Map<String, dynamic>> items = [
     {'text': 'Add Expense', 'icon': Icons.money},
     {'text': 'Create Invoice', 'icon': Icons.receipt_long},
-    {'text': 'Add New Business', 'icon': Icons.business},
-    {'text': 'Add Project', 'icon': Icons.work_outline},
+    // {'text': 'Add New Business', 'icon': Icons.business},
+    {'text': 'Add Team/Employee', 'icon': Icons.work_outline},
     {'text': 'Create Task', 'icon': Icons.task_alt},
   ];
 

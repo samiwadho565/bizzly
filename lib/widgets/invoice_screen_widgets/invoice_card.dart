@@ -21,7 +21,7 @@ class InvoiceCard extends StatelessWidget {
   Color getStatusColor() {
     switch (status.toLowerCase()) {
       case "paid":
-        return  AppColors.statusPaid;// green
+        return  AppColors.statusCancelled;// green
       case "sent":
         return  AppColors.statusSent; // blue
       case "pending":

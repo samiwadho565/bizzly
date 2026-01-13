@@ -117,6 +117,17 @@ class CustomSearchDropdown extends StatelessWidget {
               ),
             );
           },
+          searchFieldProps: TextFieldProps(
+            decoration: InputDecoration(
+              hintText: "Search...",
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+          ),
           fit: FlexFit.loose,
           constraints: const BoxConstraints(maxHeight: 250),
           menuProps: MenuProps(
