@@ -18,35 +18,60 @@ class CustomSearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: AppColors.greyButtonColor,
-        borderRadius: BorderRadius.circular(15),
-      ),
+      // Shadow ko bahar rakha hai taake aesthetic look aaye
+      // decoration: BoxDecoration(
+      //   borderRadius: BorderRadius.circular(15),
+      //   boxShadow: [
+      //     BoxShadow(
+      //       color: Colors.black.withOpacity(0.03),
+      //       blurRadius: 10,
+      //       offset: const Offset(0, 4),
+      //     ),
+      //   ],
+      // ),
       child: TextField(
         controller: controller,
         onChanged: onChanged,
+        style: const TextStyle(fontSize: 15),
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: TextStyle(
-            color: Colors.grey.shade700,
+            color: Colors.grey.shade500,
             fontSize: 15,
           ),
-          contentPadding:
-          const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          border: InputBorder.none,
+          filled: true,
+          fillColor: AppColors.background,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
 
-          /// 🔍 Search icon (left)
+          // 1. Default Border (Jab tap na kiya ho)
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: BorderSide(
+              color: Colors.grey.withOpacity(0.08), // Boht halki border
+              width: 1,
+            ),
+          ),
+
+          // 2. Focused Border (Jab tap karein - Enable ho jaye)
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: const BorderSide(
+              color: AppColors.primary, // Aapka primary color
+              width: 1.5,
+            ),
+          ),
+
           prefixIcon: Icon(
             Icons.search,
             color: AppColors.primary.withOpacity(0.5),
           ),
 
-          /// ❌ Clear icon (right)
           suffixIcon: controller.text.isNotEmpty
               ? IconButton(
             icon: Icon(
               Icons.close,
               color: AppColors.primary.withOpacity(0.5),
+              size: 20,
             ),
             onPressed: () {
               controller.clear();

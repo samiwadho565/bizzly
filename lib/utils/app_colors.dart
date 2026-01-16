@@ -4,11 +4,17 @@ class AppColors {
   /// Primary & Background
   // static const Color primary = Color(0xFF7C41A9);
   // static const Color primary = Color(0xFF4156A9);
-  static const Color primary = Color(0xff70ccf4);
+  // static const Color primary = Color(0xff70ccf4);
+  static const Color primary = Color(0xFF66c4ff);
+  // selected blue
+  // static const Color primary = Color(0xFF5DA7FB);
   static const Color primaryNavBar = Color(0xff21adea);
+  static const Color viewAll = Color(0xff029ada);
   // Color(0xff7ed3f8);
   // static const Color lightskycolor = Color(0xFFb7e9ff);
   static const Color background = Color(0xFFF7FAFC);
+  static const Color textField = Color(0xFFF0F4F8);
+  // static const Color background = Color(0xFFF5FBFD);
   static const Color greyCard = Color(0xFFF7F7F7);
   static const Color lightGrey = Color(0xFFEDEDEF);
   static const Color transparentWhite = Colors.white38;
@@ -29,9 +35,9 @@ class AppColors {
   /// PRIORITY COLORS
   /// ===============================
 
-  static const Color priorityLow = Color(0xFF10B981);    // Soft Green
-  static const Color priorityMedium = Color(0xFFF59E0B); // Orange
-  static const Color priorityHigh = Color(0xFFEF4444);   // Red
+  static const Color priorityLow = Color(0xFF90F8D6);    // Soft Green
+  static const Color priorityMedium = Color(0xFFF4C980); // Orange
+  static const Color priorityHigh = Color(0xFFF18686);   // Red
 
   /// ===============================
   /// ACTIVE / INACTIVE COLORS

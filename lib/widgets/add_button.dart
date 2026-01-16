@@ -1,6 +1,7 @@
+import 'package:bizly/utils/app_colors.dart';
 import 'package:flutter/material.dart';
 
-Widget addButton(String title) {
+Widget addButton(String title,{Icon? icon}) {
   return InkWell(
     onTap: () {
       // Button click logic yahan ayegi
@@ -9,14 +10,14 @@ Widget addButton(String title) {
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5), // Light grey background
+        color: AppColors.background, // Light grey background
         borderRadius: BorderRadius.circular(12), // Rounded corners
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min, // Jitni zaroorat ho utni width le
         children:  [
-          Icon(
-            Icons.add,
+          icon??  Icon(
+         Icons.add,
             color: Colors.black54,
             size: 17,
           ),

@@ -82,15 +82,16 @@ class CustomBottomNavBar extends StatelessWidget {
                     ),
                     activeIcon:       Icon(Icons.monetization_on)
                   ),
+              BottomNavigationBarItem(
+                label: "Invoices",
+                icon: Icon(Icons.account_balance_wallet_outlined),
+                activeIcon: Icon(Icons.account_balance_wallet),
+              ),
                   BottomNavigationBarItem(
                     label: "Tasks",
                     icon: Icon(Icons.assignment_outlined),
                     activeIcon: Icon(Icons.assignment),
-                  )  ,         BottomNavigationBarItem(
-                    label: "Invoices",
-                    icon: Icon(Icons.account_balance_wallet_outlined),
-                    activeIcon: Icon(Icons.account_balance_wallet),
-                  ) ,
+                  )     ,
                 ],
               ),
             ),

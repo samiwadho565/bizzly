@@ -34,9 +34,24 @@ class CustomSearchDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return Container(
       width: width,
       height: height,
+      // decoration: BoxDecoration(
+      //   borderRadius: BorderRadius.circular(10),
+      //   boxShadow: [
+      //     BoxShadow(
+      //       color: Colors.black.withOpacity(0.1), // Halka shadow
+      //       blurRadius: 10,
+      //       offset: const Offset(-4, 4), // Shadow position
+      //     ),
+      //     BoxShadow(
+      //       color: Colors.black.withOpacity(0.02), // Halka shadow
+      //       blurRadius: 10,
+      //       offset: const Offset(4, 0), // Shadow position
+      //     ),
+      //   ],
+      // ),
       child: DropdownSearch<String>(
         items: (filter, infiniteScrollProps) => items,
         selectedItem: selectedItem,
@@ -51,7 +66,7 @@ class CustomSearchDropdown extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                 ),
             filled: true,
-            fillColor: AppColors.lightGrey.withOpacity(0.5),
+            fillColor: AppColors.textField.withOpacity(0.5),
             contentPadding: EdgeInsets.symmetric(
               horizontal: horizontalPadding ?? 8,
               vertical: (height - 20) / 2,
@@ -131,7 +146,7 @@ class CustomSearchDropdown extends StatelessWidget {
           fit: FlexFit.loose,
           constraints: const BoxConstraints(maxHeight: 250),
           menuProps: MenuProps(
-            backgroundColor: AppColors.lightGrey,
+            backgroundColor: AppColors.background,
             borderRadius: BorderRadius.circular(15),
           ),
         ),

@@ -2,6 +2,7 @@ import 'package:bizly/widgets/home_widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/tasks_screen_controller.dart';
+import '../../routes/routes.dart';
 import '../../utils/app_colors.dart';
 import '../../widgets/add_button.dart';
 import '../../widgets/custom_search_field.dart';
@@ -58,7 +59,7 @@ class TasksScreen extends StatelessWidget {
                           child: Container(
                             width: 90,
                             decoration: BoxDecoration(
-                              color: AppColors.lightGrey,
+                              color: AppColors.background,
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Center(
@@ -100,7 +101,8 @@ class TasksScreen extends StatelessWidget {
                             const SizedBox(height: 10),
                            Obx(()=> CustomTabBar(
                                 isSmall: true,
-                                options: const ["Today", "Tomorrow", "This Week"],
+                             allowUnselectOnReselect: true,
+                             options: const ["Today", "Tomorrow", "This Week"],
                                 selectedOption: controller.selectedDue.value,
                                 onSelect: controller.setDue,
                               ),
@@ -109,7 +111,7 @@ class TasksScreen extends StatelessWidget {
                         );
 
                         Widget priorityWidget = Column(
-                          crossAxisAlignment: CrossAxisAlignment.start, // 👈 center
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
                               "Priority",
@@ -117,8 +119,9 @@ class TasksScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 10),
                             Align(
-                              alignment: Alignment.center, // 👈 tabbar center
+                              alignment: Alignment.center,
                               child:  Obx(()=>  CustomTabBar(
+                                allowUnselectOnReselect: true,
                                   isSmall: true,
                                   options: const ["Low", "Medium", "High"],
                                   selectedOption: controller.selectedPriority.value,
@@ -200,14 +203,20 @@ class TasksScreen extends StatelessWidget {
 
                       (context, index) {
                     final task = controller.tasks[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: TaskCardWidget(
-                        title: task.title,
-                        subtitle: task.description,
-                        date: task.dueDate.toString(),
-                        assignTo: task.assignedTo,
-                        status: task.status,
+                    return GestureDetector(
+                      onTap: (){
+                        Get.toNamed(Routes.taskDetailScreen);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: TaskCardWidget(
+                          priority: task.priority,
+                          title: task.title,
+                          subtitle: task.description,
+                          date: task.dueDate.toString(),
+                          assignTo: task.assignedTo,
+                          status: task.status,
+                        ),
                       ),
                     );
                   },

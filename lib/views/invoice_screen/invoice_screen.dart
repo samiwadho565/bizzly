@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import '../../controllers/invoice_screen_controller.dart';
+import '../../routes/routes.dart';
 import '../../widgets/add_button.dart';
 import '../../widgets/custom_search_field.dart';
 import '../../widgets/custom_tab_bar.dart';
@@ -47,13 +48,12 @@ class InvoiceScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     const SizedBox(height: 20),
-
                     /// 🔍 Search + Button
                     Row(
                       children: [
                         Expanded(
                           child: CustomSearchField(
-                            hintText: 'Search..',
+                            hintText: 'Search invoice..',
                             controller: controller.searchController,
                           ),
                         ),
@@ -82,15 +82,20 @@ class InvoiceScreen extends StatelessWidget {
                         itemBuilder: (context, index) {
                           final invoice =
                           controller.invoices[index];
-                          return Padding(
-                            padding:
-                            const EdgeInsets.only(bottom: 12),
-                            child: InvoiceCard(
-                              clientName: invoice["client"]!,
-                              businessName: invoice["business"]!,
-                              itemName: invoice["item"]!,
-                              amount: invoice["amount"]!,
-                              status: invoice["status"]!,
+                          return GestureDetector(
+                            onTap: (){
+                              Get.toNamed(Routes.invoiceDetailScreen);
+                            },
+                            child: Padding(
+                              padding:
+                              const EdgeInsets.only(bottom: 12),
+                              child: InvoiceCard(
+                                clientName: invoice["client"]!,
+                                businessName: invoice["business"]!,
+                                itemName: invoice["item"]!,
+                                amount: invoice["amount"]!,
+                                status: invoice["status"]!,
+                              ),
                             ),
                           );
                         },

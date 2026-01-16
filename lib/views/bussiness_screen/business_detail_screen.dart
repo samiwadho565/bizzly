@@ -128,6 +128,7 @@ class BusinessDetailScreen extends StatelessWidget {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: TaskCardWidget(
+                          priority: task.priority,
                           title: task.title,
                           subtitle: task.description,
                           date: task.dueDate.toString(),
@@ -149,6 +150,7 @@ class BusinessDetailScreen extends StatelessWidget {
                           // subtitle: task["subtitle"]!,
                           // date: task["date"]!,
                           // userName: task["user"]!,
+
                           status:  invoices["status"]!,
                           clientName: invoices['client']!,
                           businessName: invoices['business']!,

@@ -25,7 +25,8 @@ class TasksScreenController extends GetxController {
       dueDate: DateTime(2026, 12, 19),
       assignedTo: "John Deo",
       priority: 3,
-      status: "Pending", id: '1',
+      status: "Pending", id: '1', companyName: 'fixdar',
+
       // createdAt: null,
     ),
     TaskModel(
@@ -34,7 +35,7 @@ class TasksScreenController extends GetxController {
       dueDate: DateTime(2026, 12, 20),
       assignedTo: "Ali Traders",
       priority: 2,
-      status: "In Progress", id: '',
+      status: "In Progress", id: '2', companyName: 'SilverSpoon',
     ),
     TaskModel(
       title: "Server Backup",
@@ -42,7 +43,7 @@ class TasksScreenController extends GetxController {
       dueDate: DateTime(2026, 12, 22),
       assignedTo: "Tech Team",
       priority: 1,
-      status: "Pending", id: '',
+      status: "Pending", id: '3', companyName: 'Tech Agency',
     ),
     TaskModel(
       title: "UI Improvements",
@@ -50,7 +51,7 @@ class TasksScreenController extends GetxController {
       dueDate: DateTime(2026, 12, 25),
       assignedTo: "Design Team",
       priority:3,
-      status: "Completed", id: '',
+      status: "Low", id: '4', companyName: 'Appxview',
     ),
   ].obs;
   // Toggle filter visibility

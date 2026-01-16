@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bizly/utils/app_colors.dart';
+import 'package:get/get.dart';
 
 class CustomAppBar2 extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -8,6 +9,7 @@ class CustomAppBar2 extends StatelessWidget implements PreferredSizeWidget {
   final double elevation;
   final Widget? leading;
   final List<Widget>? actions;
+  final bool isBackArrow; // ✅ new property
 
   const CustomAppBar2({
     super.key,
@@ -17,6 +19,7 @@ class CustomAppBar2 extends StatelessWidget implements PreferredSizeWidget {
     this.elevation = 0,
     this.leading,
     this.actions,
+    this.isBackArrow = true, // default true
   });
 
   @override
@@ -26,7 +29,7 @@ class CustomAppBar2 extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: backgroundColor,
       elevation: elevation,
       title: Padding(
-        padding: const EdgeInsets.only(left: 0), // agar extra padding chahiye to adjust kar sakte ho
+        padding: const EdgeInsets.only(left: 0),
         child: Text(
           title,
           style: const TextStyle(
@@ -36,7 +39,18 @@ class CustomAppBar2 extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       centerTitle: centerTitle,
-      leading: leading,
+      leading: leading ??
+          (isBackArrow
+              ? IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_new_outlined,
+              color: Colors.black,
+            ),
+            onPressed: () {
+              Get.back(); // use GetX to go back
+            },
+          )
+              : null),
       actions: actions,
     );
   }

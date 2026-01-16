@@ -14,7 +14,7 @@ class BusinessDetailController extends GetxController {
       dueDate: DateTime(2026, 12, 19),
       assignedTo: "John Deo",
       priority: 3,
-      status: "Pending", id: '1',
+      status: "Pending", id: '1', companyName: 'Fixdar',
       // createdAt: null,
     ),
     TaskModel(
@@ -23,7 +23,7 @@ class BusinessDetailController extends GetxController {
       dueDate: DateTime(2026, 12, 20),
       assignedTo: "Ali Traders",
       priority: 2,
-      status: "In Progress", id: '',
+      status: "In Progress", id: '', companyName: 'Fixonto',
     ),
     TaskModel(
       title: "Server Backup",
@@ -31,7 +31,7 @@ class BusinessDetailController extends GetxController {
       dueDate: DateTime(2026, 12, 22),
       assignedTo: "Tech Team",
       priority: 1,
-      status: "Pending", id: '',
+      status: "Pending", id: '', companyName: 'SilverSpoon',
     ),
     TaskModel(
       title: "UI Improvements",
@@ -39,7 +39,7 @@ class BusinessDetailController extends GetxController {
       dueDate: DateTime(2026, 12, 25),
       assignedTo: "Design Team",
       priority:3,
-      status: "Completed", id: '',
+      status: "Completed", id: '', companyName: 'AppxView',
     ),
   ].obs;
   /// Invoices List

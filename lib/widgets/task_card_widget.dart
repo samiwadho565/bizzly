@@ -9,12 +9,14 @@ class TaskCardWidget extends StatelessWidget {
   final String assignTo;
   final String status;
   final String userImageUrl;
+  final int priority;
 
   const TaskCardWidget ({
     super.key,
     required this.title,
     required this.subtitle,
     required this.date,
+    required this.priority,
     required this.assignTo,
     required this.status,
     this.userImageUrl = 'https://i.pravatar.cc/150?u=a042581f4e29026704d', // Dummy image
@@ -25,7 +27,7 @@ class TaskCardWidget extends StatelessWidget {
     return Container(
       padding:  EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.greyCard, // Light grey background jaisa image mein hai
+        color: AppColors.background, // Light grey background jaisa image mein hai
         borderRadius: BorderRadius.circular(25),
       ),
       child: Column(
@@ -61,7 +63,7 @@ class TaskCardWidget extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  status,
+                  priority==1?"High":priority==2?"Medium":priority==3?"low":"",
                   style: const TextStyle(
                     fontSize: 11,
                     color: Colors.black,

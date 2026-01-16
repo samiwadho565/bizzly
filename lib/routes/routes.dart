@@ -11,6 +11,13 @@ class Routes {
   static const sigUpScreen = '/SigUpScreen';
   static const profileScreen = '/profile_screen';
   static const mainScreen = '/main_screen';
+  static const expenseDetailScreen = '/expense_detail_screen';
+  static const invoiceDetailScreen = '/invoice_detail_screen';
+  static const taskDetailScreen = '/task_detail_screen';
+  static const addNewBusiness = '/add_new_business_screen';
+  static const addExpenseScreen = '/add_expense_screen';
+  static const createInvoiceScreen = '/create_invoice_screen';
+  static const createTaskScreen = '/create_Task_screen';
   static const homeScreen = '/home';
   static const completeProfileScreen = '/complete_profile_screen';
   static const singleOrderScreen = '/single_order_screen';

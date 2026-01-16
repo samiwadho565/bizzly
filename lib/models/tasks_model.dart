@@ -7,6 +7,9 @@ class TaskModel {
   final DateTime? createdAt;
   final String assignedTo; // user id / employee id
   final int priority; // 1 = High, 2 = Medium, 3 = Low
+  final String companyName;
+  final List<String> attachments; // URLs ya file names
+  final String relatedProject;
 
   TaskModel({
     required this.id,
@@ -14,9 +17,12 @@ class TaskModel {
     required this.description,
     required this.status,
     this.dueDate,
-   this.createdAt,
+    this.createdAt,
     required this.assignedTo,
     required this.priority,
+    required this.companyName,
+    this.attachments = const [],
+    this.relatedProject = "",
   });
 
   /// 🔹 From JSON
@@ -27,11 +33,18 @@ class TaskModel {
       description: json['description'] ?? '',
       status: json['status'] ?? 'pending',
       dueDate: json['due_date'] != null
-          ? DateTime.parse(json['due_date'])
+          ? DateTime.tryParse(json['due_date'])
           : null,
-      createdAt: DateTime.parse(json['created_at']),
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'])
+          : null,
       assignedTo: json['assigned_to'] ?? '',
       priority: json['priority'] ?? 2,
+      companyName: json['company_name'] ?? '',
+      attachments: json['attachments'] != null
+          ? List<String>.from(json['attachments'])
+          : [],
+      relatedProject: json['related_project'] ?? '',
     );
   }
 
@@ -46,6 +59,9 @@ class TaskModel {
       'created_at': createdAt?.toIso8601String(),
       'assigned_to': assignedTo,
       'priority': priority,
+      'company_name': companyName,
+      'attachments': attachments,
+      'related_project': relatedProject,
     };
   }
 }

@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
       // initialBinding: InitialBindings(),
       // getPages: AppPages.routes,
       getPages: AppPages.routes,
-      initialRoute: Routes.onBoardingScreen,
+      initialRoute: Routes.onBoardingScreen
     );
   }
 }

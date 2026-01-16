@@ -49,9 +49,9 @@ class _MainScreenState extends State<MainScreen> {
       case 1:
         return  ExpenseScreen();
       case 2:
-        return TasksScreen();
-      default:
         return InvoiceScreen();
+      default:
+        return TasksScreen();
     }
   }
 

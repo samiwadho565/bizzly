@@ -5,6 +5,7 @@ import 'package:bizly/utils/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/expense_screen_controller.dart';
+import '../../routes/routes.dart';
 import '../../widgets/add_button.dart';
 import '../../widgets/custom_search_field.dart';
 import '../../widgets/custom_tab_bar.dart';
@@ -74,7 +75,7 @@ class ExpenseScreen extends StatelessWidget {
                           final e = controller.filteredExpenses[index];
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12),
-                            child: ExpenseCard(
+                            child:  ExpenseCard(
 
                               title: e["title"] ?? '',
                               category: e["category"] ?? '',
@@ -82,6 +83,7 @@ class ExpenseScreen extends StatelessWidget {
                               date: e["date"] ?? '',
                               iconPath: e["icon"],
                               onTap: () {
+                                Get.toNamed(Routes.expenseDetailScreen);
                                 // placeholder for tap action
                               },
                             ),

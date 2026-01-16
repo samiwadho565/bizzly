@@ -1,7 +1,12 @@
 
+import 'package:bizly/views/bussiness_screen/add_new_business_screen.dart';
+import 'package:bizly/views/expense_screen/add_expense_screen.dart';
+import 'package:bizly/views/expense_screen/expense_detail_screen.dart';
+import 'package:bizly/views/invoice_screen/invoice_detail_screen.dart';
 import 'package:bizly/views/nav_bar/main_screen.dart';
 import 'package:bizly/views/onboarding/onboarding.dart';
 import 'package:bizly/views/profile_screen/profile_screen.dart';
+import 'package:bizly/views/tasks_screen/task_detail_screen.dart';
 import 'package:get/get.dart';
 import 'package:get/get_navigation/src/routes/get_route.dart';
 
@@ -37,7 +42,37 @@ class AppPages {
       page: () => const SignUpScreen(),
       binding: InitialBindings(),
         transition: Transition.fadeIn
-    ),    GetPage(
+    ),
+    GetPage(
+      name: Routes.expenseDetailScreen,
+      page: () =>  ExpenseDetailScreen(),
+      binding: InitialBindings(),
+        transition: Transition.fadeIn
+    ),
+    GetPage(
+      name: Routes. taskDetailScreen,
+      page: () =>   TaskDetailScreen(),
+      binding: InitialBindings(),
+        transition: Transition.fadeIn
+    ),
+    GetPage(
+      name: Routes.addNewBusiness,
+      page: () => AddNewBusinessScreen(),
+      binding: InitialBindings(),
+        transition: Transition.fadeIn
+    ),  GetPage(
+      name: Routes.addExpenseScreen,
+      page: () => AddExpenseScreen(),
+      binding: InitialBindings(),
+        transition: Transition.fadeIn
+    ),
+    GetPage(
+      name: Routes.invoiceDetailScreen,
+      page: () =>  InvoiceDetailScreen(),
+      binding: InitialBindings(),
+        transition: Transition.fadeIn
+    ),
+    GetPage(
       name: Routes. businessDetailScreen,
       page: () =>   BusinessDetailScreen(),
       binding: InitialBindings(),

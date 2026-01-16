@@ -36,7 +36,7 @@ class InvoiceCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF7F7F7),
+        color: AppColors.background,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(

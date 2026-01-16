@@ -6,6 +6,7 @@ class ExpenseScreenController extends GetxController {
   final RxList<Map<String, String>> expenses = <Map<String, String>>[].obs;
   final TextEditingController searchController = TextEditingController();
   final RxString selectedCategory = 'All'.obs;
+  Rx<DateTime> selectedDate= DateTime.now().obs;
 
   @override
   void onInit() {

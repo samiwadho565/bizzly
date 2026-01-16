@@ -1,17 +1,34 @@
 import 'package:bizly/widgets/add_button.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
+import '../../routes/routes.dart';
 import '../../utils/app_colors.dart';
+import '../../routes/app_pages.dart'; // make sure your Routes are imported
 
-Widget addDropdownButton({required String leftText,required String title}) {
-
+Widget addDropdownButton({required String leftText, required String title}) {
   final List<Map<String, dynamic>> items = [
-    {'text': 'Add Expense', 'icon': Icons.money},
-    {'text': 'Create Invoice', 'icon': Icons.receipt_long},
-    // {'text': 'Add New Business', 'icon': Icons.business},
-    {'text': 'Add Team/Employee', 'icon': Icons.work_outline},
-    {'text': 'Create Task', 'icon': Icons.task_alt},
+    {
+      'text': 'Add Expense',
+      'icon': Icons.money,
+      'route': Routes.addExpenseScreen, // route for Add Expense
+    },
+    {
+      'text': 'Create Invoice',
+      'icon': Icons.receipt_long,
+      'route': Routes.invoiceDetailScreen, // define this route in your Routes
+    },
+    {
+      'text': 'Add Team/Employee',
+      'icon': Icons.work_outline,
+      'route': Routes.invoiceDetailScreen// define this route too
+    },
+    {
+      'text': 'Create Task',
+      'icon': Icons.task_alt,
+      'route': Routes.taskDetailScreen // define this route
+    },
   ];
 
   return Row(
@@ -30,8 +47,12 @@ Widget addDropdownButton({required String leftText,required String title}) {
       // Right side dropdown button
       PopupMenuButton<String>(
         onSelected: (value) {
-          print("Selected: $value");
-
+          // Find the item with the selected text
+          final selectedItem =
+          items.firstWhere((item) => item['text'] == value);
+          if (selectedItem['route'] != null) {
+            Get.toNamed(selectedItem['route']); // Navigate to the route
+          }
         },
         color: Colors.white,
         itemBuilder: (BuildContext context) {
@@ -42,7 +63,7 @@ Widget addDropdownButton({required String leftText,required String title}) {
                 children: [
                   // Icon(
                   //   item['icon'],
-                  //   color: AppColors.primaryLightTeal, // icon color
+                  //   color: AppColors.primary, // icon color
                   // ),
                   const SizedBox(width: 10),
                   Text(item['text']),
@@ -58,10 +79,10 @@ Widget addDropdownButton({required String leftText,required String title}) {
             borderRadius: BorderRadius.circular(10),
           ),
           child: Row(
-            children: const [
-              Icon(Icons.add, color: Colors.white),
-              SizedBox(width: 5),
-              Text(
+            children: [
+              Icon(Icons.arrow_drop_down, color: Colors.white),
+              const SizedBox(width: 5),
+              const Text(
                 "Add",
                 style: TextStyle(
                     color: Colors.white, fontWeight: FontWeight.bold),

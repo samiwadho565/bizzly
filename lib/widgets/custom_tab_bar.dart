@@ -6,10 +6,12 @@ class CustomTabBar extends StatelessWidget {
   final String selectedOption;
   final Function(String) onSelect;
   final bool isSmall;
+  final bool allowUnselectOnReselect; // 👈 NEW
 
   const CustomTabBar({
     super.key,
     this.isSmall = false,
+    this.allowUnselectOnReselect = false, // default OFF
     required this.options,
     required this.selectedOption,
     required this.onSelect,
@@ -18,7 +20,7 @@ class CustomTabBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height:isSmall?30: 50,
+      height: isSmall ? 30 : 50,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
@@ -35,16 +37,27 @@ class CustomTabBar extends StatelessWidget {
         child: Row(
           children: options.map((option) {
             bool isSelected = selectedOption == option;
+
             return Expanded(
               child: GestureDetector(
-                onTap: () => onSelect(option),
+                onTap: () {
+                  if (isSelected && allowUnselectOnReselect) {
+                    onSelect(""); // 👈 unselect
+                  } else {
+                    onSelect(option);
+                  }
+                },
                 child: Container(
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primary.withOpacity(0.9) : Colors.transparent, // Teal color
+                    color: isSelected
+                        ? AppColors.primary.withOpacity(0.9)
+                        : Colors.transparent,
                     border: Border(
                       right: BorderSide(
-                        color: options.last == option ? Colors.transparent : Colors.grey.withOpacity(0.2),
+                        color: options.last == option
+                            ? Colors.transparent
+                            : Colors.grey.withOpacity(0.2),
                         width: 1,
                       ),
                     ),
@@ -52,9 +65,11 @@ class CustomTabBar extends StatelessWidget {
                   child: Text(
                     option,
                     style: TextStyle(
-                      fontSize: isSmall?11:14,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                      color: isSelected ? Colors.white : Colors.black87,
+                      fontSize: isSmall ? 11 : 14,
+                      fontWeight:
+                      isSelected ? FontWeight.w600 : FontWeight.normal,
+                      color:
+                      isSelected ? Colors.white : Colors.black87,
                     ),
                   ),
                 ),

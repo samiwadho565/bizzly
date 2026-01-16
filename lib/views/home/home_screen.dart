@@ -79,6 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
                  child: SingleChildScrollView(
                    child: Column(
                      children: [
+                       SizedBox(height: 20,),
                        Align(
                          alignment: Alignment.centerLeft,
                          child: Padding(
@@ -116,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
                            children: [
                              Text("All Businesses",style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),),
 
-                             TextButton(onPressed: (){}, child: Text("View All"),)
+                             TextButton(onPressed: (){}, child: Text("View All",style: TextStyle(color: AppColors.viewAll),),)
                            ],
                          ),
                        ),

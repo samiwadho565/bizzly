@@ -6,9 +6,12 @@ class CustomTextField extends StatefulWidget {
   final String hintText;
   final bool isPassword;
   final TextEditingController? controller;
-
+ final double? verticalPadding;
+ final int maxLine;
   const CustomTextField({
     super.key,
+    this.maxLine=1,
+    this.verticalPadding,
     required this.hintText,
     this.isPassword = false,
     this.controller,
@@ -25,16 +28,17 @@ class _CustomTextFieldState extends State<CustomTextField> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color:  AppColors.lightGrey, // Background color jo image mein hai
+        color:  AppColors.background, // Background color jo image mein hai
         borderRadius: BorderRadius.circular(15), // Rounded corners
       ),
       child: TextField(
+        maxLines: widget.maxLine,
         controller: widget.controller,
         obscureText: widget.isPassword ? _obscureText : false,
         decoration: InputDecoration(
           hintText: widget.hintText,
           hintStyle: const TextStyle(color: Colors.grey, fontSize: 16),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          contentPadding:  EdgeInsets.symmetric(horizontal: 20, vertical:widget.verticalPadding?? 18),
           border: InputBorder.none, // Border remove kar diya style ke liye
 
           // Password field ke liye eye icon
