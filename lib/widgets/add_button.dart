@@ -1,17 +1,23 @@
 import 'package:bizly/utils/app_colors.dart';
 import 'package:flutter/material.dart';
 
-Widget addButton(String title,{Icon? icon}) {
+Widget addButton(String title,{Icon? icon,VoidCallback? onTap}) {
   return InkWell(
-    onTap: () {
-      // Button click logic yahan ayegi
-      print("Add Button Clicked");
-    },
+    onTap:onTap,
     child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
       decoration: BoxDecoration(
         color: AppColors.background, // Light grey background
         borderRadius: BorderRadius.circular(12), // Rounded corners
+
+
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 4),
+            ),
+          ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min, // Jitni zaroorat ho utni width le

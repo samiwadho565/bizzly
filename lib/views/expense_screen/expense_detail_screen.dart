@@ -18,7 +18,7 @@ class ExpenseDetailScreen extends GetView<ExpenseDetailController> {
       backgroundColor: Colors.grey[100],
       appBar:CustomAppBar2(title: "Expense Detail"),
       body: Container(
-        padding: const EdgeInsets.symmetric(vertical: 20),
+        padding: const EdgeInsets.only(top: 20),
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.only(
@@ -74,14 +74,14 @@ class ExpenseDetailScreen extends GetView<ExpenseDetailController> {
                     title: "Payment Method",
                     value: controller.paymentMethod.value,
                   ),
-
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 4),
-                  child: Text(
-                    "Optional Details",
-                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 16),
-                  ),
-                ),
+                //
+                // const Padding(
+                //   padding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 4),
+                //   child: Text(
+                //     "Optional Details",
+                //     style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 16),
+                //   ),
+                // ),
 
                 // Optional Info Cards
                 _buildInfoCard(
@@ -109,6 +109,30 @@ class ExpenseDetailScreen extends GetView<ExpenseDetailController> {
                   title: "Customer Name",
                   value: controller.customerName.value.isEmpty ? "N/A" : controller.customerName.value,
                 ),
+                // --- Receipt Preview Section ---
+                // if (controller.receiptPath.value.isNotEmpty)
+                //   Padding(
+                //     padding: const EdgeInsets.symmetric(vertical: 12.0),
+                //     child: Column(
+                //       crossAxisAlignment: CrossAxisAlignment.start,
+                //       children: [
+                //         const Text("Receipt / Attachment",
+                //             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 14)),
+                //         const SizedBox(height: 10),
+                //         ClipRRect(
+                //           borderRadius: BorderRadius.circular(15),
+                //           child: Container(
+                //             width: double.infinity,
+                //             height: 200,
+                //             color: Colors.grey[200],
+                //             // Agar file path hai to Image.file use karein, warna placeholder
+                //             child: Icon(Icons.image, size: 50, color: Colors.grey),
+                //             // Image.file(File(controller.receiptPath.value), fit: BoxFit.cover),
+                //           ),
+                //         ),
+                //       ],
+                //     ),
+                //   ),
 
                 if (controller.notes.value.isNotEmpty)
                   _buildInfoCard(

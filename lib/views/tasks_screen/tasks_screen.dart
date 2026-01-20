@@ -8,6 +8,7 @@ import '../../widgets/add_button.dart';
 import '../../widgets/custom_search_field.dart';
 import '../../widgets/custom_tab_bar.dart';
 import '../../widgets/task_card_widget.dart';
+import '../../widgets/top_border_ccontainer.dart';
 import '../bussiness_screen/business_detail_screen.dart';
 // import 'tasks_screen_controller.dart';
 
@@ -21,17 +22,10 @@ class TasksScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar:CustomAppBar(title: "Tasks"),
-      body: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topRight: Radius.circular(40),
-            topLeft: Radius.circular(40),
-          ),
-        ),
+      body:  TopBorderContainer(
+        padding: const EdgeInsets.symmetric(vertical: 32),
         child: CustomScrollView(
           slivers: [
-
             /// 🔹 Top Section (Add button, search, filters)
             SliverToBoxAdapter(
               child: Padding(
@@ -39,7 +33,7 @@ class TasksScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 20),
+                    // const SizedBox(height: 20),
 
                     addButton("Add Task"),
                     const SizedBox(height: 20),
@@ -61,6 +55,14 @@ class TasksScreen extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: AppColors.background,
                               borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.grey.shade300,width: 0.5),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             ),
                             child: Center(
                               child: Padding(
@@ -86,6 +88,7 @@ class TasksScreen extends StatelessWidget {
                       ],
                     ),
                     /// Filters (Responsive)
+                    controller.showFilter.value?SizedBox(height: 15,):SizedBox(),
                     Obx(() => controller.showFilter.value
                         ? LayoutBuilder(
                       builder: (context, constraints) {

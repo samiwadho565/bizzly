@@ -8,6 +8,7 @@ import 'package:get/get_core/src/get_main.dart';
 
 import '../../routes/routes.dart';
 import '../../widgets/add_button.dart';
+import '../../widgets/business_screen_widgets/status_card.dart';
 import '../../widgets/custom_drop_down.dart';
 import '../../widgets/custom_tab_bar.dart';
 import '../../widgets/custom_toggle_button.dart';
@@ -15,16 +16,22 @@ import '../../widgets/drop_down_menu/drop_down_menu.dart';
 import '../../widgets/home_widgets/bussiness_card.dart';
 import '../../widgets/home_widgets/custom_app_bar.dart';
 import '../../widgets/home_widgets/custom_revenue_chart.dart';
+import '../../widgets/home_widgets/expense_chart.dart';
 import '../../widgets/home_widgets/flow_chart.dart';
+import '../../widgets/home_widgets/side_bar.dart';
+import '../../widgets/top_border_ccontainer.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final VoidCallback? openDrawer; // Callback add karein
+  const HomeScreen({super.key, this.openDrawer});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   final List<Map<String, dynamic>> categories = [
     {'title': 'Manufacturing', 'icon': Icons.settings_outlined},
     {'title': 'Finance', 'icon': Icons.attach_money_outlined},
@@ -43,113 +50,177 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: AppColors.background,
-      appBar:  CustomAppBar(title: "Dashboard"),
-      body: Column(
+      appBar: CustomAppBar(
+        title: "Dashboard",
+        leading: Image.asset(AppImages.menu, height: 40),
+        onLeadingTap: () {
+          widget.openDrawer?.call(); // ✅ MainScreen ka drawer khulega
+        },
+      ),
+
+    body: Column(
         children: [
 
           // SizedBox(
           //   height: Get.size.height/7.5
           // ),
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.only(
-                    topRight: Radius.circular(40),
-                    topLeft: Radius.circular(40)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
+            child:  TopBorderContainer(
+              // padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 children: [
                   const SizedBox(height: 20),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 30),
                     child: addDropdownButton(leftText: 'Quick Actions',title: "Add")
                   ),
 
-                  const SizedBox(height: 10),
+                  // const SizedBox(height: 10),
+                  // SizedBox(height: 20,),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20,vertical: 20),
+                      child: SizedBox(
+                        width: Get.width/1.5,
+                        child: CustomSearchDropdown(
+                          height: 40,
+                          horizontalPadding: 12,
+                          verticalPadding: 20,
+                          iconSize: 25,
+                          textStyle: const TextStyle(fontSize: 16, color: Colors.black),
+                          enableSearch: true,
+                          hintText: "Select Business",
+                          items: const ["Fixonto", "SilverSpoon", "TechNova", "GreenLeaf"],
+                          onChanged: (value) {},
+                        ),
+                      ),
+                    ),
+                  ),
                Expanded(
                  child: SingleChildScrollView(
                    child: Column(
                      children: [
-                       SizedBox(height: 20,),
-                       Align(
-                         alignment: Alignment.centerLeft,
-                         child: Padding(
+                     Padding(
                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                           child: SizedBox(
-                             width: Get.width/1.5,
-                             child: CustomSearchDropdown(
-                               height: 40,
-                               horizontalPadding: 12,
-                               verticalPadding: 20,
-                               iconSize: 25,
-                               textStyle: const TextStyle(fontSize: 16, color: Colors.black),
-                               enableSearch: true,
-                               hintText: "Select Business",
-                               items: const ["Fixonto", "SilverSpoon", "TechNova", "GreenLeaf"],
-                               onChanged: (value) {},
-                             ),
+                           child: Column(
+                             children: [
+
+                               Row(
+                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                 children: const [
+                                   StatCard(
+                                     title: "Total Revenue",
+                                     value: "4,250,000",
+                                     icon: Icon(Icons.attach_money, color: Colors.green),
+                                     backgroundColor: Color(0xFFF7FBF7),
+                                     contentColor: Colors.green,
+                                   ),
+                                   StatCard(
+                                     title: "Team Members",
+                                     value: "2",
+                                     icon: Icon(
+                                       Icons.groups,
+                                       color: Colors.blue,
+                                     ),
+                                     backgroundColor: Color(0xFFF1F7FF),
+                                     contentColor: Colors.blue,
+                                   ),
+                                 ],
+                               ),
+                               SizedBox(height: 20,),
+                               Row(
+                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                 children: [
+                                   StatCard(
+                                     title: "Total Expenses",
+                                     value: "1,250",
+                                     icon: const Icon(
+                                       Icons.arrow_upward,
+                                       color: Colors.red,
+                                     ),
+                                     backgroundColor: const Color(0xFFFFF5F5),
+                                     contentColor: Colors.red.shade400,
+                                   ),
+
+                                   StatCard(
+                                     title: "Pending Tasks",
+                                     value: "2",
+                                     icon: const Icon(
+                                       Icons.assignment_outlined,
+                                       color: Colors.orange,
+                                     ),
+                                     backgroundColor: const Color(0xFFFFF9F0),
+                                     contentColor: Colors.orange.shade400,
+                                   ),
+                                 ],
+                               ),
+                               const SizedBox(height: 16),
+                             ],
                            ),
                          ),
-                       ),
-                       const SizedBox(height: 20),
+
+                       // const SizedBox(height: 20),
                        Padding(
                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
                          child: WeeklyRevenueChart(),
                        ),
                        const SizedBox(height: 20),
+                       // Padding(
+                       //   padding: const EdgeInsets.symmetric(horizontal: 20),
+                       //   child: BusinessTeamSection(),
+                       // ),
+                       Padding(
+                         padding: const EdgeInsets.symmetric(horizontal: 20),
+                         child: _buildRecentInvoices(),
+                       ),
+                       const SizedBox(height: 100),
                        // addButton(),
                        // CustomTabBar(items: ["tasks","test","test"], onTabChanged: (int ) {  },),
                        // CustomToggleButton(items: ["tasks","test","test"], onSelected: (int ) {  },),
                        //
-                       Padding(
-                         padding: const EdgeInsets.symmetric(horizontal: 35),
-                         child: Row(
-                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                           children: [
-                             Text("All Businesses",style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),),
-
-                             TextButton(onPressed: (){}, child: Text("View All",style: TextStyle(color: AppColors.viewAll),),)
-                           ],
-                         ),
-                       ),
-                       SizedBox(height: 15,),
-                       // ---------------- GridView ----------------
-                       Padding(
-                         padding: const EdgeInsets.symmetric(horizontal: 30),
-                         child: GridView.builder(
-                           padding: EdgeInsets.only(bottom: 80),
-                           physics: const NeverScrollableScrollPhysics(), // Scroll disable
-                           shrinkWrap: true,
-                           itemCount: categories.length,
-                           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                               crossAxisCount: 4, // 2 columns
-                               // crossAxisSpacing: 3,
-                               mainAxisSpacing: 9,
-                               childAspectRatio: 0.83 // Width / Height ratio
-                           ),
-                           itemBuilder: (context, index) {
-                             final category = categories[index];
-                             return CategoryCard(
-                               title: category['title'],
-                               icon: category['icon'],
-                               onTap: () {
-                                 print("tapped::${category['title']} clicked");
-                                 Get.toNamed(Routes.businessDetailScreen,);
-
-                               },
-                             );
-                           },
-                         ),
-                       ),
+                       // Padding(
+                       //   padding: const EdgeInsets.symmetric(horizontal: 35),
+                       //   child: Row(
+                       //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                       //     children: [
+                       //       Text("All Businesses",style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),),
+                       //
+                       //       TextButton(onPressed: (){}, child: Text("View All",style: TextStyle(color: AppColors.primary),),)
+                       //     ],
+                       //   ),
+                       // ),
+                       // SizedBox(height: 15,),
+                       // // ---------------- GridView ----------------
+                       // Padding(
+                       //   padding: const EdgeInsets.symmetric(horizontal: 30),
+                       //   child: GridView.builder(
+                       //     padding: EdgeInsets.only(bottom: 80),
+                       //     physics: const NeverScrollableScrollPhysics(), // Scroll disable
+                       //     shrinkWrap: true,
+                       //     itemCount: categories.length,
+                       //     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                       //         crossAxisCount: 4, // 2 columns
+                       //         // crossAxisSpacing: 3,
+                       //         mainAxisSpacing: 9,
+                       //         childAspectRatio: 0.83 // Width / Height ratio
+                       //     ),
+                       //     itemBuilder: (context, index) {
+                       //       final category = categories[index];
+                       //       return CategoryCard(
+                       //         title: category['title'],
+                       //         icon: category['icon'],
+                       //         onTap: () {
+                       //           print("tapped::${category['title']} clicked");
+                       //           Get.toNamed(Routes.businessDetailScreen,);
+                       //
+                       //         },
+                       //       );
+                       //     },
+                       //   ),
+                       // ),
                      ],
                    ),
                  ),
@@ -163,6 +234,68 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+  Widget _buildRecentInvoices() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              "Recent Invoices",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            TextButton(
+              onPressed: () {}, // Navigate to Invoices Screen
+              child: const Text("See All", style: TextStyle(color: AppColors.primary)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        // Invoice Cards
+        _invoiceItem("Lisa Smith", "PKR 50,000", "Paid", Colors.green),
+        _invoiceItem("John Doe", "PKR 12,000", "Pending", Colors.orange),
+        _invoiceItem("Alex Miller", "PKR 8,500", "Overdue", Colors.red),
+      ],
+    );
+  }
 
+  Widget _invoiceItem(String name, String amount, String status, Color color) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              const SizedBox(height: 4),
+              Text(amount, style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+            ],
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              status,
+              style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
 }

@@ -27,9 +27,21 @@ class TaskCardWidget extends StatelessWidget {
     return Container(
       padding:  EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.background, // Light grey background jaisa image mein hai
-        borderRadius: BorderRadius.circular(25),
+        color: AppColors.background,
+        border: Border.all(
+            width: 0.5,
+            color: Colors.grey.shade300
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        borderRadius: BorderRadius.circular(18),
       ),
+
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

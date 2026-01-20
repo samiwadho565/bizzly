@@ -44,13 +44,16 @@ class StatCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               icon,
-              const SizedBox(width: 8),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                  color: contentColor,
+              // const SizedBox(width: 5),
+              Padding(
+                padding: const EdgeInsets.all(3.0),
+                child: Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: contentColor,
+                  ),
                 ),
               ),
             ],

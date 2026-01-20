@@ -12,6 +12,7 @@ import '../../widgets/custom_search_field.dart';
 import '../../widgets/custom_tab_bar.dart';
 import '../../widgets/home_widgets/custom_app_bar.dart';
 import '../../widgets/invoice_screen_widgets/invoice_card.dart';
+import '../../widgets/top_border_ccontainer.dart';
 
 
 class InvoiceScreen extends StatelessWidget {
@@ -28,22 +29,9 @@ class InvoiceScreen extends StatelessWidget {
       body: Column(
         children: [
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(40),
-                  topLeft: Radius.circular(40),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Padding(
+            child:  TopBorderContainer(
+              // padding: const EdgeInsets.symmetric(horizontal: 20),
+              child:Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   children: [
@@ -58,7 +46,10 @@ class InvoiceScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        addButton("Create Invoice"),
+                        addButton("Create Invoice",onTap: (){
+
+                            Get.toNamed(Routes.createInvoiceScreen);
+                        }),
                       ],
                     ),
 

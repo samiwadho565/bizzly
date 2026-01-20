@@ -66,7 +66,7 @@ class CustomSearchDropdown extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                 ),
             filled: true,
-            fillColor: AppColors.textField.withOpacity(0.5),
+            fillColor: AppColors.textField,
             contentPadding: EdgeInsets.symmetric(
               horizontal: horizontalPadding ?? 8,
               vertical: (height - 20) / 2,

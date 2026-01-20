@@ -1,11 +1,14 @@
 import 'package:bizly/assets/images.dart';
 import 'package:bizly/utils/app_colors.dart';
+import 'package:bizly/utils/app_utils.dart';
+import 'package:bizly/views/profile_screen/tax_settings_screen/tax_settings_screen.dart';
 import 'package:bizly/widgets/circle_icon_widget.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 
+import '../../routes/routes.dart';
 import '../../widgets/add_button.dart';
 import '../../widgets/custom_app_bar_2.dart';
 import '../../widgets/custom_drop_down.dart';
@@ -37,34 +40,87 @@ class ProfileScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // User Info Header
-            Container(
-              margin: const EdgeInsets.all(20),
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: Row(
-                children: [
-                  const CircleAvatar(
-                    radius: 40,
-                    backgroundImage: AssetImage(AppImages.profilePlaceholder), // Replace with Lisa's image
-                  ),
-                  const SizedBox(width: 15),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        "Lisa Smith",
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        Container(
+        margin: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Stack(
+              children: [
+                const CircleAvatar(
+                  radius: 40,
+                  backgroundImage:
+                  AssetImage(AppImages.profilePlaceholder), // Replace with user's image
+                ),
+                // Edit icon
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: GestureDetector(
+                    onTap: () {
+                      print("Edit profile image tapped");
+                      AppUtils.showEditProfileSheet(currentName: "Lisa Smith", currentEmail: "LisaSmith@gmail.com", currentPhone: "+1 (212) 555-0147", onSave: (){});
+                      // TODO: Open image picker or edit profile sheet
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      Text("LisaSmith@gmail.com", style: TextStyle(color: Colors.grey[600])),
-                      Text("+1 (212) 555-0147", style: TextStyle(color: Colors.grey[600])),
-                    ],
-                  )
+                      padding: const EdgeInsets.all(4),
+                      child: const Icon(
+                        Icons.edit,
+                        size: 18,
+                        color: Colors.blue, // primary color
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 15),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    "Lisa Smith",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    "LisaSmith@gmail.com",
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    "+1 (212) 555-0147",
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 ],
               ),
-            ),
+            )
+          ],
+        ),
+      ),
 
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -80,8 +136,14 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   _buildSectionTitle("Financial"),
-                  ProfileTile(title: "Expense Categories", onTap: () {}),
-                  ProfileTile(title: "Invoice Customization", onTap: () {}),
+                  ProfileTile(title: "Tax Settings", onTap: () {
+
+                    Get.to(()=>TaxSettingsScreen());
+                        }),
+                  ProfileTile(title: "Invoice Customization", onTap: () {
+
+                    Get.toNamed(Routes.invoiceCustomizationScreen);
+                  }),
 
                   const SizedBox(height: 10),
                   _buildSectionTitle("Security "),

@@ -30,15 +30,16 @@ class ExpenseCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.background,
+          color: AppColors.background, // use light grey for better neumorphism
           borderRadius: BorderRadius.circular(12),
-          // boxShadow: [
-          //   BoxShadow(
-          //     color: Colors.grey.withOpacity(0.08),
-          //     blurRadius: 6,
-          //     offset: const Offset(0, 4),
-          //   ),
-          // ],
+          border: Border.all(color: Colors.grey.shade300,width: 0.6),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [

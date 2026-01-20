@@ -61,7 +61,7 @@ class LoginScreen extends StatelessWidget {
                         const Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            "Hi, Welcome Back! 👋",
+                            "Hi, Welcome Back!",
                             style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
                           ),
                         ),

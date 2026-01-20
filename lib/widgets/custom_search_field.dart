@@ -19,16 +19,16 @@ class CustomSearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       // Shadow ko bahar rakha hai taake aesthetic look aaye
-      // decoration: BoxDecoration(
-      //   borderRadius: BorderRadius.circular(15),
-      //   boxShadow: [
-      //     BoxShadow(
-      //       color: Colors.black.withOpacity(0.03),
-      //       blurRadius: 10,
-      //       offset: const Offset(0, 4),
-      //     ),
-      //   ],
-      // ),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: TextField(
         controller: controller,
         onChanged: onChanged,

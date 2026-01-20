@@ -6,6 +6,7 @@ class CustomAppBar2 extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final bool centerTitle;
   final Color backgroundColor;
+  final Color textColor;
   final double elevation;
   final Widget? leading;
   final List<Widget>? actions;
@@ -13,6 +14,7 @@ class CustomAppBar2 extends StatelessWidget implements PreferredSizeWidget {
 
   const CustomAppBar2({
     super.key,
+    this.textColor = Colors.black,
     required this.title,
     this.centerTitle = false, // title left side by default
     this.backgroundColor = AppColors.background,
@@ -32,8 +34,9 @@ class CustomAppBar2 extends StatelessWidget implements PreferredSizeWidget {
         padding: const EdgeInsets.only(left: 0),
         child: Text(
           title,
-          style: const TextStyle(
-            color: Colors.black,
+          style: TextStyle(
+            color: textColor,
+            fontSize: 19,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -42,9 +45,10 @@ class CustomAppBar2 extends StatelessWidget implements PreferredSizeWidget {
       leading: leading ??
           (isBackArrow
               ? IconButton(
-            icon: const Icon(
-              Icons.arrow_back_ios_new_outlined,
-              color: Colors.black,
+            icon: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color:  textColor,
+              size: 23,
             ),
             onPressed: () {
               Get.back(); // use GetX to go back

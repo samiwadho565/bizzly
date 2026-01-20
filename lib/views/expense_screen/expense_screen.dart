@@ -11,6 +11,7 @@ import '../../widgets/custom_search_field.dart';
 import '../../widgets/custom_tab_bar.dart';
 import '../../widgets/expense_widgets/expense_card_widget.dart';
 import '../../widgets/home_widgets/custom_app_bar.dart';
+import '../../widgets/top_border_ccontainer.dart';
 
 class ExpenseScreen extends StatelessWidget {
   ExpenseScreen({super.key});
@@ -25,21 +26,8 @@ class ExpenseScreen extends StatelessWidget {
       body: Column(
         children: [
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(40),
-                  topLeft: Radius.circular(40),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
+         child:  TopBorderContainer(
+
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
@@ -55,7 +43,9 @@ class ExpenseScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        addButton("Add Expense"),
+                        addButton("Add Expense",onTap: (){
+                          Get.toNamed(Routes.addExpenseScreen);
+                        }),
                       ],
                     ),
 

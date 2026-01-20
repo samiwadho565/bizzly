@@ -5,7 +5,9 @@ class AppColors {
   // static const Color primary = Color(0xFF7C41A9);
   // static const Color primary = Color(0xFF4156A9);
   // static const Color primary = Color(0xff70ccf4);
-  static const Color primary = Color(0xFF66c4ff);
+  // static const Color primary = Color(0xFF66c4ff);
+  static const Color primary = Color(0xFF0D47A1);
+  static const Color primaryDense = Color(0xFF022B6A);
   // selected blue
   // static const Color primary = Color(0xFF5DA7FB);
   static const Color primaryNavBar = Color(0xff21adea);
@@ -13,6 +15,7 @@ class AppColors {
   // Color(0xff7ed3f8);
   // static const Color lightskycolor = Color(0xFFb7e9ff);
   static const Color background = Color(0xFFF7FAFC);
+  // static const Color backgroundDark = Color(0xFFF7FAFC);
   static const Color textField = Color(0xFFF0F4F8);
   // static const Color background = Color(0xFFF5FBFD);
   static const Color greyCard = Color(0xFFF7F7F7);

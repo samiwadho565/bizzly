@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 
 import '../../utils/app_colors.dart';
 
@@ -23,12 +25,32 @@ class CategoryCard extends StatelessWidget {
         children: [
           // Icon Container
           Container(
-            height: 70, // Aap apni requirement ke mutabiq adjust kar sakte hain
-            width: 70,
-            decoration: BoxDecoration(
-              color: AppColors.background,// Light grey background
-              borderRadius: BorderRadius.circular(10), // Rounded corners
-            ),
+            height: Get.size.height*0.08, // Aap apni requirement ke mutabiq adjust kar sakte hain
+            width: Get.size.width*0.18,
+          decoration: BoxDecoration(
+            color: Colors.white, // use light grey for better neumorphism
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              // dark shadow bottom-right
+              BoxShadow(
+                color: Colors.grey.shade300,
+                offset: const Offset(3, 3),
+                blurRadius: 4,
+                spreadRadius: 1,
+              ),
+              // light shadow top-left
+              const BoxShadow(
+                color: Colors.white,
+                offset: Offset(-3, -3),
+                blurRadius: 4,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+            // decoration: BoxDecoration(
+            //   color: AppColors.background,// Light grey background
+            //   borderRadius: BorderRadius.circular(10), // Rounded corners
+            // ),
             child: Icon(
               icon,
               size: 34,

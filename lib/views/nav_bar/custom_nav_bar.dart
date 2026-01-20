@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:bizly/assets/images.dart';
 import 'package:flutter/material.dart';
 
 import '../../utils/app_colors.dart';
@@ -41,20 +42,21 @@ class CustomBottomNavBar extends StatelessWidget {
                 backgroundColor: Colors.transparent,
                 currentIndex: currentIndex,
                 onTap: onTap,
-                selectedItemColor: AppColors.primaryNavBar,
+                selectedItemColor: Colors.black,
                 unselectedItemColor: Colors.black,
                 showUnselectedLabels: true,
                 items: [
                   BottomNavigationBarItem(
                     label: 'Home',
-                    icon: Icon(Icons.home_outlined,),
-                    activeIcon: Icon(Icons.home,),
+                    icon:Image.asset(AppImages.home,height: 22,),
+                    activeIcon: Image.asset(AppImages.homeFill,height: 22,),
                   ),
                   BottomNavigationBarItem(
                     label: 'Expenses',
                     icon: Stack(
                       children: [
-                        Icon(Icons.monetization_on_outlined)
+                      Image.asset(AppImages.expense,height: 22,),
+
                         // BlocBuilder<ServicesBloc, ServicesState>(
                         //   buildWhen: (pre, nxt) =>
                         //   pre.newOrdersCount != nxt.newOrdersCount,
@@ -80,17 +82,17 @@ class CustomBottomNavBar extends StatelessWidget {
                       ],
 
                     ),
-                    activeIcon:       Icon(Icons.monetization_on)
+                    activeIcon: Image.asset(AppImages.expenseFill,height: 22,),
                   ),
               BottomNavigationBarItem(
                 label: "Invoices",
-                icon: Icon(Icons.account_balance_wallet_outlined),
-                activeIcon: Icon(Icons.account_balance_wallet),
+                icon: Image.asset(AppImages.bill,height: 22,),
+                activeIcon:  Image.asset(AppImages.billFill,height: 22,),
               ),
                   BottomNavigationBarItem(
                     label: "Tasks",
-                    icon: Icon(Icons.assignment_outlined),
-                    activeIcon: Icon(Icons.assignment),
+                    icon: Image.asset(AppImages.task,height: 22,),
+                    activeIcon:  Image.asset(AppImages.taskFill,height: 22,),
                   )     ,
                 ],
               ),

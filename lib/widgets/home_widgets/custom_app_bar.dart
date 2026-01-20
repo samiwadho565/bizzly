@@ -12,11 +12,12 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final double height;
   final Color? backgroundColor;
   final Widget? leading;
-
+  final VoidCallback? onLeadingTap;
   const CustomAppBar({
     super.key,
     required this.title,
     this.leading,
+    this.onLeadingTap,
     this.height = 80,
     this.backgroundColor,
   });
@@ -26,13 +27,15 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     return SafeArea(
       child: Container(
         height: height,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         color: backgroundColor ?? AppColors.background,
         child: Row(
           children: [
             // Leading (optional)
             if (leading != null) ...[
-              leading!,
+              InkWell(
+                  onTap: onLeadingTap,
+                  child: leading!),
               const SizedBox(width: 16),
             ],
 

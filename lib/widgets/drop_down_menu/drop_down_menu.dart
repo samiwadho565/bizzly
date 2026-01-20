@@ -10,6 +10,11 @@ import '../../routes/app_pages.dart'; // make sure your Routes are imported
 Widget addDropdownButton({required String leftText, required String title}) {
   final List<Map<String, dynamic>> items = [
     {
+      'text': 'Add New Business',
+      'icon': Icons.receipt_long,
+      'route': Routes.addNewBusiness, // define this route in your Routes
+    },
+    {
       'text': 'Add Expense',
       'icon': Icons.money,
       'route': Routes.addExpenseScreen, // route for Add Expense
@@ -17,17 +22,17 @@ Widget addDropdownButton({required String leftText, required String title}) {
     {
       'text': 'Create Invoice',
       'icon': Icons.receipt_long,
-      'route': Routes.invoiceDetailScreen, // define this route in your Routes
+      'route': Routes.createInvoiceScreen, // define this route in your Routes
     },
     {
-      'text': 'Add Team/Employee',
+      'text': 'Add Team',
       'icon': Icons.work_outline,
-      'route': Routes.invoiceDetailScreen// define this route too
+      'route': Routes.addEmployeeScreen,// define this route too
     },
     {
       'text': 'Create Task',
       'icon': Icons.task_alt,
-      'route': Routes.taskDetailScreen // define this route
+      'route':Routes.createTaskScreen // define this route
     },
   ];
 

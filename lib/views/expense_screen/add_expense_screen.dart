@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
+import '../../routes/routes.dart';
+import '../../utils/app_utils.dart';
 import '../../widgets/custom_app_bar_2.dart';
 import '../../widgets/custom_drop_down.dart';
 
@@ -50,54 +52,7 @@ class AddExpenseScreen extends GetView<ExpenseScreenController>{
                   //   // suffixIcon: const Icon(Icons.calendar_month_outlined, color: Colors.grey),
                   //   verticalPadding: 15,
                   // ),
-                  // --- Main Fields ---
-                  Obx(() => GestureDetector(
-                    onTap: () async {
-                      DateTime? pickedDate = await showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now(),
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2101),
-                        builder: (context, child) {
-                          return Theme(
-                            data: Theme.of(context).copyWith(
-                              colorScheme: const ColorScheme.light(
-                                primary: AppColors.primary,
-                                onPrimary: Colors.white,
-                                onSurface: Colors.black,
-                              ),
-                            ),
-                            child: child!,
-                          );
-                        },
-                      );
-                      if (pickedDate != null) {
-                        controller.selectedDate.value = pickedDate;
-                      }
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                      decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            controller.selectedDate.value != null
-                                ? "${controller.selectedDate.value!.day}-${controller.selectedDate.value!.month}-${controller.selectedDate.value!.year}"
-                                : "Expense Date",
-                            style: TextStyle(
-                              color: controller.selectedDate.value != null ? Colors.black : Colors.grey.shade700,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const Icon(Icons.calendar_month_outlined, color: Colors.grey),
-                        ],
-                      ),
-                    ),
-                  )),
+
                   const SizedBox(height: 12),
                   const SizedBox(height: 12),
 
@@ -111,7 +66,50 @@ class AddExpenseScreen extends GetView<ExpenseScreenController>{
                   // _buildSelectionRow("Category", "IT Service"),
                   const SizedBox(height: 12),
 
-                  _buildSelectionRow("Payment Method", "Bank Transfer"),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Obx(
+                          () => GestureDetector(
+                            onTap: () async {
+                              final date = await AppUtils.pickDate();
+                              if (date != null) {
+                                controller.selectedDate.value = date;
+                              }
+                            },
+                            child: Container(
+                              height: 50,
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              decoration: BoxDecoration(
+                                color: AppColors.textField,
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "${controller.selectedDate.value.day}-${controller.selectedDate.value.month}-${controller.selectedDate.value.year}",
+                                    style: TextStyle(
+                                      color: controller.selectedDate.value != null
+                                          ? Colors.black
+                                          : Colors.grey.shade700,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  const Icon(Icons.calendar_month_outlined, color: Colors.grey),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(child: _buildSelectionRow("Payment Method", "Bank Transfer")),
+                      // --- Main Fields ---
+                    ],
+                  ),
+
                   const SizedBox(height: 20),
 
                   // --- Optional Details Section ---
@@ -125,7 +123,7 @@ class AddExpenseScreen extends GetView<ExpenseScreenController>{
                   const SizedBox(height: 12),
 
                   CustomTextField(
-maxLine: 4,
+                      maxLine: 4,
                       hintText: "Additional details about this expense", verticalPadding: 15),
                   const SizedBox(height: 12),
 
@@ -149,7 +147,9 @@ maxLine: 4,
                   // Add Expense Button
                   CustomButton(
                     text: "Add Expense",
-                    onPressed: () {},
+                    onPressed: () {
+                      Get.toNamed(Routes.addExpenseScreen);
+                    },
                   ),
                   const SizedBox(height: 20),
                 ],
@@ -163,19 +163,17 @@ maxLine: 4,
 
   // Selection Row Widget (Category, Project etc)
   Widget _buildSelectionRow(String label, String value) {
-    return SizedBox(
-      width: Get.width/1.5,
-      child: CustomSearchDropdown(
-        height: 40,
-        horizontalPadding: 12,
-        verticalPadding: 20,
-        iconSize: 25,
-        textStyle: const TextStyle(fontSize: 13, color: Colors.black),
-        enableSearch: true,
-        hintText: "Select Payment method",
-        items: const ["EasyPaisa", "JazzCash", "Bank transfer", "Cash"],
-        onChanged: (value) {},
-      ),
+    return CustomSearchDropdown(
+      height: 50,
+      horizontalPadding: 12,
+      verticalPadding: 20,
+      iconSize: 25,
+      textStyle: const TextStyle(fontSize: 13, color: Colors.black),
+      // enableSearch: true,
+
+      hintText: "Select Payment method",
+      items: const ["EasyPaisa", "JazzCash", "Bank transfer", "Cash"],
+      onChanged: (value) {},
     );
   }
 
@@ -184,7 +182,7 @@ maxLine: 4,
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.background.withOpacity(0.4),
+        color: AppColors.textField,
         borderRadius: BorderRadius.circular(15),
       ),
       child: Row(
@@ -211,7 +209,7 @@ maxLine: 4,
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.background.withOpacity(0.4),
+        color: AppColors.textField,
         borderRadius: BorderRadius.circular(15),
       ),
       child: Row(

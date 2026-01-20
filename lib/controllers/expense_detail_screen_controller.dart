@@ -1,3 +1,4 @@
+import 'package:bizly/assets/images.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import '../../utils/app_colors.dart';
@@ -17,6 +18,7 @@ class ExpenseDetailController extends GetxController {
   var taxAmount = ''.obs;
   var projectName = ''.obs;
   var customerName = ''.obs;
+  var receiptPath = ''.obs;
   var isRepeatMonthly = false.obs;
 
   Color getStatusColor() {
@@ -39,7 +41,7 @@ class ExpenseDetailController extends GetxController {
     expenseDate.value = DateTime(2026, 1, 1);
     paymentMethod.value = "Bank Transfer";
     notes.value = "Additional details about this expense";
-
+receiptPath.value = AppImages.follower;
     vendorName.value = "Microsoft Corp";
     referenceNumber.value = "REF123456";
     taxAmount.value = "5.00";

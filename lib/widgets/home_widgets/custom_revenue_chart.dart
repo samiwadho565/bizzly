@@ -19,9 +19,10 @@ class WeeklyRevenueChart extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.grey.shade300,width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withOpacity(0.02),
               blurRadius: 20,
             )
           ],
