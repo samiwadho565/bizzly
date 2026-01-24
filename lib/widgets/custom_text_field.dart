@@ -6,6 +6,11 @@ class CustomTextField extends StatefulWidget {
   final String hintText;
   final bool isPassword;
   final TextEditingController? controller;
+  final FormFieldValidator<String>? validator;
+  final FocusNode? focusNode;
+  final TextInputAction? textInputAction;
+  final TextInputType? keyboardType;
+  final ValueChanged<String>? onFieldSubmitted;
  final double? verticalPadding;
  final int maxLine;
   const CustomTextField({
@@ -15,6 +20,11 @@ class CustomTextField extends StatefulWidget {
     required this.hintText,
     this.isPassword = false,
     this.controller,
+    this.validator,
+    this.focusNode,
+    this.textInputAction,
+    this.keyboardType,
+    this.onFieldSubmitted,
   });
 
   @override
@@ -26,9 +36,21 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    return TextFormField(
       maxLines: widget.maxLine,
       controller: widget.controller,
+      validator: widget.validator,
+      focusNode: widget.focusNode,
+      textInputAction: widget.textInputAction,
+      keyboardType: widget.keyboardType,
+      onFieldSubmitted: widget.onFieldSubmitted,
+      // onEditingComplete: () {
+      //   if (widget.textInputAction == TextInputAction.next) {
+      //     FocusScope.of(context).nextFocus();
+      //   } else if (widget.textInputAction == TextInputAction.done) {
+      //     FocusScope.of(context).unfocus();
+      //   }
+      // },
       obscureText: widget.isPassword ? _obscureText : false,
       decoration: InputDecoration(
         fillColor: AppColors.textField,
@@ -36,9 +58,11 @@ class _CustomTextFieldState extends State<CustomTextField> {
         // hintText: widget.hintText,
 // focusColor: AppColors.primaryDense,
         filled: true,
+        isDense: true,
         contentPadding:  EdgeInsets.symmetric(horizontal: 20, vertical:widget.verticalPadding?? 18),
         border: InputBorder.none, // Border remove kar diya style ke liye
         labelStyle: TextStyle(color: Colors.grey.shade700, fontSize: 16),
+        errorStyle: const TextStyle(fontSize: 12),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
           borderSide: BorderSide(
@@ -50,6 +74,20 @@ class _CustomTextFieldState extends State<CustomTextField> {
           borderRadius: BorderRadius.circular(15),
           borderSide: const BorderSide(
             color: AppColors.primary, // Aapka primary color
+            width: 1.5,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(
+            color: Colors.red,
+            width: 1,
+          ),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(
+            color: Colors.red,
             width: 1.5,
           ),
         ),

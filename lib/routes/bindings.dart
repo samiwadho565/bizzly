@@ -1,4 +1,6 @@
 
+import 'package:bizly/controllers/auth/signin_controller.dart';
+import 'package:bizly/controllers/auth/signup_controller.dart';
 import 'package:bizly/controllers/expense_detail_screen_controller.dart';
 import 'package:bizly/controllers/home_controller.dart';
 import 'package:get/get.dart';
@@ -11,6 +13,8 @@ class InitialBindings extends Bindings {
     Get.lazyPut<HomeScreenController>(() => HomeScreenController());
     Get.lazyPut<ExpenseDetailController>(() =>ExpenseDetailController());
     Get.lazyPut<ExpenseScreenController>(() =>ExpenseScreenController());
+    Get.lazyPut<SignInController>(() => SignInController());
+    Get.lazyPut<SignupController>(() => SignupController());
 
   }
 }

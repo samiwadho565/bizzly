@@ -1,22 +1,23 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
-import '../../assets/images.dart';
+import '../../controllers/auth/signin_controller.dart';
 import '../../routes/routes.dart';
 import '../../utils/app_colors.dart';
+import '../../utils/form_validations.dart';
 import '../../widgets/custom_button.dart';
-import '../../widgets/custom_drop_down.dart';
 import '../../widgets/custom_text_field.dart';
-import 'package:bizly/widgets/curved_container.dart';
-class LoginScreen extends StatelessWidget {
+
+class LoginScreen extends GetView<SignInController> {
   const LoginScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+
+    controller.emailController.text = "wadho.dev@gmail.com";
+    controller.passwordController.text = "12345678";
+
     // Screen ki height aur width nikalne ke liye
     final double screenHeight = MediaQuery.of(context).size.height;
-    String? selectedValue;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -32,9 +33,11 @@ class LoginScreen extends StatelessWidget {
                 child: IntrinsicHeight(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
+                    child: Form(
+                      key: controller.formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
 
                     // State variable screen ke upar define karein
                         // LineChart ko aise data provide karein taake crash na ho
@@ -77,11 +80,38 @@ class LoginScreen extends StatelessWidget {
                         SizedBox(height: screenHeight * 0.05), // Flexible Space
 
                         // Input Fields
-                        const CustomTextField(hintText: "Enter your Email"),
+                        CustomTextField(
+                          hintText: "Enter your Email",
+                          controller: controller.emailController,
+                          focusNode: controller.emailFocusNode,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          onFieldSubmitted: (_) {
+                            controller.passwordFocusNode.requestFocus();
+                          },
+                          validator: (value) =>
+                              FormValidations.validateEmail(value ?? ""),
+                        ),
                         const SizedBox(height: 16),
-                        const CustomTextField(
+                        CustomTextField(
                           hintText: "Enter your Password",
                           isPassword: true,
+                          controller: controller.passwordController,
+                          focusNode: controller.passwordFocusNode,
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) async {
+                            FocusScope.of(context).unfocus();
+                            if (!(controller.formKey.currentState?.validate() ??
+                                false)) {
+                              return;
+                            }
+                            final user = await controller.signIn();
+                            if (user != null) {
+                              Get.offAllNamed(Routes.mainScreen);
+                            }
+                          },
+                          validator: (value) =>
+                              FormValidations.validatePassword(value ?? ""),
                         ),
                         const SizedBox(height: 12),
 
@@ -91,13 +121,23 @@ class LoginScreen extends StatelessWidget {
                           children: [
                             Row(
                               children: [
-                                SizedBox(
-                                  height: 24, width: 24,
-                                  child: Checkbox(
-                                    value: true,
-                                    activeColor: AppColors.primary,
-                                    onChanged: (val) {},
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                                Obx(
+                                  () => SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: Checkbox(
+                                      value: controller.rememberMe.value,
+                                      activeColor: AppColors.primary,
+                                      onChanged: (val) {
+                                        if (val == null) {
+                                          return;
+                                        }
+                                        controller.setRememberMe(val);
+                                      },
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 8),
@@ -108,7 +148,11 @@ class LoginScreen extends StatelessWidget {
                               onPressed: () {},
                               child: const Text(
                                 "Forgot Password",
-                                style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500, fontSize: 13),
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 13,
+                                ),
                               ),
                             ),
                           ],
@@ -118,13 +162,24 @@ class LoginScreen extends StatelessWidget {
 
                         // Sign In Button
                         // Login Screen mein Sign In button ki jagah ye use karein:
-                        CustomButton(
-                          text: "Sign In",
-                          // height: 55, // Aap apni marzi ki height de sakte hain
-                          onPressed: () {
-                            Get.offAllNamed(Routes.mainScreen);
-                            print("Sign In Pressed");
-                          },
+                        Obx(
+                          () => CustomButton(
+                            text: "Sign In",
+                            // height: 55, // Aap apni marzi ki height de sakte hain
+                            isLoading: controller.isLoading.value,
+                            onPressed: controller.isLoading.value
+                                ? () {}
+                                : () async {
+
+                                    if (!(controller.formKey.currentState
+                                            ?.validate() ??
+                                        false)) {
+                                      return;
+                                    }
+                                     await controller.signIn();
+
+                                  },
+                          ),
                         ),
 
                         SizedBox(height: screenHeight * 0.04),
@@ -136,8 +191,7 @@ class LoginScreen extends StatelessWidget {
                             const Text("Don't have an account? ", style: TextStyle(color: Colors.grey, fontSize: 13)),
                             GestureDetector(
                               onTap: () {
-                                
-                                print("tapped");
+                                FocusScope.of(context).unfocus();
                                 Get.offAllNamed(Routes.sigUpScreen);
                               },
                               child: const Text(
@@ -186,6 +240,7 @@ class LoginScreen extends StatelessWidget {
                   ),
                 ),
               ),
+            ),
             );
           },
         ),

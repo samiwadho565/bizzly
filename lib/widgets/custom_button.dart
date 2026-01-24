@@ -4,11 +4,12 @@ import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 import 'loader/loader.dart';
 
-class CustomButton extends StatefulWidget {
+class CustomButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
   final double height;
   final Color color;
+  final bool isLoading;
 
   const CustomButton({
     super.key,
@@ -16,38 +17,19 @@ class CustomButton extends StatefulWidget {
     required this.onPressed,
     this.height = 56.0,
     this.color = AppColors.primary,
+    this.isLoading = false
   });
-
-  @override
-  State<CustomButton> createState() => _CustomButtonState();
-}
-
-class _CustomButtonState extends State<CustomButton> {
-  bool isLoading = false;
-
-  Future<void> _handleTap() async {
-    if (isLoading) return;
-
-    setState(() => isLoading = true);
-
-    // 2 seconds loader show
-    await Future.delayed(const Duration(seconds: 2));
-
-    setState(() => isLoading = false);
-
-    widget.onPressed();
-  }
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: widget.height,
+      height: height,
       child: CupertinoButton(
         padding: EdgeInsets.zero,
-        color: widget.color,
+        color: color,
         borderRadius: BorderRadius.circular(15),
-        onPressed: _handleTap,
+        onPressed: onPressed,
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
           child: isLoading
@@ -59,7 +41,7 @@ class _CustomButtonState extends State<CustomButton> {
             ),
           )
               : Text(
-            widget.text,
+            text,
             key: const ValueKey("text"),
             style: const TextStyle(
               color: Colors.white,

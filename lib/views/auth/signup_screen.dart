@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
+import '../../controllers/auth/signup_controller.dart';
 import '../../routes/routes.dart';
 import '../../utils/app_colors.dart';
+import '../../utils/form_validations.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 
-class SignUpScreen extends StatelessWidget {
+class SignUpScreen extends GetView<SignupController> {
   const SignUpScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+
+
+
     // Screen ki height aur width nikalne ke liye
     final double screenHeight = MediaQuery.of(context).size.height;
 
@@ -29,9 +33,11 @@ class SignUpScreen extends StatelessWidget {
                 child: IntrinsicHeight(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
+                    child: Form(
+                      key: controller.formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
                         // Responsive Spacing: Bari screen par ziada, choti par kam
 
 
@@ -55,30 +61,81 @@ class SignUpScreen extends StatelessWidget {
                         SizedBox(height: screenHeight * 0.05), // Flexible Space
 
                         // Input Fields
-                        const CustomTextField(hintText: "Enter your Name"),
+                        CustomTextField(
+                          hintText: "Enter your Name",
+                          controller: controller.nameController,
+                          focusNode: controller.nameFocusNode,
+                          textInputAction: TextInputAction.next,
+                          validator: (value) =>
+                              FormValidations.validateName(value ?? ""),
+                        ),
                         const SizedBox(height: 16),
-                        const CustomTextField(hintText: "Enter your Email"),
+                        CustomTextField(
+                          hintText: "Enter your Email",
+                          controller: controller.emailController,
+                          focusNode: controller.emailFocusNode,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          validator: (value) =>
+                              FormValidations.validateEmail(value ?? ""),
+                        ),
                         const SizedBox(height: 16),
-                        const CustomTextField(
+                        CustomTextField(
                           hintText: "Enter New Password",
                           isPassword: true,
+                          controller: controller.passwordController,
+                          focusNode: controller.passwordFocusNode,
+                          onFieldSubmitted: (_) {
+                            controller.confirmPasswordFocusNode.requestFocus();
+                          },
+                          textInputAction: TextInputAction.next,
+                          validator: (value) =>
+                              FormValidations.validatePassword(value ?? ""),
                         ),
                         const SizedBox(height: 12),
-                        const CustomTextField(
-                          hintText: "Confirm  Password",
+                        CustomTextField(
+                          hintText: "Confirm Password",
                           isPassword: true,
+                          controller: controller.confirmPasswordController,
+                          focusNode: controller.confirmPasswordFocusNode,
+                          textInputAction: TextInputAction.done,
+                          // onFieldSubmitted: (_) async {
+                          //   FocusScope.of(context).unfocus();
+                          //   if (!(controller.formKey.currentState?.validate() ??
+                          //       false)) {
+                          //     return;
+                          //   }
+                          //   await controller.signUp();
+                          // },
+                          validator: (value) =>
+                              FormValidations.validateConfirmPassword(
+                                controller.passwordController.text,
+                                value ?? "",
+                              ),
                         ),
 
                         SizedBox(height: screenHeight * 0.05), // Ye bari screen par extra space ko fill kar lega
 
                         // Sign In Button
                         // Login Screen mein Sign In button ki jagah ye use karein:
-                        CustomButton(
-                          text: "Create Account",
-                          // height: 55, // Aap apni marzi ki height de sakte hain
-                          onPressed: () {
-                            print("Sign In Pressed");
-                          },
+                        Obx(
+                          () => CustomButton(
+                            text: "Create Account",
+                            // height: 55, // Aap apni marzi ki height de sakte hain
+                            isLoading: controller.isLoading.value,
+                            onPressed: controller.isLoading.value
+                                ? () {}
+                                : () {
+                                    FocusScope.of(context).unfocus();
+                                    if (!(controller.formKey.currentState
+                                            ?.validate() ??
+                                        false)) {
+                                      return;
+                                    }
+
+                                    controller.signUp();
+                                  },
+                          ),
                         ),
                         // const SizedBox(height: 20),
                         SizedBox(height: screenHeight * 0.05),
@@ -90,6 +147,7 @@ class SignUpScreen extends StatelessWidget {
                             const Text("Don't have an account? ", style: TextStyle(color: Colors.grey, fontSize: 13)),
                             GestureDetector(
                               onTap: () {
+                                FocusScope.of(context).unfocus();
                                 Get.offAllNamed(Routes.loginScreen);
                               },
                               child: const Text(
@@ -138,6 +196,7 @@ class SignUpScreen extends StatelessWidget {
                   ),
                 ),
               ),
+            ),
             );
           },
         ),
