@@ -1,0 +1,133 @@
+import 'package:flutter/material.dart';
+
+import 'package:bizly/utils/app_colors.dart';
+
+class TaskCardWidget extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final String date;
+  final String assignTo;
+  final String status;
+  final String userImageUrl;
+  final int priority;
+
+  const TaskCardWidget ({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.date,
+    required this.priority,
+    required this.assignTo,
+    required this.status,
+    this.userImageUrl = 'https://i.pravatar.cc/150?u=a042581f4e29026704d', // Dummy image
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding:  EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        border: Border.all(
+            width: 0.5,
+            color: Colors.grey.shade300
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        borderRadius: BorderRadius.circular(18),
+      ),
+
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header: Title aur Status Tag
+
+          // Row(
+          //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          //   crossAxisAlignment: CrossAxisAlignment.start,
+          //   children: [
+          //
+          //
+          //     // Status Tag (e.g., Low)
+          //
+          //   ],
+          // ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  priority==1?"High":priority==2?"Medium":priority==3?"low":"",
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Colors.black,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Text(
+            assignTo,
+            style: const TextStyle(fontSize: 13,  color:Colors.black,fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Date Row
+          Row(
+            children: [
+              Icon(Icons.calendar_month_outlined, size: 18, color: Colors.grey.shade700),
+              const SizedBox(width: 8),
+              Text(
+                date,
+                style: const TextStyle(fontSize: 11, color:Colors.black,fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
+          // const SizedBox(height: 12),
+
+          // User/Assignee Row
+          // Row(
+          //   children: [
+          //     CircleAvatar(
+          //       radius: 13,
+          //       backgroundImage: NetworkImage(userImageUrl),
+          //     ),
+          //     const SizedBox(width: 8),
+          //     Text(
+          //       assignTo,
+          //       style: const TextStyle(fontSize: 13,  color:Colors.black,fontWeight: FontWeight.w500),
+          //     ),
+          //   ],
+          // ),
+        ],
+      ),
+    );
+  }
+}
