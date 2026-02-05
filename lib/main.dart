@@ -1,11 +1,5 @@
 import 'package:bizly/routes/app_pages.dart';
-import 'package:bizly/routes/bindings.dart';
 import 'package:bizly/routes/routes.dart';
-import 'package:bizly/views/auth/login_screen.dart';
-import 'package:bizly/views/auth/signup_screen.dart';
-import 'package:bizly/views/home/home_screen.dart';
-import 'package:bizly/views/nav_bar/main_screen.dart';
-import 'package:bizly/views/onboarding/onboarding.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -33,5 +27,4 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
 

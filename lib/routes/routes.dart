@@ -1,5 +1,3 @@
-import 'package:bizly/views/profile_screen/profile_screen.dart';
-
 class Routes {
   Routes._();
 
@@ -19,6 +17,7 @@ class Routes {
   static const  addCompanyAssetScreen  = '/add_company_asset_screen';
   static const  invoiceCustomizationScreen  = '/invoice_customization_screen';
   static const  invoicePreviewScreen  = '/invoice_preview_screen';
+  static const  taxSettingsScreen  = '/tax_settings_screen';
   static const  allBusinessScreen  = '/all_business_screen';
   static const sigUpScreen = '/SigUpScreen';
   static const profileScreen = '/profile_screen';

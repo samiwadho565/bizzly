@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
-import '../app/constants/app_urls.dart';
-import '../models/api_response.dart';
+import 'package:bizly/app/constants/app_urls.dart';
+import 'package:bizly/models/api_response.dart';
 import 'local_storage.dart';
 
 class ApiService {

@@ -1,12 +1,12 @@
 // # Toasts, validation, helpers
 
 import 'package:bizly/assets/images.dart';
-import 'package:bizly/widgets/custom_text_field.dart';
+import 'package:bizly/components/common/custom_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 
-import '../widgets/custom_tab_bar.dart';
+import 'package:bizly/components/common/custom_tab_bar.dart';
 import 'app_colors.dart';
 
 class AppUtils {

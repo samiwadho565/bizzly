@@ -1,34 +1,47 @@
 
-import 'package:bizly/views/bussiness_screen/add_new_business_screen.dart';
-import 'package:bizly/views/customers_screen/customers_screen.dart';
-import 'package:bizly/views/expense_screen/add_expense_screen.dart';
-import 'package:bizly/views/expense_screen/expense_detail_screen.dart';
-import 'package:bizly/views/home/home_screen.dart';
-import 'package:bizly/views/invoice_screen/invoice_detail_screen.dart';
-import 'package:bizly/views/nav_bar/main_screen.dart';
-import 'package:bizly/views/onboarding/onboarding.dart';
-import 'package:bizly/views/profile_screen/invoice_customization/invoice_preview_screen.dart';
-import 'package:bizly/views/profile_screen/profile_screen.dart';
-import 'package:bizly/views/tasks_screen/task_detail_screen.dart';
-import 'package:bizly/views/team_screen/team_screen.dart';
-import 'package:bizly/views/vendors/vendor_detail_screen.dart';
+import 'package:bizly/modules/business/screens/add_new_business_screen.dart';
+import 'package:bizly/modules/customers/screens/customers_screen/customers_screen.dart';
+import 'package:bizly/modules/expense/screens/add_expense_screen.dart';
+import 'package:bizly/modules/expense/screens/expense_detail_screen.dart';
+import 'package:bizly/modules/home/screens/home_screen.dart';
+import 'package:bizly/modules/invoice/screens/invoice_detail_screen.dart';
+import 'package:bizly/modules/nav/screens/main_screen.dart';
+import 'package:bizly/modules/onboarding/screens/onboarding.dart';
+import 'package:bizly/modules/profile/screens/profile_screen/profile_screen.dart';
+import 'package:bizly/modules/tasks/screens/task_detail_screen.dart';
+import 'package:bizly/modules/team/screens/team_screen/team_screen.dart';
+import 'package:bizly/modules/auth/bindings/login_binding.dart';
+import 'package:bizly/modules/auth/bindings/signup_binding.dart';
+import 'package:bizly/modules/business/bindings/business_detail_binding.dart';
+import 'package:bizly/modules/expense/bindings/expense_binding.dart';
+import 'package:bizly/modules/expense/bindings/expense_detail_binding.dart';
+import 'package:bizly/modules/home/bindings/home_binding.dart';
+import 'package:bizly/modules/invoice/bindings/create_invoice_binding.dart';
+import 'package:bizly/modules/invoice/bindings/invoice_binding.dart';
+import 'package:bizly/modules/invoice/bindings/invoice_detail_binding.dart';
+import 'package:bizly/modules/nav/bindings/main_binding.dart';
+import 'package:bizly/modules/onboarding/bindings/onboarding_binding.dart';
+import 'package:bizly/modules/profile/bindings/invoice_customization_binding.dart';
+import 'package:bizly/modules/profile/bindings/tax_settings_binding.dart';
+import 'package:bizly/modules/tasks/bindings/task_detail_binding.dart';
+import 'package:bizly/modules/tasks/bindings/tasks_binding.dart';
 import 'package:get/get.dart';
 import 'package:get/get_navigation/src/routes/get_route.dart';
 
-import '../views/auth/login_screen.dart';
-import '../views/auth/signup_screen.dart';
-import '../views/bussiness_screen/all_business_screen.dart';
-import '../views/bussiness_screen/business_detail_screen.dart';
-import '../views/bussiness_screen/single_business_detail_screen.dart';
-import '../views/company_assets/add_company_asset.dart';
-import '../views/company_assets/company_assets_screen.dart';
-import '../views/invoice_screen/create_ivoice_screen.dart';
-import '../views/profile_screen/invoice_customization/invoice_cstomization_screen.dart';
-import '../views/tasks_screen/create_task_screen.dart';
-import '../views/team_screen/create_team_member.dart';
-import '../views/vendors/vendors_screen.dart';
+import 'package:bizly/modules/auth/screens/login_screen.dart';
+import 'package:bizly/modules/auth/screens/signup_screen.dart';
+import 'package:bizly/modules/business/screens/all_business_screen.dart';
+import 'package:bizly/modules/business/screens/business_detail_screen.dart';
+import 'package:bizly/modules/business/screens/single_business_detail_screen.dart';
+import 'package:bizly/modules/company_assets/screens/company_assets/add_company_asset.dart';
+import 'package:bizly/modules/company_assets/screens/company_assets/company_assets_screen.dart';
+import 'package:bizly/modules/invoice/screens/create_ivoice_screen.dart';
+import 'package:bizly/modules/profile/screens/profile_screen/invoice_customization/invoice_cstomization_screen.dart';
+import 'package:bizly/modules/profile/screens/profile_screen/tax_settings_screen/tax_settings_screen.dart';
+import 'package:bizly/modules/tasks/screens/create_task_screen.dart';
+import 'package:bizly/modules/team/screens/team_screen/create_team_member.dart';
+import 'package:bizly/modules/vendors/screens/vendors/vendors_screen.dart';
 import 'routes.dart';
-import 'bindings.dart';
 
 
 class AppPages {
@@ -38,7 +51,7 @@ class AppPages {
     GetPage(
       name: Routes.onBoardingScreen,
       page: () => OnboardingScreen(),
-      binding: InitialBindings(),
+      binding: OnboardingBinding(),
     ),
     // GetPage(
     //   name: Routes.splash,
@@ -48,121 +61,121 @@ class AppPages {
     GetPage(
       name: Routes.loginScreen,
       page: () => const LoginScreen(),
-      binding: InitialBindings(),
+      binding: LoginBinding(),
       transition: Transition.fadeIn
     ),
     GetPage(
       name: Routes.sigUpScreen,
       page: () => const SignUpScreen(),
-      binding: InitialBindings(),
+      binding: SignupBinding(),
         transition: Transition.fadeIn
     ),
     GetPage(
       name: Routes.expenseDetailScreen,
       page: () =>  ExpenseDetailScreen(),
-      binding: InitialBindings(),
+      binding: ExpenseDetailBinding(),
         transition: Transition.fadeIn
     ),
     GetPage(
       name: Routes. taskDetailScreen,
       page: () =>   TaskDetailScreen(),
-      binding: InitialBindings(),
+      binding: TaskDetailBinding(),
         transition: Transition.fadeIn
     ),
     GetPage(
       name: Routes.addNewBusiness,
       page: () => AddNewBusinessScreen(),
-      binding: InitialBindings(),
         transition: Transition.fadeIn
     ),
     GetPage(
       name: Routes.addExpenseScreen,
       page: () => AddExpenseScreen(),
-      binding: InitialBindings(),
+      binding: ExpenseBinding(),
         transition: Transition.fadeIn
     ),
     GetPage(
       name: Routes.createInvoiceScreen,
       page: () =>  CreateInvoiceScreen(),
-  binding: InitialBindings(),
+  binding: CreateInvoiceBinding(),
         transition: Transition.fadeIn
     ),
     GetPage(
       name: Routes.createTaskScreen,
       page: () =>   CreateTaskScreen(),
-  binding: InitialBindings(),
         transition: Transition.fadeIn
     ),     GetPage(
       name: Routes.addEmployeeScreen,
       page: () =>   AddEmployeeScreen(),
-  binding: InitialBindings(),
         transition: Transition.fadeIn
     ),
     GetPage(
       name: Routes.allBusinessScreen,
       page: () =>   AllBusinessesScreen(),
-  binding: InitialBindings(),
         transition: Transition.fadeIn
     ),
     GetPage(
       name: Routes.invoiceDetailScreen,
       page: () =>  InvoiceDetailScreen(),
-      binding: InitialBindings(),
+      binding: InvoiceDetailBinding(),
         transition: Transition.fadeIn
     ),
     GetPage(
       name: Routes. businessDetailScreen,
       page: () =>   BusinessDetailScreen(),
-      binding: InitialBindings(),
+      binding: BusinessDetailBinding(),
         transition: Transition.fadeIn
     ),    GetPage(
       name: Routes. singleBusinessDetailScreen,
       page: () =>   SingleBusinessDetailScreen(),
-      binding: InitialBindings(),
         transition: Transition.fadeIn
     ),GetPage(
       name: Routes. customersScreen,
       page: () =>   CustomersScreen(),
-      binding: InitialBindings(),
         transition: Transition.fadeIn
     ),
     GetPage(
       name: Routes.profileScreen,
       page: () => const ProfileScreen(),
-      binding: InitialBindings(),
     ),
     GetPage(
       name: Routes.vendorsScreen,
       page: () =>  VendorsScreen(),
-      binding: InitialBindings(),
     ),    GetPage(
       name: Routes.addCompanyAssetScreen,
       page: () =>  AddAssetScreen(),
-  binding: InitialBindings(),
     ), GetPage(
       name: Routes.invoiceCustomizationScreen,
       page: () => InvoiceCustomizationScreen(),
-  binding: InitialBindings(),
+  binding: InvoiceCustomizationBinding(),
+    ),
+    GetPage(
+      name: Routes.taxSettingsScreen,
+      page: () => TaxSettingsScreen(),
+      binding: TaxSettingsBinding(),
     ),
     GetPage(
       name: Routes.companyAssetsScreen,
       page: () =>  CompanyAssetsScreen(),
-      binding: InitialBindings(),
     ),
   GetPage(
       name: Routes.teamScreen,
       page: () => TeamEmployeesScreen(),
-    binding: InitialBindings(),
     ),
     GetPage(
       name: Routes.mainScreen,
       page: () =>  MainScreen(),
-      binding: InitialBindings(),
+      bindings: [
+        MainBinding(),
+        HomeBinding(),
+        ExpenseBinding(),
+        InvoiceBinding(),
+        TasksBinding(),
+      ],
     ),
     GetPage(
       name: Routes.homeScreen,
       page: () => HomeScreen(),
-      binding: InitialBindings(),
+      binding: HomeBinding(),
     ),
 
   // GetPage(
