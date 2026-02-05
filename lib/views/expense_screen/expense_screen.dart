@@ -51,11 +51,13 @@ class ExpenseScreen extends StatelessWidget {
 
                     const SizedBox(height: 20),
 
-                    Obx(() => CustomTabBar(
-                      options: const ["All", "Business", "Personal"],
-                      selectedOption: controller.selectedCategory.value,
-                      onSelect: controller.setCategory,
-                    )),
+                    // Obx(() => CustomTabBar(
+                    //   options: const ["All", "Business", "Personal"],
+                    //   selectedOption: controller.selectedCategory.value,
+                    //   onSelect: controller.setCategory,
+                    // )),
+
+
 
                     Expanded(
                       child: Obx(() => ListView.builder(

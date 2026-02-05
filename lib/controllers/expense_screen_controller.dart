@@ -8,6 +8,8 @@ class ExpenseScreenController extends GetxController {
   final RxString selectedCategory = 'All'.obs;
   Rx<DateTime> selectedDate= DateTime.now().obs;
 
+  RxInt index = 0.obs;
+
   @override
   void onInit() {
     super.onInit();

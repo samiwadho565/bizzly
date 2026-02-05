@@ -3,6 +3,7 @@ import 'package:bizly/views/bussiness_screen/add_new_business_screen.dart';
 import 'package:bizly/views/customers_screen/customers_screen.dart';
 import 'package:bizly/views/expense_screen/add_expense_screen.dart';
 import 'package:bizly/views/expense_screen/expense_detail_screen.dart';
+import 'package:bizly/views/home/home_screen.dart';
 import 'package:bizly/views/invoice_screen/invoice_detail_screen.dart';
 import 'package:bizly/views/nav_bar/main_screen.dart';
 import 'package:bizly/views/onboarding/onboarding.dart';
@@ -158,11 +159,11 @@ class AppPages {
       page: () =>  MainScreen(),
       binding: InitialBindings(),
     ),
-    // GetPage(
-    //   name: Routes.authScreen,
-    //   page: () => const AuthScreen(),
-    //   binding: InitialBindings(),
-    // ),
+    GetPage(
+      name: Routes.homeScreen,
+      page: () => HomeScreen(),
+      binding: InitialBindings(),
+    ),
 
   // GetPage(
     //   name: Routes.notificationScreen,

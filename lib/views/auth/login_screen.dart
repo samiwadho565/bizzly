@@ -105,10 +105,8 @@ class LoginScreen extends GetView<SignInController> {
                                 false)) {
                               return;
                             }
-                            final user = await controller.signIn();
-                            if (user != null) {
-                              Get.offAllNamed(Routes.mainScreen);
-                            }
+                             await controller.signIn();
+
                           },
                           validator: (value) =>
                               FormValidations.validatePassword(value ?? ""),

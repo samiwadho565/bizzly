@@ -3,10 +3,13 @@ import 'package:bizly/widgets/invoice_screen_widgets/invoice_card.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/business_controller.dart';
+import '../../routes/routes.dart';
 import '../../widgets/business_screen_widgets/status_card.dart';
 import '../../widgets/custom_app_bar_2.dart';
 import '../../widgets/custom_tab_bar.dart';
 import '../../widgets/drop_down_menu/drop_down_menu.dart';
+import '../../widgets/home_widgets/bussiness_card.dart';
+import '../../widgets/home_widgets/side_bar.dart';
 import '../../widgets/task_card_widget.dart';
 
 class BusinessDetailScreen extends StatelessWidget {
@@ -39,56 +42,128 @@ class BusinessDetailScreen extends StatelessWidget {
                     addDropdownButton(leftText: 'Quick Actions', title: "Add"),
                     const SizedBox(height: 10),
 
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        StatCard(
-                          title: "Total Revenue",
-                          value: "\$4,250,000",
-                          icon: Icon(Icons.attach_money, color: Colors.green),
-                          backgroundColor: Color(0xFFF7FBF7),
-                          contentColor: Colors.green,
-                        ),
-                        StatCard(
-                          title: "Team Members",
-                          value: "2",
-                          icon: Icon(
-                            Icons.groups,
-                            color: Colors.blue,
-                          ),
-                          backgroundColor: Color(0xFFF1F7FF),
-                          contentColor: Colors.blue,
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 20,),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        StatCard(
-                          title: "Total Expenses",
-                          value: "\$1,250",
-                          icon: const Icon(
-                            Icons.arrow_upward,
-                            color: Colors.red,
-                          ),
-                          backgroundColor: const Color(0xFFFFF5F5),
-                          contentColor: Colors.red.shade400,
-                        ),
+                    Container(
+                      //color: Colors.blue,
+                      height: 120,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children:  [
+                        Expanded(
+                          child: CategoryCard(
+                            title: "Customers",
+                            icon: Icons.people_alt_outlined,
+                            onTap: () {
+                              Get.toNamed(Routes.customersScreen);
 
-                        StatCard(
-                          title: "Pending Tasks",
-                          value: "2",
-                          icon: const Icon(
-                            Icons.assignment_outlined,
-                            color: Colors.orange,
+                            },
                           ),
-                          backgroundColor: const Color(0xFFFFF9F0),
-                          contentColor: Colors.orange.shade400,
                         ),
-                      ],
+                          Expanded(
+                            child: CategoryCard(
+                              title: "Vendors",
+                              icon: Icons.settings_outlined,
+                              onTap: () {
+                                Get.toNamed(Routes.vendorsScreen);
+
+                              },
+                            ),
+                          ),
+
+                          Expanded(
+                            child: CategoryCard(
+                              title: "Team members",
+                              icon: Icons.supervised_user_circle_sharp,
+                              onTap: () {
+
+                                Get.toNamed(Routes.teamScreen);
+
+                              },
+                            ),
+                          ),
+                          Expanded(
+                            child: CategoryCard(
+                              title: "Company Assets",
+                              icon: Icons.web_asset,
+                              onTap: () {
+                                Get.toNamed(Routes.companyAssetsScreen);
+
+
+                              },
+                            ),
+                          ),
+
+                          // StatCard(
+                          //   title: "Total Revenue",
+                          //   value: "\$4,250,000",
+                          //   icon: Icon(Icons.attach_money, color: Colors.green),
+                          //   backgroundColor: Color(0xFFF7FBF7),
+                          //   contentColor: Colors.green,
+                          // ),
+                          // StatCard(
+                          //   title: "Team Members",
+                          //   value: "2",
+                          //   icon: Icon(
+                          //     Icons.groups,
+                          //     color: Colors.blue,
+                          //   ),
+                          //   backgroundColor: Color(0xFFF1F7FF),
+                          //   contentColor: Colors.blue,
+                          // ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 16),
+                    // SizedBox(height: 20,),
+                    // Container(
+                    //   //color: Colors.red,
+                    //   height: 100,
+                    //   child: Row(
+                    //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    //     children: [
+                    //       Expanded(
+                    //         child: CategoryCard(
+                    //           title: "Company Assets",
+                    //           icon: Icons.settings_outlined,
+                    //           onTap: () {
+                    //             //Get.toNamed(Routes.businessDetailScreen,);
+                    //
+                    //           },
+                    //         ),
+                    //       ),
+                    //       Expanded(
+                    //         child: CategoryCard(
+                    //           title: "Team Members",
+                    //           icon: Icons.settings_outlined,
+                    //           onTap: () {
+                    //             //Get.toNamed(Routes.businessDetailScreen,);
+                    //
+                    //           },
+                    //         ),
+                    //       ),
+                    //       // StatCard(
+                    //       //   title: "Total Expenses",
+                    //       //   value: "\$1,250",
+                    //       //   icon: const Icon(
+                    //       //     Icons.arrow_upward,
+                    //       //     color: Colors.red,
+                    //       //   ),
+                    //       //   backgroundColor: const Color(0xFFFFF5F5),
+                    //       //   contentColor: Colors.red.shade400,
+                    //       // ),
+                    //       //
+                    //       // StatCard(
+                    //       //   title: "Pending Tasks",
+                    //       //   value: "2",
+                    //       //   icon: const Icon(
+                    //       //     Icons.assignment_outlined,
+                    //       //     color: Colors.orange,
+                    //       //   ),
+                    //       //   backgroundColor: const Color(0xFFFFF9F0),
+                    //       //   contentColor: Colors.orange.shade400,
+                    //       // ),
+                    //     ],
+                    //   ),
+                    // ),
+                    // const SizedBox(height: 16),
                   ],
                 ),
               ),
@@ -97,6 +172,7 @@ class BusinessDetailScreen extends StatelessWidget {
             /// --- Sticky TabBar ---
             SliverPersistentHeader(
               pinned: true,
+
               delegate: StickyTabBarDelegate(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -107,7 +183,7 @@ class BusinessDetailScreen extends StatelessWidget {
                         "Invoices",
                         "Expenses",
                         "Tasks",
-                        "Team",
+                     //   "Team",
                       ],
                       selectedOption: controller.selectedTab.value,
                       onSelect: controller.changeTab,
@@ -119,7 +195,7 @@ class BusinessDetailScreen extends StatelessWidget {
 
             /// --- Dynamic Content ---
             SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
               sliver: Obx(() {
                 if (controller.selectedTab.value == 'Tasks') {
                   return SliverList(

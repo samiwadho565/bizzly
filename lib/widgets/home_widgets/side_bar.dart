@@ -17,7 +17,7 @@ class CustomSideBar extends StatelessWidget {
           children: [
             // ---------- Header ----------
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(15),
               child: Row(
                 children:  [
                   CircleAvatar(
@@ -53,7 +53,7 @@ class CustomSideBar extends StatelessWidget {
 
             const Divider(color: Colors.white24),
             Padding(
-              padding: const EdgeInsets.only(left: 20,top: 15),
+              padding: const EdgeInsets.only(left: 15,top: 15),
               child: Text(
                 "Selected Business",
                 style: const TextStyle(
@@ -65,6 +65,15 @@ class CustomSideBar extends StatelessWidget {
             ),
             SizedBox(height: 15,),
             // ---------- Menu Items ----------
+
+            _drawerItem(
+              icon: AppImages.building,
+              title: "Add New Business",
+              onTap: () {
+                Get.back();
+                Get.toNamed(Routes.addNewBusiness);
+              },
+            ),
 
             _drawerItem(
               icon: AppImages.customer,
@@ -91,18 +100,38 @@ class CustomSideBar extends StatelessWidget {
               onTap: () => Get.toNamed(Routes.companyAssetsScreen),
             ),
 
-            const Spacer(),
+            _drawerItem(
+              icon: AppImages.expenseFill,
+              title: "Expanses",
+              onTap: () => Get.toNamed(Routes.companyAssetsScreen),
+            ),
 
-            const Divider(color: Colors.white24),
 
             _drawerItem(
-              icon: AppImages.building,
-              title: "Businesses",
-              onTap: () {
-                Get.back();
-                Get.toNamed(Routes.allBusinessScreen);
-              },
+              icon: AppImages.billFill,
+              title: "Invoices",
+              onTap: () => Get.toNamed(Routes.companyAssetsScreen),
             ),
+
+            _drawerItem(
+              icon: AppImages.taskFill,
+              title: "Tasks",
+              onTap: () => Get.toNamed(Routes.companyAssetsScreen),
+            ),
+
+            //const Spacer(),
+
+
+
+            // _drawerItem(
+            //   icon: AppImages.building,
+            //   title: "Businesses",
+            //   onTap: () {
+            //     Get.back();
+            //     Get.toNamed(Routes.allBusinessScreen);
+            //   },
+            // ),
+            const Divider(color: Colors.white24),
             _drawerItem(
               icon: AppImages.settings,
               title: "Settings",

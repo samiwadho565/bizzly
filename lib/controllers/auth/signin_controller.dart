@@ -59,21 +59,30 @@ class SignInController extends GetxController {
       }
       if (data['user'] is Map<String, dynamic>) {
         user = UserModel.fromJson(data['user'] as Map<String, dynamic>);
-          Get.offAllNamed(Routes.mainScreen);
+
+        if (rememberMe.value) {
+          await LocalStorage.saveRememberedEmail(
+            emailController.text.trim(),
+          );
+          await LocalStorage.saveRememberedPassword(
+            passwordController.text,
+          );
+        } else {
+          await LocalStorage.clearRememberedCredentials();
+        }
+
+          Get.offAllNamed(Routes.homeScreen);
       }
-      if (rememberMe.value) {
-        await LocalStorage.saveRememberedEmail(
-          emailController.text.trim(),
-        );
-        await LocalStorage.saveRememberedPassword(
-          passwordController.text,
-        );
-      } else {
-        await LocalStorage.clearRememberedCredentials();
-      }
+
+    }else{
+      Get.snackbar(
+          'Error',
+          response.message,snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red
+      );
     }
 
-    Get.snackbar(response.success ? 'Success' : 'Error', response.message);
+
     isLoading.value = false;
     return user;
   }
@@ -88,10 +97,11 @@ class SignInController extends GetxController {
 
   @override
   void onClose() {
-    emailFocusNode.dispose();
-    passwordFocusNode.dispose();
     emailController.dispose();
     passwordController.dispose();
+    emailFocusNode.dispose();
+    passwordFocusNode.dispose();
+
     super.onClose();
   }
 }

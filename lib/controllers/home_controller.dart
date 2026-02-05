@@ -1,8 +1,11 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../utils/enum.dart';
 import '../../utils/app_colors.dart';
 
 class HomeScreenController extends GetxController {
+  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   var viewType = RevenueViewType.weekly.obs;
 
   late List<RevenueBar> weeklyData;

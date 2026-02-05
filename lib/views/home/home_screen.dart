@@ -1,7 +1,9 @@
 import 'package:bizly/assets/images.dart';
+import 'package:bizly/controllers/home_controller.dart';
 import 'package:bizly/utils/app_colors.dart';
 import 'package:bizly/widgets/circle_icon_widget.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
@@ -21,42 +23,39 @@ import '../../widgets/home_widgets/flow_chart.dart';
 import '../../widgets/home_widgets/side_bar.dart';
 import '../../widgets/top_border_ccontainer.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends GetView<HomeScreenController> {
   final VoidCallback? openDrawer; // Callback add karein
-  const HomeScreen({super.key, this.openDrawer});
+   HomeScreen({super.key, this.openDrawer});
 
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  // final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   final List<Map<String, dynamic>> categories = [
-    {'title': 'Manufacturing', 'icon': Icons.settings_outlined},
-    {'title': 'Finance', 'icon': Icons.attach_money_outlined},
-    {'title': 'Marketing', 'icon': Icons.campaign_outlined},
-    {'title': 'HR', 'icon': Icons.people_alt_outlined},
-    {'title': 'IT', 'icon': Icons.computer_outlined},
-    {'title': 'Logistics', 'icon': Icons.local_shipping_outlined},
-    {'title': 'Manufacturing', 'icon': Icons.settings_outlined},
-    {'title': 'Finance', 'icon': Icons.attach_money_outlined},
-    {'title': 'Marketing', 'icon': Icons.campaign_outlined},
-    {'title': 'HR', 'icon': Icons.people_alt_outlined},
-    {'title': 'IT', 'icon': Icons.computer_outlined},
-    {'title': 'Logistics', 'icon': Icons.local_shipping_outlined},
+    {'title': 'Manufacturing', 'icon': 'assets/temp/manufacturing.jpg'},
+    {'title': 'Finance', 'icon': 'assets/temp/finance.jpg'},
+    {'title': 'Marketing', 'icon': 'assets/temp/markeeting.jpg'},
+    {'title': 'HR', 'icon': 'assets/temp/hr.jpg'},
+    {'title': 'IT', 'icon':  'assets/temp/it.jpg'},
+    {'title': 'Logistics', 'icon': 'assets/temp/logistics.jpg'},
+    {'title': 'Manufacturing', 'icon': 'assets/temp/manufacturing.jpg'},
+    {'title': 'Finance', 'icon': 'assets/temp/finance.jpg'},
+    {'title': 'Marketing', 'icon': 'assets/temp/markeeting.jpg'},
+    {'title': 'HR', 'icon': 'assets/temp/hr.jpg'},
+    {'title': 'IT', 'icon':  'assets/temp/it.jpg'},
+    {'title': 'Logistics', 'icon': 'assets/temp/logistics.jpg'},
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
+      key: controller.scaffoldKey,
       backgroundColor: AppColors.background,
+      extendBody: true,
+      drawer: const CustomSideBar(),
       appBar: CustomAppBar(
         title: "Dashboard",
         leading: Image.asset(AppImages.menu, height: 40),
         onLeadingTap: () {
-          widget.openDrawer?.call(); // ✅ MainScreen ka drawer khulega
+          controller.scaffoldKey.currentState?.openDrawer();
         },
       ),
 
@@ -72,97 +71,143 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 children: [
                   const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 30),
-                    child: addDropdownButton(leftText: 'Quick Actions',title: "Add")
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20.0),
+                        child: Text(
+                          "Quick Action",
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+
+                      Container(
+                        alignment: Alignment.centerRight,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                         // child: addDropdownButton(leftText: 'Quick Actions',title: "Add")
+                          child: CupertinoButton(
+                            minimumSize: Size.zero,
+                            padding: EdgeInsets.zero,
+                            onPressed: (){
+                              Get.toNamed(Routes.addNewBusiness);
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(12.0),
+                                child: Text(
+                                  "Add New Business",
+                                  style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                       fontWeight: FontWeight.w600
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
 
                   // const SizedBox(height: 10),
                   // SizedBox(height: 20,),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20,vertical: 20),
-                      child: SizedBox(
-                        width: Get.width/1.5,
-                        child: CustomSearchDropdown(
-                          height: 40,
-                          horizontalPadding: 12,
-                          verticalPadding: 20,
-                          iconSize: 25,
-                          textStyle: const TextStyle(fontSize: 16, color: Colors.black),
-                          enableSearch: true,
-                          hintText: "Select Business",
-                          items: const ["Fixonto", "SilverSpoon", "TechNova", "GreenLeaf"],
-                          onChanged: (value) {},
-                        ),
-                      ),
-                    ),
-                  ),
+                  // Align(
+                  //   alignment: Alignment.centerLeft,
+                  //   child: Padding(
+                  //     padding: const EdgeInsets.symmetric(horizontal: 20,vertical: 20),
+                  //     child: SizedBox(
+                  //       width: Get.width/1.5,
+                  //       child: CustomSearchDropdown(
+                  //         height: 40,
+                  //         horizontalPadding: 12,
+                  //         verticalPadding: 20,
+                  //         iconSize: 25,
+                  //         textStyle: const TextStyle(fontSize: 16, color: Colors.black),
+                  //         enableSearch: true,
+                  //         hintText: "Select Business",
+                  //         items: const ["Fixonto", "SilverSpoon", "TechNova", "GreenLeaf"],
+                  //         onChanged: (value) {},
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
                Expanded(
                  child: SingleChildScrollView(
                    child: Column(
                      children: [
-                     Padding(
-                           padding: const EdgeInsets.symmetric(horizontal: 20),
-                           child: Column(
-                             children: [
+                     // Padding(
+                     //       padding: const EdgeInsets.symmetric(horizontal: 20),
+                     //       child: Column(
+                     //         children: [
+                     //
+                     //           Row(
+                     //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                     //             children: const [
+                     //               StatCard(
+                     //                 title: "Total Revenue",
+                     //                 value: "4,250,000",
+                     //                 icon: Icon(Icons.attach_money, color: Colors.green),
+                     //                 backgroundColor: Color(0xFFF7FBF7),
+                     //                 contentColor: Colors.green,
+                     //               ),
+                     //               StatCard(
+                     //                 title: "Team Members",
+                     //                 value: "2",
+                     //                 icon: Icon(
+                     //                   Icons.groups,
+                     //                   color: Colors.blue,
+                     //                 ),
+                     //                 backgroundColor: Color(0xFFF1F7FF),
+                     //                 contentColor: Colors.blue,
+                     //               ),
+                     //             ],
+                     //           ),
+                     //           SizedBox(height: 20,),
+                     //           Row(
+                     //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                     //             children: [
+                     //               StatCard(
+                     //                 title: "Total Expenses",
+                     //                 value: "1,250",
+                     //                 icon: const Icon(
+                     //                   Icons.arrow_upward,
+                     //                   color: Colors.red,
+                     //                 ),
+                     //                 backgroundColor: const Color(0xFFFFF5F5),
+                     //                 contentColor: Colors.red.shade400,
+                     //               ),
+                     //
+                     //               StatCard(
+                     //                 title: "Pending Tasks",
+                     //                 value: "2",
+                     //                 icon: const Icon(
+                     //                   Icons.assignment_outlined,
+                     //                   color: Colors.orange,
+                     //                 ),
+                     //                 backgroundColor: const Color(0xFFFFF9F0),
+                     //                 contentColor: Colors.orange.shade400,
+                     //               ),
+                     //             ],
+                     //           ),
+                     //           const SizedBox(height: 16),
+                     //         ],
+                     //       ),
+                     //     ),
 
-                               Row(
-                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                 children: const [
-                                   StatCard(
-                                     title: "Total Revenue",
-                                     value: "4,250,000",
-                                     icon: Icon(Icons.attach_money, color: Colors.green),
-                                     backgroundColor: Color(0xFFF7FBF7),
-                                     contentColor: Colors.green,
-                                   ),
-                                   StatCard(
-                                     title: "Team Members",
-                                     value: "2",
-                                     icon: Icon(
-                                       Icons.groups,
-                                       color: Colors.blue,
-                                     ),
-                                     backgroundColor: Color(0xFFF1F7FF),
-                                     contentColor: Colors.blue,
-                                   ),
-                                 ],
-                               ),
-                               SizedBox(height: 20,),
-                               Row(
-                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                 children: [
-                                   StatCard(
-                                     title: "Total Expenses",
-                                     value: "1,250",
-                                     icon: const Icon(
-                                       Icons.arrow_upward,
-                                       color: Colors.red,
-                                     ),
-                                     backgroundColor: const Color(0xFFFFF5F5),
-                                     contentColor: Colors.red.shade400,
-                                   ),
-
-                                   StatCard(
-                                     title: "Pending Tasks",
-                                     value: "2",
-                                     icon: const Icon(
-                                       Icons.assignment_outlined,
-                                       color: Colors.orange,
-                                     ),
-                                     backgroundColor: const Color(0xFFFFF9F0),
-                                     contentColor: Colors.orange.shade400,
-                                   ),
-                                 ],
-                               ),
-                               const SizedBox(height: 16),
-                             ],
-                           ),
-                         ),
-
-                       // const SizedBox(height: 20),
+                       const SizedBox(height: 20),
                        Padding(
                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
                          child: WeeklyRevenueChart(),
@@ -172,55 +217,57 @@ class _HomeScreenState extends State<HomeScreen> {
                        //   padding: const EdgeInsets.symmetric(horizontal: 20),
                        //   child: BusinessTeamSection(),
                        // ),
-                       Padding(
-                         padding: const EdgeInsets.symmetric(horizontal: 20),
-                         child: _buildRecentInvoices(),
-                       ),
-                       const SizedBox(height: 100),
+                       // Padding(
+                       //   padding: const EdgeInsets.symmetric(horizontal: 20),
+                       //   child: _buildRecentInvoices(),
+                       // ),
+                       //const SizedBox(height: 100),
                        // addButton(),
                        // CustomTabBar(items: ["tasks","test","test"], onTabChanged: (int ) {  },),
                        // CustomToggleButton(items: ["tasks","test","test"], onSelected: (int ) {  },),
-                       //
-                       // Padding(
-                       //   padding: const EdgeInsets.symmetric(horizontal: 35),
-                       //   child: Row(
-                       //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                       //     children: [
-                       //       Text("All Businesses",style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),),
-                       //
-                       //       TextButton(onPressed: (){}, child: Text("View All",style: TextStyle(color: AppColors.primary),),)
-                       //     ],
-                       //   ),
-                       // ),
-                       // SizedBox(height: 15,),
-                       // // ---------------- GridView ----------------
-                       // Padding(
-                       //   padding: const EdgeInsets.symmetric(horizontal: 30),
-                       //   child: GridView.builder(
-                       //     padding: EdgeInsets.only(bottom: 80),
-                       //     physics: const NeverScrollableScrollPhysics(), // Scroll disable
-                       //     shrinkWrap: true,
-                       //     itemCount: categories.length,
-                       //     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                       //         crossAxisCount: 4, // 2 columns
-                       //         // crossAxisSpacing: 3,
-                       //         mainAxisSpacing: 9,
-                       //         childAspectRatio: 0.83 // Width / Height ratio
-                       //     ),
-                       //     itemBuilder: (context, index) {
-                       //       final category = categories[index];
-                       //       return CategoryCard(
-                       //         title: category['title'],
-                       //         icon: category['icon'],
-                       //         onTap: () {
-                       //           print("tapped::${category['title']} clicked");
-                       //           Get.toNamed(Routes.businessDetailScreen,);
-                       //
-                       //         },
-                       //       );
-                       //     },
-                       //   ),
-                       // ),
+
+                       Padding(
+                         padding: const EdgeInsets.symmetric(horizontal: 20),
+                         child: Row(
+                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                           children: [
+                             Text("All Businesses",style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),),
+
+                             // TextButton(onPressed: (){
+                             //   Get.toNamed(Routes.allBusinessScreen);
+                             // }, child: Text("View All",style: TextStyle(color: AppColors.primary),),)
+                           ],
+                         ),
+                       ),
+                       SizedBox(height: 15,),
+                       // ---------------- GridView ----------------
+                       Padding(
+                         padding: const EdgeInsets.symmetric(horizontal: 20),
+                         child: GridView.builder(
+                           padding: EdgeInsets.only(bottom: 120),
+                           physics: const NeverScrollableScrollPhysics(), // Scroll disable
+                           shrinkWrap: true,
+                           itemCount: categories.length,
+                           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                               crossAxisCount: 3, // 2 columns
+                               // crossAxisSpacing: 3,
+                               mainAxisSpacing: 0,
+                               childAspectRatio: 1 // Width / Height ratio
+                           ),
+                           itemBuilder: (context, index) {
+                             final category = categories[index];
+                             return CategoryCard(
+                               title: category['title'],
+                               image: category['icon'],
+                               onTap: () {
+                                 print("tapped::${category['title']} clicked");
+                                 Get.toNamed(Routes.businessDetailScreen,);
+
+                               },
+                             );
+                           },
+                         ),
+                       ),
                      ],
                    ),
                  ),
@@ -234,6 +281,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
   Widget _buildRecentInvoices() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -297,5 +345,4 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
 }

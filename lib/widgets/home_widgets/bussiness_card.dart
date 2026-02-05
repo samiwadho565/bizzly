@@ -6,14 +6,16 @@ import '../../utils/app_colors.dart';
 
 class CategoryCard extends StatelessWidget {
   final String title;
-  final IconData icon; // Aap yahan String path bhi de sakte hain agar image use karni ho
+  final IconData? icon;
+  final String? image;
   final VoidCallback onTap;
 
   const CategoryCard({
     super.key,
     required this.title,
-    required this.icon,
+     this.icon,
     required this.onTap,
+    this.image,
   });
 
   @override
@@ -51,17 +53,27 @@ class CategoryCard extends StatelessWidget {
             //   color: AppColors.background,// Light grey background
             //   borderRadius: BorderRadius.circular(10), // Rounded corners
             // ),
-            child: Icon(
-              icon,
-              size: 34,
-              color:  AppColors.primary.withOpacity(0.8),// Teal color jo aapki image mein hai
-            ),
-          ),
+          //   child: Icon(
+          //     icon,
+          //     size: 34,
+          //     color:  AppColors.primary.withOpacity(0.8),// Teal color jo aapki image mein hai
+          //   ),
+          // ),
+          child:
+          icon != null ?Icon(
+                icon,
+                size: 34,
+                color:  AppColors.primary.withOpacity(0.8),// Teal color jo aapki image mein hai
+              ):image != null ?
+          ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.asset(image!, fit: BoxFit.cover)) : SizedBox()),
           const SizedBox(height: 5),
           // Title Text
           Expanded(
             child: Text(
               title,
+              maxLines: 2,
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,

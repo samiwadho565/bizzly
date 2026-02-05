@@ -19,12 +19,17 @@ class WeeklyRevenueChart extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Colors.grey.shade300,width: 1),
+          border: Border(
+            bottom: BorderSide(color: Colors.grey.shade300,width: 1),
+            right: BorderSide(color: Colors.grey.shade300,width: 1),
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: AppColors.primary.withOpacity(0.15),
               blurRadius: 20,
-            )
+              // spreadRadius: 10,
+              offset: Offset(0, 0),
+            ),
           ],
         ),
         child: Padding(

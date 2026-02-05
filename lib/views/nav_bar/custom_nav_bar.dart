@@ -19,43 +19,63 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final navBarHeight = screenHeight * 0.09;
+    const double navBarHeight = 60;
+    final BorderRadius borderRadius = BorderRadius.circular(30);
     return SafeArea(
-      bottom: true,
+      bottom: false,
       child: Padding(
-        padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10 ),
+        padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20 ),
         child:ClipRRect(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: borderRadius,
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
             child: Container(
               height: navBarHeight,
               decoration: BoxDecoration(
                 // color: Colors.white.withValues(alpha:0.1),
-                borderRadius: BorderRadius.circular(35),
+                borderRadius: borderRadius,
                 border: Border.all(color: AppColors.primary.withValues(alpha:0.3)),
               ),
-              child: BottomNavigationBar(
-                type: BottomNavigationBarType.fixed,
-                elevation: 0,
-                backgroundColor: Colors.transparent,
-                currentIndex: currentIndex,
-                onTap: onTap,
-                selectedItemColor: Colors.black,
-                unselectedItemColor: Colors.black,
-                showUnselectedLabels: true,
-                items: [
-                  BottomNavigationBarItem(
-                    label: 'Home',
-                    icon:Image.asset(AppImages.home,height: 22,),
-                    activeIcon: Image.asset(AppImages.homeFill,height: 22,),
-                  ),
-                  BottomNavigationBarItem(
-                    label: 'Expenses',
-                    icon: Stack(
-                      children: [
-                      Image.asset(AppImages.expense,height: 22,),
+              child: MediaQuery.removePadding(
+                context: context,
+                removeBottom: true,
+                child: BottomNavigationBar(
+                  type: BottomNavigationBarType.fixed,
+                  elevation: 0,
+                  backgroundColor: Colors.transparent,
+                  currentIndex: currentIndex,
+                  onTap: onTap,
+                  selectedItemColor:AppColors.primary,
+                  //selectedIconTheme: IconThemeData(color: AppColors.primary),
+                  //unselectedItemColor: Colors.yellow,
+                  showSelectedLabels: true,
+                  showUnselectedLabels: false,
+                  selectedFontSize: 12,
+                  unselectedFontSize: 0,
+                  iconSize: 22,
+                  items: [
+                    BottomNavigationBarItem(
+                      label: 'Home',
+                      icon: Image.asset(
+                        AppImages.home,
+                        height: 22,
+                        color: Colors.black,
+                      ),
+                      activeIcon: Image.asset(
+                        AppImages.homeFill,
+                        height: 22,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    BottomNavigationBarItem(
+                      label: 'Expenses',
+                      icon: Stack(
+                        children: [
+                        Image.asset(
+                          AppImages.expense,
+                          height: 22,
+                          color: Colors.black,
+                        ),
 
                         // BlocBuilder<ServicesBloc, ServicesState>(
                         //   buildWhen: (pre, nxt) =>
@@ -79,22 +99,43 @@ class CustomBottomNavBar extends StatelessWidget {
                         //         : const SizedBox.shrink();
                         //   },
                         // )
-                      ],
+                        ],
 
+                      ),
+                      activeIcon: Image.asset(
+                        AppImages.expenseFill,
+                        height: 22,
+                        color: AppColors.primary,
+                      ),
                     ),
-                    activeIcon: Image.asset(AppImages.expenseFill,height: 22,),
+                BottomNavigationBarItem(
+                  label: "Invoices",
+                  icon: Image.asset(
+                    AppImages.bill,
+                    height: 22,
+                    color: Colors.black,
                   ),
-              BottomNavigationBarItem(
-                label: "Invoices",
-                icon: Image.asset(AppImages.bill,height: 22,),
-                activeIcon:  Image.asset(AppImages.billFill,height: 22,),
-              ),
-                  BottomNavigationBarItem(
-                    label: "Tasks",
-                    icon: Image.asset(AppImages.task,height: 22,),
-                    activeIcon:  Image.asset(AppImages.taskFill,height: 22,),
-                  )     ,
-                ],
+                  activeIcon: Image.asset(
+                    AppImages.billFill,
+                    height: 22,
+                    color: AppColors.primary,
+                  ),
+                ),
+                    BottomNavigationBarItem(
+                      label: "Tasks",
+                      icon: Image.asset(
+                        AppImages.task,
+                        height: 22,
+                        color: Colors.black,
+                      ),
+                      activeIcon: Image.asset(
+                        AppImages.taskFill,
+                        height: 22,
+                        color: AppColors.primary,
+                      ),
+                    )     ,
+                  ],
+                ),
               ),
             ),
           ),
