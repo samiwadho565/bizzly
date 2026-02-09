@@ -1,5 +1,6 @@
 import 'package:bizly/assets/images.dart';
 import 'package:bizly/modules/home/controllers/home_controller.dart';
+import 'package:bizly/modules/business/models/business_model.dart';
 import 'package:bizly/utils/app_colors.dart';
 import 'package:bizly/components/common/circle_icon_widget.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -26,23 +27,6 @@ import 'package:bizly/components/common/top_border_ccontainer.dart';
 class HomeScreen extends GetView<HomeScreenController> {
   final VoidCallback? openDrawer; // Callback add karein
    HomeScreen({super.key, this.openDrawer});
-
-  // final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
-  final List<Map<String, dynamic>> categories = [
-    {'title': 'Manufacturing', 'icon': 'assets/temp/manufacturing.jpg'},
-    {'title': 'Finance', 'icon': 'assets/temp/finance.jpg'},
-    {'title': 'Marketing', 'icon': 'assets/temp/markeeting.jpg'},
-    {'title': 'HR', 'icon': 'assets/temp/hr.jpg'},
-    {'title': 'IT', 'icon':  'assets/temp/it.jpg'},
-    {'title': 'Logistics', 'icon': 'assets/temp/logistics.jpg'},
-    {'title': 'Manufacturing', 'icon': 'assets/temp/manufacturing.jpg'},
-    {'title': 'Finance', 'icon': 'assets/temp/finance.jpg'},
-    {'title': 'Marketing', 'icon': 'assets/temp/markeeting.jpg'},
-    {'title': 'HR', 'icon': 'assets/temp/hr.jpg'},
-    {'title': 'IT', 'icon':  'assets/temp/it.jpg'},
-    {'title': 'Logistics', 'icon': 'assets/temp/logistics.jpg'},
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -145,9 +129,13 @@ class HomeScreen extends GetView<HomeScreenController> {
                   //   ),
                   // ),
                Expanded(
-                 child: SingleChildScrollView(
-                   child: Column(
-                     children: [
+                 child: RefreshIndicator(
+                   color: AppColors.primary,
+                   onRefresh: controller.fetchBusinesses,
+                   child: SingleChildScrollView(
+                     physics: const AlwaysScrollableScrollPhysics(),
+                     child: Column(
+                       children: [
                      // Padding(
                      //       padding: const EdgeInsets.symmetric(horizontal: 20),
                      //       child: Column(
@@ -243,32 +231,71 @@ class HomeScreen extends GetView<HomeScreenController> {
                        // ---------------- GridView ----------------
                        Padding(
                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                         child: GridView.builder(
-                           padding: EdgeInsets.only(bottom: 120),
-                           physics: const NeverScrollableScrollPhysics(), // Scroll disable
-                           shrinkWrap: true,
-                           itemCount: categories.length,
-                           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                               crossAxisCount: 3, // 2 columns
-                               // crossAxisSpacing: 3,
-                               mainAxisSpacing: 0,
-                               childAspectRatio: 1 // Width / Height ratio
-                           ),
-                           itemBuilder: (context, index) {
-                             final category = categories[index];
-                             return CategoryCard(
-                               title: category['title'],
-                               image: category['icon'],
-                               onTap: () {
-                                 print("tapped::${category['title']} clicked");
-                                 Get.toNamed(Routes.businessDetailScreen,);
-
-                               },
+                         child: Obx(() {
+                           if (controller.isBusinessesLoading.value) {
+                             return const Padding(
+                               padding: EdgeInsets.only(top: 20, bottom: 40),
+                               child: Center(
+                                 child: CircularProgressIndicator(
+                                   color: AppColors.primary,
+                                 ),
+                               ),
                              );
-                           },
-                         ),
+                           }
+
+                           if (controller.businesses.isEmpty) {
+                             return Padding(
+                               padding: const EdgeInsets.only(top: 20, bottom: 40),
+                               child: Center(
+                                 child: Text(
+                                   controller.businessesError.value.isNotEmpty
+                                       ? controller.businessesError.value
+                                       : "No businesses found.",
+                                   style: const TextStyle(
+                                     color: AppColors.textSecondary,
+                                   ),
+                                 ),
+                               ),
+                             );
+                           }
+
+                           return GridView.builder(
+                             padding: const EdgeInsets.only(bottom: 120),
+                             physics: const NeverScrollableScrollPhysics(),
+                             shrinkWrap: true,
+                             itemCount: controller.businesses.length,
+                             gridDelegate:
+                                 const SliverGridDelegateWithFixedCrossAxisCount(
+                               crossAxisCount: 3,
+                               mainAxisSpacing: 0,
+                               childAspectRatio: 1,
+                             ),
+                             itemBuilder: (context, index) {
+                               final business = controller.businesses[index];
+                               return CategoryCard(
+                                 title: business.businessName,
+                                 imageUrl: business.businessImageUrl,
+                                  heroTag: 'business_image_${business.id ?? index}',
+                                 onTap: () async {
+                                   final dynamic updated = await Get.toNamed(
+                                     Routes.businessDetailScreen,
+                                     arguments: business,
+                                   );
+                                   if (updated is BusinessModel) {
+                                     final int index = controller.businesses
+                                         .indexWhere((b) => b.id == updated.id);
+                                     if (index >= 0) {
+                                       controller.businesses[index] = updated;
+                                     }
+                                   }
+                                 },
+                               );
+                             },
+                           );
+                         }),
                        ),
-                     ],
+                       ],
+                     ),
                    ),
                  ),
                )

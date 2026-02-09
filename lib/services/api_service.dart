@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:bizly/app/constants/app_urls.dart';
 import 'package:bizly/models/api_response.dart';
@@ -46,6 +48,28 @@ class ApiService {
       () => _dio.post(
         path,
         data: data,
+        queryParameters: queryParameters,
+        options: Options(headers: requestHeaders),
+      ),
+    );
+  }
+
+  Future<ApiResponse> postMultipart(
+    String path, {
+    required Map<String, dynamic> data,
+    Map<String, dynamic>? queryParameters,
+    Map<String, String>? headers,
+    bool isAuth = false,
+  }) async {
+    final Map<String, String> requestHeaders =
+        await _buildHeaders(headers, isAuth);
+    requestHeaders['Content-Type'] = 'multipart/form-data';
+
+    final FormData formData = await _toFormData(data);
+    return _request(
+      () => _dio.post(
+        path,
+        data: formData,
         queryParameters: queryParameters,
         options: Options(headers: requestHeaders),
       ),
@@ -104,6 +128,28 @@ class ApiService {
         message: 'Something went wrong',
       );
     }
+  }
+
+  Future<ApiResponse> putMultipart(
+    String path, {
+    required Map<String, dynamic> data,
+    Map<String, dynamic>? queryParameters,
+    Map<String, String>? headers,
+    bool isAuth = false,
+  }) async {
+    final Map<String, String> requestHeaders =
+        await _buildHeaders(headers, isAuth);
+    requestHeaders['Content-Type'] = 'multipart/form-data';
+
+    final FormData formData = await _toFormData(data);
+    return _request(
+      () => _dio.put(
+        path,
+        data: formData,
+        queryParameters: queryParameters,
+        options: Options(headers: requestHeaders),
+      ),
+    );
   }
 
   ApiResponse _handleResponse(Response<dynamic> response) {
@@ -176,5 +222,40 @@ class ApiService {
     }
 
     return requestHeaders;
+  }
+
+  Future<FormData> _toFormData(Map<String, dynamic> data) async {
+    final Map<String, dynamic> payload = {};
+
+    for (final MapEntry<String, dynamic> entry in data.entries) {
+      final dynamic value = entry.value;
+      if (value == null) continue;
+
+      if (value is File) {
+        payload[entry.key] = await MultipartFile.fromFile(
+          value.path,
+          filename: value.path.split('/').last,
+        );
+        continue;
+      }
+
+      if (value is List<File>) {
+        final List<MultipartFile> files = [];
+        for (final File file in value) {
+          files.add(
+            await MultipartFile.fromFile(
+              file.path,
+              filename: file.path.split('/').last,
+            ),
+          );
+        }
+        payload[entry.key] = files;
+        continue;
+      }
+
+      payload[entry.key] = value;
+    }
+
+    return FormData.fromMap(payload);
   }
 }

@@ -4,8 +4,10 @@ import 'package:bizly/components/common/circle_icon_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:bizly/routes/routes.dart';
+import 'package:bizly/modules/home/controllers/home_controller.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title; // Only the title is dynamic now
@@ -63,14 +65,42 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
                 const SizedBox(width: 10),
                 InkWell(
-                  onTap: (){
-                    Get.toNamed(Routes.profileScreen );
+                  onTap: () {
+                    Get.toNamed(Routes.profileScreen);
                   },
-                  child:CircleAvatar(
-                    radius: 18,
-                    backgroundImage: AssetImage(AppImages.profilePlaceholder),
-                    backgroundColor: Colors.grey.shade400
-                  ),
+                  child: Obx(() {
+                    final HomeScreenController homeController =
+                        Get.find<HomeScreenController>();
+                    final String? url = homeController.displayImageUrl;
+                    return CircleAvatar(
+                      radius: 18,
+                      backgroundColor: Colors.grey.shade400,
+                      child: ClipOval(
+                        child: url != null && url.isNotEmpty
+                            ? CachedNetworkImage(
+                                imageUrl: url,
+                                width: 36,
+                                height: 36,
+                                fit: BoxFit.cover,
+                                placeholder: (_, __) => const Image(
+                                  image:
+                                      AssetImage(AppImages.profilePlaceholder),
+                                  fit: BoxFit.cover,
+                                ),
+                                errorWidget: (_, __, ___) => const Image(
+                                  image:
+                                      AssetImage(AppImages.profilePlaceholder),
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : const Image(
+                                image:
+                                    AssetImage(AppImages.profilePlaceholder),
+                                fit: BoxFit.cover,
+                              ),
+                      ),
+                    );
+                  }),
                 ),
               ],
             ),

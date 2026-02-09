@@ -1,21 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_navigation/src/extension_navigation.dart';
+import 'package:get/get.dart';
 import 'package:bizly/modules/customers/models/customer_model.dart';
 import 'package:bizly/routes/routes.dart';
 import 'package:bizly/utils/app_colors.dart';
 import 'package:bizly/utils/app_dialouge.dart';
+import 'package:bizly/modules/customers/controllers/customers_controller.dart';
+import 'package:bizly/assets/images.dart';
 import 'package:bizly/components/common/custom_app_bar_2.dart';
 import 'package:bizly/components/common/custom_button.dart';
-import 'package:bizly/components/common/custom_drop_down.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class CustomerDetailScreen extends StatelessWidget {
-  final CustomerModel customer;
+  final Rx<CustomerModel> customerRx;
 
-  const CustomerDetailScreen({super.key, required this.customer});
+  CustomerDetailScreen({super.key, required CustomerModel customer})
+      : customerRx = customer.obs;
 
   @override
   Widget build(BuildContext context) {
+    return Obx(() {
+      final CustomerModel customer = customerRx.value;
     return Scaffold(
       backgroundColor: AppColors.primaryDense,
       appBar: const CustomAppBar2(title: "Customer Detail",backgroundColor: AppColors.primaryDense,textColor: Colors.white,),
@@ -52,13 +56,24 @@ class CustomerDetailScreen extends StatelessWidget {
                         CircleAvatar(
                           radius: 32,
                           backgroundColor: AppColors.primary.withOpacity(0.1),
-                          child: Text(
-                            customer.name[0],
-                            style: const TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
+                          child: ClipOval(
+                            child: (customer.profileImage != null &&
+                                    customer.profileImage!.isNotEmpty)
+                                ? CachedNetworkImage(
+                                    imageUrl: customer.profileImage!,
+                                    width: 64,
+                                    height: 64,
+                                    fit: BoxFit.cover,
+                                    placeholder: (_, __) => const Image(
+                                      image: AssetImage(
+                                          AppImages.profilePlaceholder),
+                                      fit: BoxFit.cover,
+                                    ),
+                                    errorWidget: (_, __, ___) => _initialsAvatar(
+                                      customer.customerName,
+                                    ),
+                                  )
+                                : _initialsAvatar(customer.customerName),
                           ),
                         ),
                         const SizedBox(width: 15),
@@ -67,7 +82,7 @@ class CustomerDetailScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                customer.name,
+                              customer.customerName,
                                 style: const TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.bold,
@@ -75,7 +90,7 @@ class CustomerDetailScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                customer.address,
+                              customer.address,
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: Colors.grey.shade600,
@@ -89,34 +104,30 @@ class CustomerDetailScreen extends StatelessWidget {
                         PopupMenuButton<String>(
                           color:  AppColors.textField,
                           icon: const Icon(Icons.more_vert, size: 28),
-                          onSelected: (value) {
-                            if (value == 'Edit') {
-                              // TODO: Navigate to Edit Customer Screen
-                              print("Edit customer tapped");
-                            } else if (value == 'Delete') {
-                              AppDialogs.showConfirmation(
-                                title: "Delete Customer",
-                                message: "Are you sure you want to delete ${customer.name}?",
-                                onYes: () {
-                                  // ✅ Delete logic
-                                  print("${customer.name} deleted!");
-                                  Get.back(); // optional, close detail screen after delete
-                                },
-                                onNo: () {
-                                  print("Delete cancelled");
-                                },
-                              );
-                            }
+                          onSelected: (value) async {
+                            AppDialogs.showActionDialog(
+                              iconPath: AppImages.dialogTrash,
+                              title: "Delete Customer!",
+                              message:
+                              "Are you sure you want to delete ${customer.customerName}?",
+                              actions: [
+                                AppDialogAction(label: "Cancel"),
+                                AppDialogAction(
+                                  label: "Delete Customer",
+                                  textColor: Colors.red,
+                                  onPressed: () {
+                                    Get.find<CustomersController>()
+                                        .deleteCustomer(customer);
+                                  },
+                                ),
+                              ],
+                            );
                           },
                           itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                            PopupMenuItem<String>(
-                              value: 'Edit',
-                              child: Text('Edit'),
 
-                            ),
                             const PopupMenuItem<String>(
                               value: 'Delete',
-                              child: Text('Delete', style: TextStyle(color: Colors.red)),
+                              child: Text('Delete Customer', style: TextStyle(color: Colors.red)),
                             ),
                           ],
                         ),
@@ -139,68 +150,57 @@ class CustomerDetailScreen extends StatelessWidget {
                           _infoCard(
                             icon: Icons.phone,
                             title: "Phone Number",
-                            value: customer.phone,
+                          value: customer.phoneNumber,
                           ),
                           _infoCard(
                             icon: Icons.email,
                             title: "Email",
-                            value: customer.email,
+                          value: customer.email ?? "-",
                           ),
                           _infoCard(
                             icon: Icons.location_on,
                             title: "Address",
-                            value: customer.address,
+                          value: customer.address,
                           ),
 
                           /// Optional Fields (show only if available)
-                          if (customer.secondaryPhone != null)
-                            _infoCard(
-                              icon: Icons.phone_android,
-                              title: "Secondary Phone",
-                              value: customer.secondaryPhone!,
-                            ),
-                          if (customer.companyName != null)
-                            _infoCard(
-                              icon: Icons.business,
-                              title: "Company Name",
-                              value: customer.companyName!,
-                            ),
-                          if (customer.taxNumber != null)
-                            _infoCard(
-                              icon: Icons.confirmation_number,
-                              title: "Tax / NTN",
-                              value: customer.taxNumber!,
-                            ),
-                          if (customer.website != null)
-                            _infoCard(
-                              icon: Icons.language,
-                              title: "Website",
-                              value: customer.website!,
-                            ),
-                          if (customer.socialLink != null)
-                            _infoCard(
-                              icon: Icons.link,
-                              title: "Social Link",
-                              value: customer.socialLink!,
-                            ),
-                          if (customer.notes != null)
-                            _infoCard(
-                              icon: Icons.note,
-                              title: "Notes",
-                              value: customer.notes!,
-                            ),
-                          if (customer.city != null)
-                            _infoCard(
-                              icon: Icons.location_city,
-                              title: "City",
-                              value: customer.city!,
-                            ),
-                          if (customer.country != null)
-                            _infoCard(
-                              icon: Icons.flag,
-                              title: "Country",
-                              value: customer.country!,
-                            ),
+                        if ((customer.secondaryPhoneNumber ?? '').isNotEmpty)
+                          _infoCard(
+                            icon: Icons.phone_android,
+                            title: "Secondary Phone",
+                            value: customer.secondaryPhoneNumber!,
+                          ),
+                        if ((customer.companyName ?? '').isNotEmpty)
+                          _infoCard(
+                            icon: Icons.business,
+                            title: "Company Name",
+                            value: customer.companyName!,
+                          ),
+                        if ((customer.taxNtn ?? '').isNotEmpty)
+                          _infoCard(
+                            icon: Icons.confirmation_number,
+                            title: "Tax / NTN",
+                            value: customer.taxNtn!,
+                          ),
+                        if ((customer.website ?? '').isNotEmpty)
+                          _infoCard(
+                            icon: Icons.language,
+                            title: "Website",
+                            value: customer.website!,
+                          ),
+                        if ((customer.socialLink ?? '').isNotEmpty)
+                          _infoCard(
+                            icon: Icons.link,
+                            title: "Social Link",
+                            value: customer.socialLink!,
+                          ),
+                        if ((customer.notes ?? '').isNotEmpty)
+                          _infoCard(
+                            icon: Icons.note,
+                            title: "Notes",
+                            value: customer.notes!,
+                          ),
+
 
                           const SizedBox(height: 20),
                         ],
@@ -214,13 +214,19 @@ class CustomerDetailScreen extends StatelessWidget {
                     child: Row(
                       children: [
                         Expanded(
-                          child: CustomButton(
-                            color: AppColors.textPrimary,
-                            text: "Edit Customer",
-                            onPressed: () {
-                              // TODO: Navigate to EditCustomerScreen
-                            },
-                          ),
+                child: CustomButton(
+                  color: AppColors.textPrimary,
+                  text: "Edit Customer",
+                  onPressed: () async {
+                    final dynamic updated = await Get.toNamed(
+                      Routes.createCustomerScreen,
+                      arguments: customer,
+                    );
+                    if (updated is CustomerModel) {
+                      customerRx.value = updated;
+                    }
+                  },
+                ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -244,6 +250,7 @@ class CustomerDetailScreen extends StatelessWidget {
         ),
 
     );
+    });
   }
 
   /// 🔹 Info Card Widget (reuse same style as invoice/business screens)
@@ -297,6 +304,23 @@ class CustomerDetailScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _initialsAvatar(String name) {
+    return Container(
+      width: 64,
+      height: 64,
+      alignment: Alignment.center,
+      color: Colors.transparent,
+      child: Text(
+        name.isNotEmpty ? name[0] : "?",
+        style: const TextStyle(
+          fontSize: 26,
+          fontWeight: FontWeight.bold,
+          color: AppColors.primary,
+        ),
       ),
     );
   }

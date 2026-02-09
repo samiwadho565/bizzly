@@ -2,16 +2,19 @@
 import 'package:bizly/modules/business/screens/add_new_business_screen.dart';
 import 'package:bizly/modules/customers/screens/customers_screen/customers_screen.dart';
 import 'package:bizly/modules/expense/screens/add_expense_screen.dart';
+import 'package:bizly/modules/expense/screens/expense_screen.dart';
 import 'package:bizly/modules/expense/screens/expense_detail_screen.dart';
 import 'package:bizly/modules/home/screens/home_screen.dart';
 import 'package:bizly/modules/invoice/screens/invoice_detail_screen.dart';
 import 'package:bizly/modules/nav/screens/main_screen.dart';
 import 'package:bizly/modules/onboarding/screens/onboarding.dart';
 import 'package:bizly/modules/profile/screens/profile_screen/profile_screen.dart';
+import 'package:bizly/modules/profile/controllers/profile_controller.dart';
 import 'package:bizly/modules/tasks/screens/task_detail_screen.dart';
 import 'package:bizly/modules/team/screens/team_screen/team_screen.dart';
 import 'package:bizly/modules/auth/bindings/login_binding.dart';
 import 'package:bizly/modules/auth/bindings/signup_binding.dart';
+import 'package:bizly/modules/business/bindings/create_business_binding.dart';
 import 'package:bizly/modules/business/bindings/business_detail_binding.dart';
 import 'package:bizly/modules/expense/bindings/expense_binding.dart';
 import 'package:bizly/modules/expense/bindings/expense_detail_binding.dart';
@@ -41,6 +44,14 @@ import 'package:bizly/modules/profile/screens/profile_screen/tax_settings_screen
 import 'package:bizly/modules/tasks/screens/create_task_screen.dart';
 import 'package:bizly/modules/team/screens/team_screen/create_team_member.dart';
 import 'package:bizly/modules/vendors/screens/vendors/vendors_screen.dart';
+import 'package:bizly/modules/business/screens/business_tabs_screen.dart';
+import 'package:bizly/modules/splash/screens/splash_screen.dart';
+import 'package:bizly/modules/vendors/screens/vendors/create_vendor_screen.dart';
+import 'package:bizly/modules/vendors/bindings/create_vendor_binding.dart';
+import 'package:bizly/modules/vendors/controllers/vendors_controller.dart';
+import 'package:bizly/modules/customers/screens/customers_screen/create_customer_screen.dart';
+import 'package:bizly/modules/customers/bindings/create_customer_binding.dart';
+import 'package:bizly/modules/customers/controllers/customers_controller.dart';
 import 'routes.dart';
 
 
@@ -53,11 +64,10 @@ class AppPages {
       page: () => OnboardingScreen(),
       binding: OnboardingBinding(),
     ),
-    // GetPage(
-    //   name: Routes.splash,
-    //   page: () => const SplashScreen(),
-    //   binding: InitialBindings(),
-    // ),
+    GetPage(
+      name: Routes.splash,
+      page: () => const SplashScreen(),
+    ),
     GetPage(
       name: Routes.loginScreen,
       page: () => const LoginScreen(),
@@ -85,13 +95,19 @@ class AppPages {
     GetPage(
       name: Routes.addNewBusiness,
       page: () => AddNewBusinessScreen(),
-        transition: Transition.fadeIn
+      binding: CreateBusinessBinding(),
+      transition: Transition.fadeIn
     ),
     GetPage(
       name: Routes.addExpenseScreen,
       page: () => AddExpenseScreen(),
       binding: ExpenseBinding(),
         transition: Transition.fadeIn
+    ),
+    GetPage(
+      name: Routes.expenseScreen,
+      page: () => ExpenseScreen(),
+      binding: ExpenseBinding(),
     ),
     GetPage(
       name: Routes.createInvoiceScreen,
@@ -131,16 +147,35 @@ class AppPages {
     ),GetPage(
       name: Routes. customersScreen,
       page: () =>   CustomersScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<CustomersController>(() => CustomersController());
+      }),
         transition: Transition.fadeIn
     ),
     GetPage(
       name: Routes.profileScreen,
       page: () => const ProfileScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<ProfileController>(() => ProfileController());
+      }),
     ),
     GetPage(
       name: Routes.vendorsScreen,
       page: () =>  VendorsScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<VendorsController>(() => VendorsController());
+      }),
     ),    GetPage(
+      name: Routes.createVendorScreen,
+      page: () => CreateVendorScreen(),
+      binding: CreateVendorBinding(),
+    ),
+    GetPage(
+      name: Routes.createCustomerScreen,
+      page: () => CreateCustomerScreen(),
+      binding: CreateCustomerBinding(),
+    ),
+    GetPage(
       name: Routes.addCompanyAssetScreen,
       page: () =>  AddAssetScreen(),
     ), GetPage(
@@ -156,6 +191,10 @@ class AppPages {
     GetPage(
       name: Routes.companyAssetsScreen,
       page: () =>  CompanyAssetsScreen(),
+    ),
+    GetPage(
+      name: Routes.businessTabsScreen,
+      page: () => const BusinessTabsScreen(),
     ),
   GetPage(
       name: Routes.teamScreen,

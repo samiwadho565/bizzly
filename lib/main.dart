@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-void main() async{
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
@@ -23,8 +23,7 @@ class MyApp extends StatelessWidget {
       // initialBinding: InitialBindings(),
       // getPages: AppPages.routes,
       getPages: AppPages.routes,
-      initialRoute: Routes.onBoardingScreen
+      initialRoute: Routes.splash,
     );
   }
 }
-

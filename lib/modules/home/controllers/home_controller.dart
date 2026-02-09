@@ -1,6 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:bizly/app/constants/app_urls.dart';
+import 'package:bizly/models/api_response.dart';
+import 'package:bizly/modules/business/models/business_model.dart';
+import 'package:bizly/modules/auth/models/user_model.dart';
+import 'package:bizly/services/local_storage.dart';
+import 'package:bizly/services/api_service.dart';
 import 'package:bizly/utils/enum.dart';
 import 'package:bizly/utils/app_colors.dart';
 
@@ -11,6 +17,12 @@ class HomeScreenController extends GetxController {
   late List<RevenueBar> weeklyData;
   late List<RevenueBar> monthlyData;
   late List<RevenueBar> yearlyData;
+
+  final RxList<BusinessModel> businesses = <BusinessModel>[].obs;
+  final RxBool isBusinessesLoading = false.obs;
+  final RxString businessesError = ''.obs;
+  final Rxn<UserModel> user = Rxn<UserModel>();
+  final RxString imageCacheBuster = ''.obs;
 
   @override
   void onInit() {
@@ -51,6 +63,10 @@ class HomeScreenController extends GetxController {
     weeklyData[0].isSelected.value = true;
     monthlyData[0].isSelected.value = true;
     yearlyData[0].isSelected.value = true;
+
+    _loadUser();
+    _fetchUserProfile();
+    fetchBusinesses();
   }
 
   List<RevenueBar> get currentData {
@@ -96,6 +112,76 @@ class HomeScreenController extends GetxController {
         break;
     }
   }
+
+  Future<void> fetchBusinesses() async {
+    if (isBusinessesLoading.value) return;
+    isBusinessesLoading.value = true;
+    businessesError.value = '';
+
+    ApiResponse response = await ApiService().get(
+      AppUrls.getAllBusinesses,
+      isAuth: true,
+    );
+
+    if (response.success && response.data is List) {
+      final List<dynamic> items = response.data as List<dynamic>;
+      businesses.assignAll(
+        items
+            .whereType<Map<String, dynamic>>()
+            .map((json) => BusinessModel.fromJson(json))
+            .toList(),
+      );
+    } else {
+      businesses.clear();
+      businessesError.value = response.message;
+    }
+
+    isBusinessesLoading.value = false;
+  }
+
+  Future<void> _loadUser() async {
+    final UserModel? local = await LocalStorage.getUser();
+    if (local != null) {
+      user.value = local;
+      _bustCache();
+    }
+  }
+
+  Future<void> _fetchUserProfile() async {
+    final ApiResponse response = await ApiService().get(
+      AppUrls.profile,
+      isAuth: true,
+    );
+    if (response.success && response.data is Map) {
+      final Map<String, dynamic> map =
+          Map<String, dynamic>.from(response.data as Map);
+      final Map<String, dynamic> payload =
+          map['data'] is Map ? Map<String, dynamic>.from(map['data'] as Map) : map;
+      final UserModel updated = UserModel.fromJson(payload);
+      user.value = updated;
+      _bustCache();
+      await LocalStorage.saveUser(updated);
+    }
+  }
+
+  void setUser(UserModel updated) {
+    user.value = updated;
+    _bustCache();
+  }
+
+  String? get displayImageUrl {
+    final String? url = user.value?.imageUrl;
+    if (url == null || url.isEmpty) return null;
+    final String buster = imageCacheBuster.value;
+    if (buster.isEmpty) return url;
+    final String separator = url.contains('?') ? '&' : '?';
+    return '$url${separator}v=$buster';
+  }
+
+  void _bustCache() {
+    imageCacheBuster.value =
+        DateTime.now().millisecondsSinceEpoch.toString();
+  }
 }
 
 
@@ -111,4 +197,3 @@ class RevenueBar {
     bool isSelected = false, // default value
   }) : isSelected = isSelected.obs;
 }
-

@@ -1,8 +1,15 @@
 class FormValidations {
+  static String? validateRequiredMin3(String value, {String fieldName = "Field"}) {
+    final String trimmed = value.trim();
+    if (trimmed.isEmpty) return "$fieldName is required";
+    if (trimmed.length < 3) return "$fieldName must be at least 3 characters";
+    return null;
+  }
+
   static String? validateName(String value) {
     final String trimmed = value.trim();
     if (trimmed.isEmpty) return "Name is required";
-    if (trimmed.length < 2) return "Name must be at least 2 characters";
+    if (trimmed.length < 3) return "Name must be at least 3 characters";
     return null;
   }
 

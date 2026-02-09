@@ -1,27 +1,16 @@
 import 'package:bizly/assets/images.dart';
-import 'package:bizly/components/common/add_button.dart';
-import 'package:bizly/components/common/circle_icon_widget.dart';
 import 'package:bizly/components/common/custom_app_bar_2.dart';
-import 'package:bizly/components/common/custom_drop_down.dart';
-import 'package:bizly/components/common/custom_tab_bar.dart';
-import 'package:bizly/components/common/custom_toggle_button.dart';
-import 'package:bizly/components/common/task_card_widget.dart';
-import 'package:bizly/components/home/bussiness_card.dart';
-import 'package:bizly/components/home/custom_app_bar.dart';
-import 'package:bizly/components/home/custom_revenue_chart.dart';
-import 'package:bizly/components/home/flow_chart.dart';
-import 'package:bizly/components/invoice/invoice_card.dart';
-import 'package:bizly/components/projects/project_detail_card.dart';
 import 'package:bizly/routes/routes.dart';
 import 'package:bizly/utils/app_colors.dart';
 import 'package:bizly/utils/app_utils.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:bizly/modules/profile/controllers/profile_controller.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 // ProfileTile ko import karein
 // import 'package:bizly/widgets/profile_tile.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends GetView<ProfileController> {
   const ProfileScreen({super.key});
 
   @override
@@ -31,9 +20,12 @@ class ProfileScreen extends StatelessWidget {
       appBar: CustomAppBar2(title: "Profile"),
 
       body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        child: Obx(() {
+          final user = controller.user.value;
+          final String? displayImageUrl = controller.displayImageUrl;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // User Info Header
         Container(
         margin: const EdgeInsets.all(20),
@@ -53,10 +45,41 @@ class ProfileScreen extends StatelessWidget {
           children: [
             Stack(
               children: [
-                const CircleAvatar(
+                CircleAvatar(
                   radius: 40,
-                  backgroundImage:
-                  AssetImage(AppImages.profilePlaceholder), // Replace with user's image
+                  backgroundColor: Colors.grey.shade400,
+                  child: ClipOval(
+                    child: controller.avatarFile.value != null
+                        ? Image.file(
+                            controller.avatarFile.value!,
+                            width: 80,
+                            height: 80,
+                            fit: BoxFit.cover,
+                          )
+                        : (displayImageUrl != null &&
+                                displayImageUrl.isNotEmpty
+                            ? CachedNetworkImage(
+                                imageUrl: displayImageUrl,
+                                width: 80,
+                                height: 80,
+                                fit: BoxFit.cover,
+                                placeholder: (_, __) => const Image(
+                                  image:
+                                      AssetImage(AppImages.profilePlaceholder),
+                                  fit: BoxFit.cover,
+                                ),
+                                errorWidget: (_, __, ___) => const Image(
+                                  image:
+                                      AssetImage(AppImages.profilePlaceholder),
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : const Image(
+                                image:
+                                    AssetImage(AppImages.profilePlaceholder),
+                                fit: BoxFit.cover,
+                              )),
+                  ),
                 ),
                 // Edit icon
                 Positioned(
@@ -64,9 +87,21 @@ class ProfileScreen extends StatelessWidget {
                   right: 0,
                   child: GestureDetector(
                     onTap: () {
-                      print("Edit profile image tapped");
-                      AppUtils.showEditProfileSheet(currentName: "Lisa Smith", currentEmail: "LisaSmith@gmail.com", currentPhone: "+1 (212) 555-0147", onSave: (){});
-                      // TODO: Open image picker or edit profile sheet
+                      AppUtils.showEditProfileSheet(
+                        currentName: user?.name ?? "",
+                        currentEmail: user?.email ?? "",
+                        currentPhone: user?.phone ?? "",
+                        onPickImage: controller.pickAvatar,
+                        isSaving: controller.isUpdating,
+                        avatarFile: controller.avatarFile,
+                        imageUrl: displayImageUrl,
+                        onSave: (name, phone) async {
+                          await controller.updateProfile(
+                            name: name,
+                            phone: phone,
+                          );
+                        },
+                      );
                     },
                     child: Container(
                       decoration: BoxDecoration(
@@ -95,20 +130,20 @@ class ProfileScreen extends StatelessWidget {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Text(
-                    "Lisa Smith",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    user?.name ?? "—",
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 4),
                   Text(
-                    "LisaSmith@gmail.com",
-                    style: TextStyle(color: Colors.grey),
+                    user?.email ?? "—",
+                    style: const TextStyle(color: Colors.grey),
                   ),
                   SizedBox(height: 2),
                   Text(
-                    "+1 (212) 555-0147",
-                    style: TextStyle(color: Colors.grey),
+                    (user?.phone ?? "").isNotEmpty ? user!.phone! : "—",
+                    style: const TextStyle(color: Colors.grey),
                   ),
                 ],
               ),
@@ -156,19 +191,20 @@ class ProfileScreen extends StatelessWidget {
                   ProfileTile(
                       title: "Log Out",
                       textColor: AppColors.primary.withOpacity(0.7),
-                      onTap: () {}
+                      onTap: controller.showLogoutSheet
                   ),
                   ProfileTile(
                       title: "Delete Account",
                       textColor: Colors.red,
-                      onTap: () {}
+                      onTap: controller.showDeleteAccountSheet
                   ),
                   const SizedBox(height: 30),
                 ],
               ),
             ),
           ],
-        ),
+        );
+        }),
       ),
     );
   }

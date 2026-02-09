@@ -3,11 +3,14 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 
 import 'package:bizly/utils/app_colors.dart';
+import 'package:bizly/assets/images.dart';
 
 class CategoryCard extends StatelessWidget {
   final String title;
   final IconData? icon;
   final String? image;
+  final String? imageUrl;
+  final String? heroTag;
   final VoidCallback onTap;
 
   const CategoryCard({
@@ -16,6 +19,8 @@ class CategoryCard extends StatelessWidget {
      this.icon,
     required this.onTap,
     this.image,
+    this.imageUrl,
+    this.heroTag,
   });
 
   @override
@@ -35,7 +40,7 @@ class CategoryCard extends StatelessWidget {
             boxShadow: [
               // dark shadow bottom-right
               BoxShadow(
-                color: Colors.grey.shade300,
+                color: Colors.grey.shade100,
                 offset: const Offset(3, 3),
                 blurRadius: 4,
                 spreadRadius: 1,
@@ -59,15 +64,7 @@ class CategoryCard extends StatelessWidget {
           //     color:  AppColors.primary.withOpacity(0.8),// Teal color jo aapki image mein hai
           //   ),
           // ),
-          child:
-          icon != null ?Icon(
-                icon,
-                size: 34,
-                color:  AppColors.primary.withOpacity(0.8),// Teal color jo aapki image mein hai
-              ):image != null ?
-          ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.asset(image!, fit: BoxFit.cover)) : SizedBox()),
+          child: _buildImage()),
           const SizedBox(height: 5),
           // Title Text
           Expanded(
@@ -87,5 +84,49 @@ class CategoryCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildImage() {
+    if (icon != null) {
+      return Icon(
+        icon,
+        size: 34,
+        color: AppColors.primary.withOpacity(0.8),
+      );
+    }
+
+    final bool hasBusinessHero = heroTag != null && heroTag!.isNotEmpty;
+
+    Widget imageWidget;
+
+    if (imageUrl != null && imageUrl!.isNotEmpty) {
+      imageWidget = ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.network(
+          imageUrl!,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Image.asset(
+            AppImages.building,
+            fit: BoxFit.cover,
+          ),
+        ),
+      );
+    } else if (image != null && image!.isNotEmpty) {
+      imageWidget = ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Center(
+          child: Image.asset(
+              image!, fit: BoxFit.cover),
+        ),
+      );
+    } else {
+      imageWidget = Image.asset(AppImages.building, fit: BoxFit.cover);
+    }
+
+    if (hasBusinessHero) {
+      return Hero(tag: heroTag!, child: imageWidget);
+    }
+
+    return imageWidget;
   }
 }

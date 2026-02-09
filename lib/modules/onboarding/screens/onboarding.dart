@@ -8,6 +8,7 @@ import 'package:get/get_core/src/get_main.dart';
 import 'package:bizly/modules/onboarding/controllers/on_boarding_controller.dart';
 import 'package:bizly/routes/routes.dart';
 import 'package:bizly/components/common/vertical_widget.dart';
+import 'package:bizly/services/local_storage.dart';
 class OnboardingScreen extends StatelessWidget {
   final controller = Get.find<OnboardingController>();
   final PageController pageController = PageController();
@@ -40,8 +41,8 @@ class OnboardingScreen extends StatelessWidget {
             bottom: 70,
             right: 40,
             child: InkWell(
-              onTap: () {
-                print("skip:::");
+              onTap: () async {
+                await LocalStorage.setOnboardingSeen(true);
                 Get.offAllNamed(Routes.loginScreen);
               },
               child: const Text(
@@ -70,7 +71,8 @@ class OnboardingContent extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           SizedBox(height: 20,),
-            Image.asset(AppImages.logo, width: Get.width,height: Get.height*0.30,color: AppColors.primaryDense,),
+            Center(child: Hero(
+                tag: 'logo',child:  Image.asset(AppImages.logo, width: Get.width,height: Get.height*0.30,color: AppColors.primaryDense,))),
           // SizedBox(height: 10,),
           // Text("Smart Money.Simplified.",style: TextStyle(color: Colors.amber),),
           //

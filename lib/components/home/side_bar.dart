@@ -103,7 +103,10 @@ class CustomSideBar extends StatelessWidget {
             _drawerItem(
               icon: AppImages.expenseFill,
               title: "Expanses",
-              onTap: () => Get.toNamed(Routes.companyAssetsScreen),
+              onTap: () {
+                Get.back();
+                Get.toNamed(Routes.expenseScreen);
+              },
             ),
 
 

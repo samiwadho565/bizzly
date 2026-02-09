@@ -59,6 +59,7 @@ class SignInController extends GetxController {
       }
       if (data['user'] is Map<String, dynamic>) {
         user = UserModel.fromJson(data['user'] as Map<String, dynamic>);
+        await LocalStorage.saveUser(user);
 
         if (rememberMe.value) {
           await LocalStorage.saveRememberedEmail(

@@ -9,6 +9,8 @@ import 'package:bizly/components/common/custom_search_field.dart';
 import 'package:bizly/components/common/custom_tab_bar.dart';
 import 'package:bizly/components/common/task_card_widget.dart';
 import 'package:bizly/components/common/top_border_ccontainer.dart';
+
+import '../../business/screens/business_detail_screen.dart';
 // import 'tasks_screen_controller.dart';
 
 class TasksScreen extends StatelessWidget {

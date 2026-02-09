@@ -11,6 +11,7 @@ class Routes {
   static const  vendorsScreen  = '/vendors_screen';
   static const  vendorDetailScreen  = '/vendor_detail_screen';
   static const  createVendorScreen  = '/create_vendor_screen';
+  static const  createCustomerScreen  = '/create_customer_screen';
   static const  teamScreen  = '/team_screen';
   static const addEmployeeScreen  = '/add_employee_screen';
   static const  companyAssetsScreen  = '/company_assets_screen';
@@ -23,6 +24,7 @@ class Routes {
   static const profileScreen = '/profile_screen';
   static const mainScreen = '/main_screen';
   static const expenseDetailScreen = '/expense_detail_screen';
+  static const expenseScreen = '/expense_screen';
   static const invoiceDetailScreen = '/invoice_detail_screen';
   static const taskDetailScreen = '/task_detail_screen';
   static const addNewBusiness = '/add_new_business_screen';
@@ -34,4 +36,5 @@ class Routes {
   static const singleOrderScreen = '/single_order_screen';
   static const notificationScreen = '/notification_screen';
   static const otpVerificationScreen = '/OtpVerificationScreen';
+  static const businessTabsScreen = '/business_tabs_screen';
 }

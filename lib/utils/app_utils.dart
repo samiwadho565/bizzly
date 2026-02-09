@@ -1,10 +1,13 @@
 // # Toasts, validation, helpers
 
+import 'dart:io';
+
 import 'package:bizly/assets/images.dart';
 import 'package:bizly/components/common/custom_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:bizly/components/common/custom_tab_bar.dart';
 import 'app_colors.dart';
@@ -40,7 +43,11 @@ class AppUtils {
     required String currentName,
     required String currentEmail,
     required String currentPhone,
-    required VoidCallback onSave,
+    required VoidCallback onPickImage,
+    required Future<void> Function(String name, String phone) onSave,
+    required RxBool isSaving,
+    required Rxn<File> avatarFile,
+    required String? imageUrl,
   }) {
     final TextEditingController nameController =
     TextEditingController(text: currentName);
@@ -79,45 +86,73 @@ class AppUtils {
               // const SizedBox(height: 20),
 
               /// Profile Image
-              Stack(
-                children: [
-                  const CircleAvatar(
-                    radius: 40,
-                    backgroundImage:
-                    AssetImage(AppImages.profilePlaceholder), // Replace with user's image
-                  ),
-                  // Edit icon
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: GestureDetector(
-                      onTap: () {
-                        print("Edit profile image tapped");
-                        // AppUtils.showEditProfileSheet(currentName: "Lisa Smith", currentEmail: "LisaSmith@gmail.com", currentPhone: "+1 (212) 555-0147", onSave: (){});
-                        // TODO: Open image picker or edit profile sheet
-                      },
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        padding: const EdgeInsets.all(4),
-                        child: const Icon(
-                          Icons.camera_alt,
-                          size: 18,
-                          color: Colors.blue, // primary color
+              Obx(
+                () => Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 40,
+                      backgroundColor: Colors.grey.shade400,
+                      child: ClipOval(
+                        child: avatarFile.value != null
+                            ? Image.file(
+                                avatarFile.value!,
+                                width: 80,
+                                height: 80,
+                                fit: BoxFit.cover,
+                              )
+                            : (imageUrl != null && imageUrl!.isNotEmpty
+                                ? CachedNetworkImage(
+                                    imageUrl: imageUrl!,
+                                    width: 80,
+                                    height: 80,
+                                    fit: BoxFit.cover,
+                                    placeholder: (_, __) => const Image(
+                                      image: AssetImage(
+                                          AppImages.profilePlaceholder),
+                                      fit: BoxFit.cover,
+                                    ),
+                                    errorWidget: (_, __, ___) => const Image(
+                                      image: AssetImage(
+                                          AppImages.profilePlaceholder),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : const Image(
+                                    image: AssetImage(
+                                        AppImages.profilePlaceholder),
+                                    fit: BoxFit.cover,
+                                  )),
+                      ),
+                    ),
+                    // Edit icon
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: GestureDetector(
+                        onTap: onPickImage,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          padding: const EdgeInsets.all(4),
+                          child: const Icon(
+                            Icons.camera_alt,
+                            size: 18,
+                            color: Colors.blue, // primary color
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const SizedBox(height: 20),
 
@@ -132,6 +167,7 @@ class AppUtils {
               CustomTextField(
                 controller: emailController,
           hintText: "Email",
+                enabled: false,
                 // keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 15),
@@ -145,26 +181,40 @@ class AppUtils {
               const SizedBox(height: 25),
 
               /// Save Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+              Obx(
+                () => SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  onPressed: () {
-                    // TODO: Add save logic
-                    print(
-                        "Saved: ${nameController.text}, ${emailController.text}, ${phoneController.text}");
-                    onSave();
-                    Get.back();
-                  },
-                  child: const Text(
-                    "Save Changes",
-                    style: TextStyle(color: Colors.white, fontSize: 16),
+                    onPressed: isSaving.value
+                        ? null
+                        : () async {
+                            await onSave(
+                              nameController.text.trim(),
+                              phoneController.text.trim(),
+                            );
+                            Get.back();
+                          },
+                    child: isSaving.value
+                        ? const SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : const Text(
+                            "Save Changes",
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
                   ),
                 ),
               ),

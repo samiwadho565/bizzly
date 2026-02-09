@@ -6,21 +6,40 @@ import 'package:bizly/utils/app_colors.dart';
 import 'package:bizly/utils/app_dialouge.dart';
 import 'package:bizly/components/common/custom_app_bar_2.dart';
 import 'package:bizly/components/common/custom_button.dart';
+import 'package:bizly/modules/vendors/controllers/vendors_controller.dart';
+import 'package:bizly/assets/images.dart';
 
 class VendorDetailScreen extends StatelessWidget {
-  final VendorModel vendor;
+  final Rx<VendorModel> vendorRx;
 
-  const VendorDetailScreen({super.key, required this.vendor});
+  VendorDetailScreen({super.key, required VendorModel vendor})
+      : vendorRx = vendor.obs;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.primaryDense,
-      appBar: const CustomAppBar2(
-        title: "Vendor Detail",
+    return Obx(() {
+      final VendorModel vendor = vendorRx.value;
+      return Scaffold(
         backgroundColor: AppColors.primaryDense,
-        textColor: Colors.white,
-      ),
+        appBar: CustomAppBar2(
+          title: "Vendor Detail",
+          backgroundColor: AppColors.primaryDense,
+          textColor: Colors.white,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.edit, color: Colors.white),
+              onPressed: () async {
+                final dynamic updated = await Get.toNamed(
+                  Routes.createVendorScreen,
+                  arguments: vendor,
+                );
+                if (updated is VendorModel) {
+                  vendorRx.value = updated;
+                }
+              },
+            ),
+          ],
+        ),
       body: SafeArea(
         top: true,
         bottom: false,
@@ -55,7 +74,9 @@ class VendorDetailScreen extends StatelessWidget {
                         backgroundColor:
                         AppColors.primary.withOpacity(0.1),
                         child: Text(
-                          vendor.name[0],
+                          vendor.vendorName.isNotEmpty
+                              ? vendor.vendorName[0]
+                              : "?",
                           style: const TextStyle(
                             fontSize: 26,
                             fontWeight: FontWeight.bold,
@@ -69,7 +90,7 @@ class VendorDetailScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              vendor.name,
+                              vendor.vendorName,
                               style: const TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
@@ -77,7 +98,7 @@ class VendorDetailScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              vendor.address,
+                              vendor.address ?? "-",
                               style: TextStyle(
                                 fontSize: 13,
                                 color: Colors.grey.shade600,
@@ -91,29 +112,31 @@ class VendorDetailScreen extends StatelessWidget {
                       PopupMenuButton<String>(
                         color: AppColors.textField,
                         icon: const Icon(Icons.more_vert, size: 28),
-                        onSelected: (value) {
-                          if (value == 'Edit') {
-                            // TODO: Navigate to EditVendorScreen
-                          } else if (value == 'Delete') {
-                            AppDialogs.showConfirmation(
-                              title: "Delete Vendor",
+                        onSelected: (value) async {
+
+                            AppDialogs.showActionDialog(
+                              iconPath: AppImages.dialogTrash,
+                              title: "Delete Vendor!",
                               message:
-                              "Are you sure you want to delete ${vendor.name}?",
-                              onYes: () {
-                                Get.back();
-                              },
+                                  "Are you sure you want to delete ${vendor.vendorName}?",
+                              actions: [
+                                AppDialogAction(label: "Cancel"),
+                                AppDialogAction(
+                                  label: "Delete Vendor",
+                                  textColor: Colors.red,
+                                  onPressed: () {
+                                    Get.find<VendorsController>()
+                                        .deleteVendor(vendor);
+                                  },
+                                ),
+                              ],
                             );
-                          }
-                        },
+                          },
                         itemBuilder: (context) => const [
-                          PopupMenuItem(
-                            value: 'Edit',
-                            child: Text('Edit'),
-                          ),
                           PopupMenuItem(
                             value: 'Delete',
                             child: Text(
-                              'Delete',
+                              'Delete Vendor',
                               style: TextStyle(color: Colors.red),
                             ),
                           ),
@@ -137,60 +160,36 @@ class VendorDetailScreen extends StatelessWidget {
                         _infoCard(
                           icon: Icons.phone,
                           title: "Phone Number",
-                          value: vendor.phone,
+                          value: vendor.phoneNumber,
                         ),
                         _infoCard(
                           icon: Icons.email,
                           title: "Email",
-                          value: vendor.email,
+                          value: vendor.email ?? "-",
                         ),
                         _infoCard(
                           icon: Icons.location_on,
                           title: "Address",
-                          value: vendor.address,
+                          value: vendor.address ?? "-",
                         ),
 
-                        if (vendor.secondaryPhone.isNotEmpty)
-                          _infoCard(
-                            icon: Icons.phone_android,
-                            title: "Secondary Phone",
-                            value: vendor.secondaryPhone,
-                          ),
-                        if (vendor.companyName.isNotEmpty)
+                        if ((vendor.companyName ?? '').isNotEmpty)
                           _infoCard(
                             icon: Icons.business,
                             title: "Company Name",
-                            value: vendor.companyName,
+                            value: vendor.companyName ?? "-",
                           ),
-                        if (vendor.taxNumber.isNotEmpty)
+                        if ((vendor.taxNumber ?? '').isNotEmpty)
                           _infoCard(
                             icon: Icons.confirmation_number,
                             title: "Tax / NTN",
-                            value: vendor.taxNumber,
+                            value: vendor.taxNumber ?? "-",
                           ),
-                        if (vendor.website.isNotEmpty)
-                          _infoCard(
-                            icon: Icons.language,
-                            title: "Website",
-                            value: vendor.website,
-                          ),
-                        if (vendor.notes.isNotEmpty)
+                        if ((vendor.notes ?? '').isNotEmpty)
                           _infoCard(
                             icon: Icons.note,
                             title: "Notes",
-                            value: vendor.notes,
-                          ),
-                        if (vendor.city.isNotEmpty)
-                          _infoCard(
-                            icon: Icons.location_city,
-                            title: "City",
-                            value: vendor.city,
-                          ),
-                        if (vendor.country.isNotEmpty)
-                          _infoCard(
-                            icon: Icons.flag,
-                            title: "Country",
-                            value: vendor.country,
+                            value: vendor.notes ?? "-",
                           ),
                       ],
                     ),
@@ -207,8 +206,14 @@ class VendorDetailScreen extends StatelessWidget {
                         child: CustomButton(
                           color: AppColors.textPrimary,
                           text: "Edit Vendor",
-                          onPressed: () {
-                            // TODO: Edit Vendor
+                          onPressed: () async {
+                            final dynamic updated = await Get.toNamed(
+                              Routes.createVendorScreen,
+                              arguments: vendor,
+                            );
+                            if (updated is VendorModel) {
+                              vendorRx.value = updated;
+                            }
                           },
                         ),
                       ),
@@ -229,7 +234,8 @@ class VendorDetailScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
+      );
+    });
   }
 
   /// 🔹 Info Card

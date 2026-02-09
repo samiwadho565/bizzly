@@ -13,6 +13,7 @@ class CustomTextField extends StatefulWidget {
   final ValueChanged<String>? onFieldSubmitted;
  final double? verticalPadding;
  final int maxLine;
+  final bool enabled;
   const CustomTextField({
     super.key,
     this.maxLine=1,
@@ -25,6 +26,7 @@ class CustomTextField extends StatefulWidget {
     this.textInputAction,
     this.keyboardType,
     this.onFieldSubmitted,
+    this.enabled = true,
   });
 
   @override
@@ -39,6 +41,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
     return TextFormField(
       maxLines: widget.maxLine,
       controller: widget.controller,
+      enabled: widget.enabled,
       validator: widget.validator,
       focusNode: widget.focusNode,
       textInputAction: widget.textInputAction,
@@ -67,6 +70,13 @@ class _CustomTextFieldState extends State<CustomTextField> {
           borderRadius: BorderRadius.circular(15),
           borderSide: BorderSide(
             color: Colors.grey.withOpacity(0.2), // Boht halki border
+            width: 1,
+          ),
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(
+            color: Colors.grey.withOpacity(0.2),
             width: 1,
           ),
         ),

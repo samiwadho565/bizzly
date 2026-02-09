@@ -1,94 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bizly/modules/customers/models/customer_model.dart';
+import 'package:bizly/modules/customers/controllers/customers_controller.dart';
 import 'package:bizly/utils/app_colors.dart';
 import 'package:bizly/components/common/custom_search_field.dart';
-import 'package:bizly/components/common/custom_button.dart';
 import 'package:bizly/components/common/custom_app_bar_2.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:bizly/assets/images.dart';
 import 'customer_detail_screen.dart';
+import '../../../../routes/routes.dart';
 
-class CustomersScreen extends StatefulWidget {
+class CustomersScreen extends GetView<CustomersController> {
   const CustomersScreen({super.key});
-
-  @override
-  State<CustomersScreen> createState() => _CustomersScreenState();
-}
-
-class _CustomersScreenState extends State<CustomersScreen> {
-  final TextEditingController _searchController = TextEditingController();
-  List<CustomerModel> allCustomers = [];
-  List<CustomerModel> filteredCustomers = [];
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Dummy data
-    allCustomers = [
-      CustomerModel(
-        name: "John Doe",
-        email: "john@example.com",
-        phone: "+92 300 1234567",
-        address: "Karachi, Pakistan",
-        secondaryPhone: "+92 300 7654321",
-        companyName: "Fixonto Ltd",
-        taxNumber: "1234567",
-        website: "www.fixonto.com",
-        socialLink: "https://facebook.com/johndoe",
-        notes: "VIP customer",
-        city: "Karachi",
-        country: "Pakistan",
-      ),
-      CustomerModel(
-        name: "Jane Smith",
-        email: "jane@example.com",
-        phone: "+92 301 9876543",
-        address: "Lahore, Pakistan",
-        secondaryPhone: "+92 301 1234567",
-        companyName: "Tech Solutions",
-        taxNumber: "7654321",
-        website: "www.techsolutions.com",
-        socialLink: "https://linkedin.com/in/janesmith",
-        notes: "Frequent buyer",
-        city: "Lahore",
-        country: "Pakistan",
-      ),
-      CustomerModel(
-        name: "Ali Khan",
-        email: "ali@example.com",
-        phone: "+92 302 1122334",
-        address: "Islamabad",
-        secondaryPhone: "+92 302 9988776",
-        companyName: "Khan Enterprises",
-        taxNumber: "1122334",
-        website: "www.khanenterprises.com",
-        socialLink: "https://twitter.com/alikhan",
-        notes: "New customer",
-        city: "Islamabad",
-        country: "Pakistan",
-      ),
-    ];
-
-
-    filteredCustomers = allCustomers;
-  }
-
-  void _filterCustomers(String query) {
-    if (query.isEmpty) {
-      setState(() {
-        filteredCustomers = allCustomers;
-      });
-    } else {
-      setState(() {
-        filteredCustomers = allCustomers
-            .where((c) =>
-        c.name.toLowerCase().contains(query.toLowerCase()) ||
-            c.email.toLowerCase().contains(query.toLowerCase()) ||
-            c.phone.contains(query))
-            .toList();
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -112,9 +35,9 @@ class _CustomersScreenState extends State<CustomersScreen> {
                       padding: const EdgeInsets.all(8.0),
                       child: CustomSearchField(
                         hintText: "Search Customers...",
-                        controller: _searchController,
-                        onChanged: _filterCustomers,
-                        onClear: () => _filterCustomers(""),
+                        controller: controller.searchController,
+                        onChanged: controller.filter,
+                        onClear: () => controller.filter(""),
                       ),
                     ),
                   ],
@@ -124,22 +47,53 @@ class _CustomersScreenState extends State<CustomersScreen> {
 
           // 🔹 Customers List
           Expanded(
-            child: filteredCustomers.isEmpty
-                ? const Center(
-              child: Text("No customers found"),
-            )
-                : ListView.builder(
-              padding: EdgeInsets.only(bottom: 100,left: 20,right: 20,top: 20),
-              itemCount: filteredCustomers.length,
-              itemBuilder: (context, index) {
-                final customer = filteredCustomers[index];
-                return InkWell(
-                    onTap: (){
-                      Get.to(() => CustomerDetailScreen(customer: customer));
-                    },
-                    child: _customerCard(customer));
-              },
-            ),
+            child: Obx(() {
+              if (controller.isLoading.value) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    color: AppColors.primary,
+                  ),
+                );
+              }
+              return RefreshIndicator(
+                color: AppColors.primary,
+                onRefresh: controller.fetchCustomers,
+                child: controller.filtered.isEmpty
+                    ? ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          SizedBox(
+                            height: 200,
+                            child: Center(
+                              child: Text(
+                                controller.error.value.isNotEmpty
+                                    ? controller.error.value
+                                    : "No customers found",
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.only(
+                          bottom: 100,
+                          left: 20,
+                          right: 20,
+                          top: 20,
+                        ),
+                        itemCount: controller.filtered.length,
+                        itemBuilder: (context, index) {
+                          final customer = controller.filtered[index];
+                          return InkWell(
+                            onTap: () {
+                              Get.to(() => CustomerDetailScreen(customer: customer));
+                            },
+                            child: _customerCard(customer),
+                          );
+                        },
+                      ),
+              );
+            }),
           ),
         ],
       ),
@@ -147,8 +101,8 @@ class _CustomersScreenState extends State<CustomersScreen> {
       // 🔹 Floating Add Button
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
-        onPressed: () {
-          // TODO: Navigate to AddCustomerScreen
+        onPressed: () async {
+           Get.toNamed(Routes.createCustomerScreen);
         },
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -176,13 +130,24 @@ class _CustomersScreenState extends State<CustomersScreen> {
           CircleAvatar(
             radius: 24,
             backgroundColor: AppColors.primary.withOpacity(0.1),
-            child: Text(
-              customer.name[0],
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary,
-              ),
+            child: ClipOval(
+              child: (customer.profileImage != null &&
+                      customer.profileImage!.isNotEmpty)
+                  ? CachedNetworkImage(
+                      imageUrl: customer.profileImage!,
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) => const Image(
+                        image: AssetImage(AppImages.profilePlaceholder),
+                        fit: BoxFit.cover,
+                      ),
+                      errorWidget: (_, __, ___) => _initialsAvatar(
+                        customer.customerName,
+                        18,
+                      ),
+                    )
+                  : _initialsAvatar(customer.customerName, 18),
             ),
           ),
           const SizedBox(width: 12),
@@ -191,7 +156,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  customer.name,
+                  customer.customerName,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -199,12 +164,12 @@ class _CustomersScreenState extends State<CustomersScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  customer.email,
+                  customer.email ?? "-",
                   style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  customer.phone,
+                  customer.phoneNumber,
                   style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                 ),
               ],
@@ -212,6 +177,23 @@ class _CustomersScreenState extends State<CustomersScreen> {
           ),
           const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
         ],
+      ),
+    );
+  }
+
+  Widget _initialsAvatar(String name, double fontSize) {
+    return Container(
+      width: 48,
+      height: 48,
+      alignment: Alignment.center,
+      color: Colors.transparent,
+      child: Text(
+        name.isNotEmpty ? name[0] : "?",
+        style: TextStyle(
+          fontSize: fontSize,
+          fontWeight: FontWeight.bold,
+          color: AppColors.primary,
+        ),
       ),
     );
   }

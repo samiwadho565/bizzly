@@ -10,6 +10,9 @@ class CustomButton extends StatelessWidget {
   final double height;
   final Color color;
   final bool isLoading;
+  final Color textColor;
+  final Color borderColor;
+  final double borderWidth;
 
   const CustomButton({
     super.key,
@@ -17,7 +20,10 @@ class CustomButton extends StatelessWidget {
     required this.onPressed,
     this.height = 56.0,
     this.color = AppColors.primary,
-    this.isLoading = false
+    this.isLoading = false,
+    this.textColor = Colors.white,
+    this.borderColor = Colors.transparent,
+    this.borderWidth = 1.2,
   });
 
   @override
@@ -25,29 +31,36 @@ class CustomButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       height: height,
-      child: CupertinoButton(
-        padding: EdgeInsets.zero,
-        color: color,
-        borderRadius: BorderRadius.circular(15),
-        onPressed: onPressed,
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child: isLoading
-              ? const Center(
-            key: ValueKey("loader"),
-            child: FinancePulseLoader(
-              color: Colors.white,
-              size: 45,
-            ),
-          )
-              : Text(
-            text,
-            key: const ValueKey("text"),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: borderColor, width: borderWidth),
+        ),
+        child: CupertinoButton(
+          padding: EdgeInsets.zero,
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(15),
+          onPressed: onPressed,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: isLoading
+                ? Center(
+                    key: const ValueKey("loader"),
+                    child: FinancePulseLoader(
+                      color: textColor,
+                      size: 45,
+                    ),
+                  )
+                : Text(
+                    text,
+                    key: const ValueKey("text"),
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
           ),
         ),
       ),

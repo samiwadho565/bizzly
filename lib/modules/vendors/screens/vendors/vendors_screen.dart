@@ -2,89 +2,15 @@ import 'package:bizly/modules/vendors/screens/vendors/vendor_detail_screen.dart'
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bizly/modules/vendors/models/vendor_model.dart';
+import 'package:bizly/modules/vendors/controllers/vendors_controller.dart';
 import 'package:bizly/utils/app_colors.dart';
 import 'package:bizly/components/common/custom_search_field.dart';
 import 'package:bizly/components/common/custom_app_bar_2.dart';
-import 'create_vendor_screen.dart';
+import '../../../../routes/routes.dart';
 // import 'vendor_detail_screen.dart';
 
-class VendorsScreen extends StatefulWidget {
+class VendorsScreen extends GetView<VendorsController> {
   const VendorsScreen({super.key});
-
-  @override
-  State<VendorsScreen> createState() => _VendorsScreenState();
-}
-
-class _VendorsScreenState extends State<VendorsScreen> {
-  final TextEditingController _searchController = TextEditingController();
-
-  List<VendorModel> allVendors = [];
-  List<VendorModel> filteredVendors = [];
-
-  @override
-  void initState() {
-    super.initState();
-
-    /// 🔹 Dummy Vendors
-    allVendors = [
-      VendorModel(
-        name: "Ali Traders",
-        email: "ali@traders.com",
-        phone: "+92 300 1112233",
-        address: "Karachi",
-        secondaryPhone: "+92 300 9988776",
-        companyName: "Ali Traders Pvt Ltd",
-        taxNumber: "VTX-12345",
-        website: "www.alitraders.com",
-        notes: "Main supplier",
-        city: "Karachi",
-        country: "Pakistan",
-      ),
-      VendorModel(
-        name: "Global Supplies",
-        email: "contact@globalsupplies.com",
-        phone: "+92 301 4455667",
-        address: "Lahore",
-        secondaryPhone: "+92 301 2233445",
-        companyName: "Global Supplies Co",
-        taxNumber: "VTX-77889",
-        website: "www.globalsupplies.com",
-        notes: "Monthly payments",
-        city: "Lahore",
-        country: "Pakistan",
-      ),
-      VendorModel(
-        name: "Tech Parts",
-        email: "sales@techparts.com",
-        phone: "+92 302 6677889",
-        address: "Islamabad",
-        secondaryPhone: "+92 302 1122334",
-        companyName: "Tech Parts Ltd",
-        taxNumber: "VTX-45678",
-        website: "www.techparts.com",
-        notes: "Hardware supplier",
-        city: "Islamabad",
-        country: "Pakistan",
-      ),
-    ];
-
-    filteredVendors = allVendors;
-  }
-
-  void _filterVendors(String query) {
-    if (query.isEmpty) {
-      setState(() => filteredVendors = allVendors);
-    } else {
-      setState(() {
-        filteredVendors = allVendors
-            .where((v) =>
-        v.name.toLowerCase().contains(query.toLowerCase()) ||
-            v.email.toLowerCase().contains(query.toLowerCase()) ||
-            v.phone.contains(query))
-            .toList();
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -112,9 +38,9 @@ class _VendorsScreenState extends State<VendorsScreen> {
                   padding: const EdgeInsets.all(8),
                   child: CustomSearchField(
                     hintText: "Search Vendors...",
-                    controller: _searchController,
-                    onChanged: _filterVendors,
-                    onClear: () => _filterVendors(""),
+                    controller: controller.searchController,
+                    onChanged: controller.filter,
+                    onClear: () => controller.filter(""),
                   ),
                 ),
               ],
@@ -123,21 +49,48 @@ class _VendorsScreenState extends State<VendorsScreen> {
 
           /// 🔹 Vendors List
           Expanded(
-            child: filteredVendors.isEmpty
-                ? const Center(child: Text("No vendors found"))
-                : ListView.builder(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-              itemCount: filteredVendors.length,
-              itemBuilder: (context, index) {
-                final vendor = filteredVendors[index];
-                return InkWell(
-                  onTap: () {
-                    Get.to(() => VendorDetailScreen(vendor: vendor));
-                  },
-                  child: _vendorCard(vendor),
+            child: Obx(() {
+              if (controller.isLoading.value) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    color: AppColors.primary,
+                  ),
                 );
-              },
-            ),
+              }
+              return RefreshIndicator(
+                color: AppColors.primary,
+                onRefresh: controller.fetchVendors,
+                child: controller.filtered.isEmpty
+                    ? ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          SizedBox(
+                            height: 200,
+                            child: Center(
+                              child: Text(
+                                controller.error.value.isNotEmpty
+                                    ? controller.error.value
+                                    : "No vendors found",
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+                        itemCount: controller.filtered.length,
+                        itemBuilder: (context, index) {
+                          final vendor = controller.filtered[index];
+                          return InkWell(
+                            onTap: () {
+                              Get.to(() => VendorDetailScreen(vendor: vendor));
+                            },
+                            child: _vendorCard(vendor),
+                          );
+                        },
+                      ),
+              );
+            }),
           ),
         ],
       ),
@@ -145,10 +98,8 @@ class _VendorsScreenState extends State<VendorsScreen> {
       /// ➕ Add Vendor
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
-        onPressed: () {
-          Get.to(() => CreateVendorScreen());
-
-          // TODO: Navigate to AddVendorScreen
+        onPressed: () async {
+            Get.toNamed(Routes.createVendorScreen);
         },
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -177,7 +128,7 @@ class _VendorsScreenState extends State<VendorsScreen> {
             radius: 24,
             backgroundColor: AppColors.primary.withOpacity(0.1),
             child: Text(
-              vendor.name[0],
+              vendor.vendorName.isNotEmpty ? vendor.vendorName[0] : "?",
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -192,7 +143,7 @@ class _VendorsScreenState extends State<VendorsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  vendor.name,
+                  vendor.vendorName,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -200,12 +151,12 @@ class _VendorsScreenState extends State<VendorsScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  vendor.email,
+                  vendor.email ?? "-",
                   style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  vendor.phone,
+                  vendor.phoneNumber,
                   style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                 ),
               ],
