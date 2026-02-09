@@ -1,0 +1,140 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import 'package:bizly/app/constants/app_urls.dart';
+import 'package:bizly/models/api_response.dart';
+import 'package:bizly/modules/vendors/models/vendor_model.dart';
+import 'package:bizly/services/api_service.dart';
+import 'package:bizly/utils/app_colors.dart';
+import 'package:bizly/utils/app_dialouge.dart';
+import 'package:bizly/assets/images.dart';
+import 'package:bizly/modules/vendors/controllers/vendors_controller.dart';
+
+class CreateVendorController extends GetxController {
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController addressController = TextEditingController();
+  final TextEditingController companyController = TextEditingController();
+  final TextEditingController taxController = TextEditingController();
+  final TextEditingController notesController = TextEditingController();
+
+  final RxBool isLoading = false.obs;
+  final Rxn<VendorModel> editingVendor = Rxn<VendorModel>();
+
+  bool get isEdit => editingVendor.value?.id != null;
+
+  Future<void> createVendor() async {
+
+    if (isLoading.value) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+    if (!(formKey.currentState?.validate() ?? false)) return;
+
+    isLoading.value = true;
+
+    final VendorModel vendor = VendorModel(
+      vendorName: nameController.text.trim(),
+      phoneNumber: phoneController.text.trim(),
+      email: emailController.text.trim().isNotEmpty
+          ? emailController.text.trim()
+          : null,
+      address: addressController.text.trim(),
+      companyName: companyController.text.trim().isNotEmpty
+          ? companyController.text.trim()
+          : null,
+      taxNumber: taxController.text.trim().isNotEmpty
+          ? taxController.text.trim()
+          : null,
+      notes: notesController.text.trim().isNotEmpty
+          ? notesController.text.trim()
+          : null,
+    );
+
+    final ApiResponse response = isEdit
+        ? await ApiService().post(
+            '${AppUrls.updateVendor}/${editingVendor.value!.id}',
+            data: vendor.toJson(),
+            isAuth: true,
+          )
+        : await ApiService().post(
+            AppUrls.createVendor,
+            data: vendor.toJson(),
+            isAuth: true,
+          );
+
+    if (response.success) {
+      VendorModel? created;
+      if (response.data is Map<String, dynamic>) {
+        created = VendorModel.fromJson(
+          response.data as Map<String, dynamic>,
+        );
+      }
+
+      AppDialogs.showActionDialog(
+        iconPath: AppImages.dialogSuccess,
+        title: isEdit ? "Vendor Updated!" : "Vendor Added!",
+        message: isEdit
+            ? "Vendor updated successfully."
+            : "Vendor created successfully.",
+        actions: [
+          if (!isEdit)
+            AppDialogAction(label: "Create New Vendor", onPressed: () {
+              if (Get.isRegistered<VendorsController>()) {
+                Get.find<VendorsController>().fetchVendors();
+              }
+            }),
+          AppDialogAction(label: "Done", onPressed: () {
+            if (Get.isRegistered<VendorsController>()) {
+              Get.find<VendorsController>().fetchVendors();
+            }
+            Get.back(result: created ?? vendor);
+          }),
+        ],
+      );
+    } else {
+      Get.snackbar(
+        "Error",
+        response.message,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+
+    isLoading.value = false;
+  }
+
+  @override
+  void onClose() {
+    nameController.dispose();
+    phoneController.dispose();
+    emailController.dispose();
+    addressController.dispose();
+    companyController.dispose();
+    taxController.dispose();
+    notesController.dispose();
+    super.onClose();
+  }
+
+  @override
+  void onInit() {
+    super.onInit();
+    final dynamic args = Get.arguments;
+    if (args is VendorModel) {
+      loadForEdit(args);
+    }
+  }
+
+  void loadForEdit(VendorModel vendor) {
+    editingVendor.value = vendor;
+    nameController.text = vendor.vendorName;
+    phoneController.text = vendor.phoneNumber;
+    emailController.text = vendor.email ?? '';
+    addressController.text = vendor.address ?? '';
+    companyController.text = vendor.companyName ?? '';
+    taxController.text = vendor.taxNumber ?? '';
+    notesController.text = vendor.notes ?? '';
+  }
+}
