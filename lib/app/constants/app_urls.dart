@@ -16,4 +16,16 @@ class AppUrls {
   static const String updateVendor = '/api/vendors';
   static const String createCustomer = '/api/customers';
   static const String updateCustomer = '/api/customers';
+  static const String expenseCategories = '/api/dropdowns/categories';
+  static const String paymentMethods = '/api/dropdowns/payment-methods';
+  static const String createExpense = '/api/expenses';
+  static const String expensePdf = '/api/expenses';
+  static const String updateExpense = '/api/expenses';
+  static const String deleteExpense = '/api/expenses';
+  static const String createCategory = '/api/categories';
+  static const String updateCategory = '/api/categories';
+  static const String deleteCategory = '/api/categories';
+  static const String createInvoice = '/api/invoices';
+  static const String updateInvoice = '/api/invoices';
+  static const String deleteInvoice = '/api/invoices';
 }

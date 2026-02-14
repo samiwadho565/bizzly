@@ -34,4 +34,19 @@ class FormValidations {
     if (confirm != password) return "Passwords do not match";
     return null;
   }
+
+  static String? validateRequired(String value, {String fieldName = "Field"}) {
+    final String trimmed = value.trim();
+    if (trimmed.isEmpty) return "$fieldName is required";
+    return null;
+  }
+
+  static String? validateRequiredNumber(String value, {String fieldName = "Field"}) {
+    final String trimmed = value.trim();
+    if (trimmed.isEmpty) return "$fieldName is required";
+    final num? parsed = num.tryParse(trimmed);
+    if (parsed == null) return "$fieldName must be a number";
+    if (parsed <= 0) return "$fieldName must be greater than 0";
+    return null;
+  }
 }

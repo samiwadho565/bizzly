@@ -1,7 +1,4 @@
-import 'package:bizly/assets/images.dart';
 import 'package:bizly/utils/app_colors.dart';
-import 'package:bizly/components/common/circle_icon_widget.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
@@ -9,10 +6,10 @@ import 'package:bizly/modules/invoice/controllers/invoice_screen_controller.dart
 import 'package:bizly/routes/routes.dart';
 import 'package:bizly/components/common/add_button.dart';
 import 'package:bizly/components/common/custom_search_field.dart';
-import 'package:bizly/components/common/custom_tab_bar.dart';
 import 'package:bizly/components/home/custom_app_bar.dart';
 import 'package:bizly/components/invoice/invoice_card.dart';
 import 'package:bizly/components/common/top_border_ccontainer.dart';
+import 'package:bizly/components/common/loader/loader.dart';
 
 
 class InvoiceScreen extends StatelessWidget {
@@ -55,42 +52,44 @@ class InvoiceScreen extends StatelessWidget {
 
                     const SizedBox(height: 20),
 
-                    /// Status Tabs
-                    Obx(() => CustomTabBar(
-                      options: const ["Paid", "UnPaid"],
-                      selectedOption:
-                      controller.selectedStatus.value,
-                      onSelect: controller.setStatus,
-                    )),
-
-                    // const SizedBox(height: 20),
-
                     /// Invoice List
                     Expanded(
-                      child: Obx(() => ListView.builder(
-                        padding: EdgeInsets.only(top: 20,bottom: 100),
-                        itemCount: controller.invoices.length,
-                        itemBuilder: (context, index) {
-                          final invoice =
-                          controller.invoices[index];
-                          return GestureDetector(
-                            onTap: (){
-                              Get.toNamed(Routes.invoiceDetailScreen);
-                            },
-                            child: Padding(
-                              padding:
-                              const EdgeInsets.only(bottom: 12),
-                              child: InvoiceCard(
-                                clientName: invoice["client"]!,
-                                businessName: invoice["business"]!,
-                                itemName: invoice["item"]!,
-                                amount: invoice["amount"]!,
-                                status: invoice["status"]!,
+                      child: Obx(() {
+                        if (controller.isLoading.value) {
+                          return const Center(child: FinancePulseLoader());
+                        }
+                        if (controller.error.value.isNotEmpty) {
+                          return Center(child: Text(controller.error.value));
+                        }
+                        return ListView.builder(
+                          padding: const EdgeInsets.only(top: 20, bottom: 100),
+                          itemCount: controller.filteredInvoices.length,
+                          itemBuilder: (context, index) {
+                            final invoice = controller.filteredInvoices[index];
+                            final String itemName = invoice.items.isNotEmpty
+                                ? invoice.items.first.itemName
+                                : "-";
+                            return GestureDetector(
+                              onTap: () {
+                                Get.toNamed(
+                                  Routes.invoiceDetailScreen,
+                                  arguments: invoice,
+                                );
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: InvoiceCard(
+                                  clientName: invoice.customerName ?? '-',
+                                  businessName: invoice.businessName ?? '-',
+                                  itemName: itemName,
+                                  amount: invoice.totalAmount?.toString() ?? '-',
+                                  status: invoice.status ?? '-',
+                                ),
                               ),
-                            ),
-                          );
-                        },
-                      )),
+                            );
+                          },
+                        );
+                      }),
                     ),
                   ],
                 ),

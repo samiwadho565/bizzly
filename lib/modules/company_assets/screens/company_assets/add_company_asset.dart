@@ -6,6 +6,7 @@ import 'package:bizly/components/common/custom_text_field.dart';
 import 'package:bizly/components/common/custom_button.dart';
 import 'package:bizly/utils/app_dialouge.dart';
 import 'package:bizly/utils/app_utils.dart';
+import 'package:bizly/utils/date_formats.dart';
 
 class AddAssetScreen extends StatefulWidget {
   const AddAssetScreen({super.key});
@@ -75,7 +76,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
                     setState(() {
                       selectedDate = date;
                       _purchaseDateController.text =
-                      "${date.day}-${date.month}-${date.year}";
+                      DateFormats.dMonY(date);
                     });
                   }
                 },

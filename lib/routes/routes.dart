@@ -15,6 +15,7 @@ class Routes {
   static const  teamScreen  = '/team_screen';
   static const addEmployeeScreen  = '/add_employee_screen';
   static const  companyAssetsScreen  = '/company_assets_screen';
+  static const  categoriesScreen  = '/categories_screen';
   static const  addCompanyAssetScreen  = '/add_company_asset_screen';
   static const  invoiceCustomizationScreen  = '/invoice_customization_screen';
   static const  invoicePreviewScreen  = '/invoice_preview_screen';

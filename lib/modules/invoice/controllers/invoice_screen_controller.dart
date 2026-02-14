@@ -1,40 +1,69 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:bizly/app/constants/app_urls.dart';
+import 'package:bizly/models/api_response.dart';
+import 'package:bizly/services/api_service.dart';
+import 'package:bizly/modules/invoice/models/invoice_model.dart';
+
 class InvoiceScreenController extends GetxController {
-  // Search
   final TextEditingController searchController = TextEditingController();
+  final RxList<InvoiceModel> invoices = <InvoiceModel>[].obs;
+  final RxBool isLoading = false.obs;
+  final RxString error = ''.obs;
 
-  // Selected status
-  RxString selectedStatus = "Paid".obs;
+  @override
+  void onInit() {
+    super.onInit();
+    fetchInvoices();
+    searchController.addListener(() {
+      invoices.refresh();
+    });
+  }
 
-  // Invoice list
-  RxList<Map<String, String>> invoices = <Map<String, String>>[
-    {
-      "client": "John Doe",
-      "business": "TechNova",
-      "item": "Website Design",
-      "amount": "\$500",
-      "status": "Paid",
-    },
-    {
-      "client": "Robert De Niro",
-      "business": "Crypto Trading",
-      "item": "Mobile App",
-      "amount": "\$1200",
-      "status": "Paid",
-    },
-    {
-      "client": "Jack Smith",
-      "business": "Fixonto",
-      "item": "Backend Setup",
-      "amount": "\$800",
-      "status": "Paid",
-    },
-  ].obs;
+  List<InvoiceModel> get filteredInvoices {
+    final String q = searchController.text.toLowerCase().trim();
+    if (q.isEmpty) return invoices;
+    return invoices.where((i) {
+      final combined =
+          '${i.customerName ?? ''} ${i.invoiceNumber ?? ''} ${i.status ?? ''}'
+              .toLowerCase();
+      return combined.contains(q);
+    }).toList();
+  }
 
-  // Change status
-  void setStatus(String value) {
-    selectedStatus.value = value;
+  Future<void> fetchInvoices() async {
+    if (isLoading.value) return;
+    isLoading.value = true;
+    error.value = '';
+
+    final ApiResponse response = await ApiService().get(
+      AppUrls.createInvoice,
+      isAuth: true,
+    );
+
+    if (response.success) {
+      final dynamic raw = response.data;
+      final List<dynamic> items = raw is List
+          ? raw
+          : (raw is Map && raw['data'] is List ? raw['data'] as List : []);
+      invoices.assignAll(
+        items
+            .whereType<Map<String, dynamic>>()
+            .map((e) => InvoiceModel.fromJson(e))
+            .toList(),
+      );
+    } else {
+      invoices.clear();
+      error.value = response.message;
+    }
+
+    isLoading.value = false;
+  }
+
+  @override
+  void onClose() {
+    searchController.dispose();
+    super.onClose();
   }
 }

@@ -14,7 +14,7 @@ class InitialBindings extends Bindings {
     Get.lazyPut<HomeScreenController>(() => HomeScreenController());
     Get.lazyPut<MainScreenController>(() => MainScreenController());
     Get.lazyPut<ExpenseDetailController>(() =>ExpenseDetailController());
-    Get.lazyPut<ExpenseScreenController>(() =>ExpenseScreenController());
+    Get.lazyPut<AddExpenseScreenController>(() =>AddExpenseScreenController());
     Get.lazyPut<SignInController>(() => SignInController());
     Get.lazyPut<SignupController>(() => SignupController());
 

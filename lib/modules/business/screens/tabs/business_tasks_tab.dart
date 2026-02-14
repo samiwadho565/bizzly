@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import 'package:bizly/modules/business/controllers/business_controller.dart';
 import 'package:bizly/components/common/task_card_widget.dart';
+import 'package:bizly/utils/date_formats.dart';
 
 class BusinessTasksTab extends StatelessWidget {
   const BusinessTasksTab({super.key});
@@ -28,7 +29,9 @@ class BusinessTasksTab extends StatelessWidget {
             priority: task.priority,
             title: task.title,
             subtitle: task.description,
-            date: task.dueDate.toString(),
+            date: task.dueDate == null
+                ? "-"
+                : DateFormats.dMonY(task.dueDate!),
             assignTo: task.assignedTo,
             status: task.status,
           ),

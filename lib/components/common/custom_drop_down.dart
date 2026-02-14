@@ -15,6 +15,7 @@ class CustomSearchDropdown extends StatelessWidget {
   final double? verticalPadding;
   final TextStyle? textStyle;
   final TextStyle? popupTextStyle;
+  final String? displayValue;
 
   const CustomSearchDropdown({
     super.key,
@@ -22,6 +23,7 @@ class CustomSearchDropdown extends StatelessWidget {
     required this.items,
     this.selectedItem,
     required this.onChanged,
+    this.displayValue,
     this.height = 32,
     this.iconSize,
     this.horizontalPadding,
@@ -52,6 +54,7 @@ class CustomSearchDropdown extends StatelessWidget {
       //     ),
       //   ],
       // ),
+
       child: DropdownSearch<String>(
         items: (filter, infiniteScrollProps) => items,
         selectedItem: selectedItem,
@@ -83,13 +86,16 @@ class CustomSearchDropdown extends StatelessWidget {
         ),
 
         dropdownBuilder: (context, selectedItem) {
+          final String? resolvedDisplay = displayValue ?? selectedItem;
           return Align(
             alignment: Alignment.centerLeft,
             child: Row(
               children: [
                 Expanded(
                   child: Text(
-                    selectedItem ?? hintText,
+                    (resolvedDisplay != null && resolvedDisplay.isNotEmpty)
+                        ? resolvedDisplay
+                        : hintText,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: textStyle ??
@@ -115,19 +121,25 @@ class CustomSearchDropdown extends StatelessWidget {
         popupProps: PopupProps.menu(
           showSearchBox: enableSearch,
           itemBuilder: (context, item, isDisabled, isSelected) {
+            print("item : $item");
             return Container(
+              decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppColors.primary.withOpacity(0.2)
+                      : item == "Add New Category" ? AppColors.primary : Colors.transparent,
+                borderRadius: BorderRadius.only(bottomRight: Radius.circular(10), bottomLeft: Radius.circular(10))
+              ),
               padding: const EdgeInsets.symmetric(
                   vertical: 10, horizontal: 12),
-              color: isSelected
-                  ? AppColors.primary.withOpacity(0.2)
-                  : Colors.transparent,
+
               child: Text(
                 item,
+                textAlign: item == "Add New Category"  ?TextAlign.center : TextAlign.left,
                 style: popupTextStyle ??
-                    const TextStyle(
+                     TextStyle(
                       fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black,
+                      fontWeight: item == "Add New Category" ? FontWeight.w600 : FontWeight.w500,
+                      color: item == "Add New Category" ? Colors.white : Colors.black,
                     ),
               ),
             );

@@ -4,11 +4,12 @@ import 'package:get/get.dart';
 import 'package:bizly/modules/invoice/controllers/invoice_detail_controller.dart';
 import 'package:bizly/utils/app_colors.dart';
 import 'package:bizly/components/common/custom_button.dart';
+import 'package:bizly/routes/routes.dart';
+import 'package:bizly/modules/invoice/models/invoice_model.dart';
+import 'package:bizly/modules/invoice/controllers/invoice_screen_controller.dart';
 
-class InvoiceDetailScreen extends StatelessWidget {
-  InvoiceDetailScreen({super.key});
-
-  final InvoiceDetailController controller = Get.find<InvoiceDetailController>();
+class InvoiceDetailScreen extends GetView<InvoiceDetailController> {
+  const InvoiceDetailScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +45,7 @@ class InvoiceDetailScreen extends StatelessWidget {
                                 children: [
                                   Flexible(
                                     child: Text(
-                                      controller.clientName.value,
+                                    controller.model.value?.customerName ?? '-',
                                       style: const TextStyle(
                                         // color: Colors.white,
                                         fontSize: 24,
@@ -60,7 +61,7 @@ class InvoiceDetailScreen extends StatelessWidget {
                                       borderRadius: BorderRadius.circular(20),
                                     ),
                                     child: Text(
-                                      controller.status.value,
+                                      controller.model.value?.status ?? '-',
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 12,
@@ -85,45 +86,41 @@ class InvoiceDetailScreen extends StatelessWidget {
                         _buildInfoCard(
                           icon: Icons.receipt_long,
                           title: "Invoice Number",
-                          value: controller.invoiceNumber.value,
+                          value: controller.model.value?.invoiceNumber ?? '',
                         ),
-                        if (controller.invoiceDate.value != null)
+                        if ((controller.model.value?.invoiceDate ?? '').isNotEmpty)
                           _buildInfoCard(
                             icon: Icons.calendar_today,
                             title: "Invoice Date",
-                            value:
-                            "${controller.invoiceDate.value!.day}-${controller.invoiceDate.value!.month}-${controller.invoiceDate.value!.year}",
+                            value: controller.model.value?.invoiceDate ?? '',
                           ),
                         _buildInfoCard(
                           icon: Icons.business,
                           title: "Business Name",
-                          value: controller.businessName.value,
+                          value: controller.model.value?.businessName ?? '',
                         ),
-                        _buildInfoCard(
-                          icon: Icons.shopping_bag,
-                          title: "Item Name",
-                          value: controller.itemName.value,
-                        ),
+                        if (controller.model.value != null)
+                          _buildItems(controller.model.value!),
                         _buildInfoCard(
                           icon: Icons.attach_money,
-                          title: "Amount",
-                          value: controller.amount.value,
+                          title: "Total Amount",
+                          value: controller.model.value?.totalAmount?.toString() ?? '',
                           valueColor: AppColors.primary,
                           valueFontSize: 18,
                           valueFontWeight: FontWeight.bold,
                         ),
 
-                        if (controller.notes.value.isNotEmpty)
+                        if ((controller.model.value?.notes ?? '').isNotEmpty)
                           _buildInfoCard(
                             icon: Icons.note,
                             title: "Notes",
-                            value: controller.notes.value,
+                            value: controller.model.value?.notes ?? '',
                           ),
-                        if (controller.paymentMethod.value.isNotEmpty)
+                        if ((controller.model.value?.paymentMethodName ?? '').isNotEmpty)
                           _buildInfoCard(
                             icon: Icons.payment,
                             title: "Payment Method",
-                            value: controller.paymentMethod.value,
+                            value: controller.model.value?.paymentMethodName ?? '',
                           ),
 
                         const SizedBox(height: 20),
@@ -142,7 +139,17 @@ class InvoiceDetailScreen extends StatelessWidget {
                           color: AppColors.textPrimary,
                           text: "Edit Invoice",
                           onPressed: () {
-                            // TODO: Navigate to edit screen
+                            () async {
+                              final result = await Get.toNamed(
+                                Routes.createInvoiceScreen,
+                                arguments: controller.model.value,
+                              );
+                              if (result == true &&
+                                  Get.isRegistered<InvoiceScreenController>()) {
+                                Get.find<InvoiceScreenController>()
+                                    .fetchInvoices();
+                              }
+                            }();
                           },
                         ),
                       ),
@@ -156,6 +163,16 @@ class InvoiceDetailScreen extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                  child: CustomButton(
+                    text: "Delete Invoice",
+                    color: Colors.white,
+                    textColor: Colors.red,
+                    borderColor: Colors.red,
+                    onPressed: controller.confirmDelete,
                   ),
                 ),
                           ],
@@ -215,6 +232,59 @@ class InvoiceDetailScreen extends StatelessWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildItems(InvoiceModel model) {
+    if (model.items.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.15),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Items",
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(height: 8),
+          for (final item in model.items) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    item.itemName,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+                Text(
+                  item.amount?.toString() ?? '',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+          ],
         ],
       ),
     );

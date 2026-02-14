@@ -52,6 +52,8 @@ import 'package:bizly/modules/vendors/controllers/vendors_controller.dart';
 import 'package:bizly/modules/customers/screens/customers_screen/create_customer_screen.dart';
 import 'package:bizly/modules/customers/bindings/create_customer_binding.dart';
 import 'package:bizly/modules/customers/controllers/customers_controller.dart';
+import 'package:bizly/modules/categories/screens/categories_screen.dart';
+import 'package:bizly/modules/categories/bindings/categories_binding.dart';
 import 'routes.dart';
 
 
@@ -191,6 +193,11 @@ class AppPages {
     GetPage(
       name: Routes.companyAssetsScreen,
       page: () =>  CompanyAssetsScreen(),
+    ),
+    GetPage(
+      name: Routes.categoriesScreen,
+      page: () => const CategoriesScreen(),
+      binding: CategoriesBinding(),
     ),
     GetPage(
       name: Routes.businessTabsScreen,

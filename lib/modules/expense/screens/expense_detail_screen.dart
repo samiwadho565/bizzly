@@ -4,8 +4,17 @@ import 'package:bizly/components/common/custom_app_bar_2.dart';
 import 'package:bizly/components/common/custom_button.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:bizly/utils/app_colors.dart';
+import 'package:bizly/routes/routes.dart';
+import 'package:bizly/modules/customers/screens/customers_screen/customer_detail_screen.dart';
+import 'package:bizly/modules/vendors/screens/vendors/vendor_detail_screen.dart';
+import 'package:bizly/modules/expense/controllers/expenses_list_controller.dart';
+import 'package:bizly/modules/expense/models/expense_model.dart';
+import 'package:bizly/modules/business/models/business_model.dart';
+import 'package:bizly/modules/customers/models/customer_model.dart';
+import 'package:bizly/modules/vendors/models/vendor_model.dart';
 
 // Assuming you have a central color file, otherwise define it here
 
@@ -36,43 +45,96 @@ class ExpenseDetailScreen extends GetView<ExpenseDetailController> {
                 // SizedBox(height: 10,),
                 Align(
                   alignment: Alignment.centerRight,
-                  child: addButton("Edit expense",icon: Icon(Icons.edit,  color: Colors.black54,
-                    size: 17,
-                  )),
+                  child: GestureDetector(
+                    onTap: () async {
+                      final result = await Get.toNamed(
+                        Routes.addExpenseScreen,
+                        arguments: controller.model.value,
+                      );
+                      if(result != null){
+                        controller.model.value = result;
+                      }
+                      print("controller.model.value : ${controller.model.value?.toJson()}");
+
+                      // if (result == true &&
+                      //     Get.isRegistered<ExpensesListController>()) {
+                      //   Get.find<ExpensesListController>().fetchExpenses();
+                      // }
+
+
+                    },
+                    child: addButton(
+                      "Edit expense",
+                      icon: Icon(
+                        Icons.edit,
+                        color: Colors.black54,
+                        size: 17,
+                      ),
+                    ),
+                  ),
                 ),
                 SizedBox(height: 20,),
                 // Main Info Section
                 _buildInfoCard(
                   icon: Icons.category,
                   title: "Category",
-                  value: controller.category.value,
+                  value: controller.model.value?.categoryName ?? '',
                 ),
                 _buildInfoCard(
                   icon: Icons.description,
                   title: "Title",
-                  value: controller.title.value,
+                  value: controller.model.value?.title ?? '',
                 ),
                 _buildInfoCard(
                   icon: Icons.attach_money,
                   title: "Amount",
-                  value: "Rs. ${controller.amount.value}",
+                  value: "Rs. ${controller.model.value?.amount ?? ''}",
                   // valueColor: AppColors.textPrimary,
                   valueFontSize: 17,
                   valueFontWeight: FontWeight.bold,
                 ),
 
-                if (controller.expenseDate.value != null)
+                if (controller.model.value?.expenseDate != null &&
+                    controller.model.value!.expenseDate!.isNotEmpty)
                   _buildInfoCard(
                     icon: Icons.calendar_today,
                     title: "Expense Date",
-                    value: "${controller.expenseDate.value!.day}-${controller.expenseDate.value!.month}-${controller.expenseDate.value!.year}",
+                    value: controller.model.value!.expenseDate!,
                   ),
 
-                if (controller.paymentMethod.value.isNotEmpty)
+                if ((controller.model.value?.paymentMethodName ?? '').isNotEmpty)
                   _buildInfoCard(
                     icon: Icons.payment,
                     title: "Payment Method",
-                    value: controller.paymentMethod.value,
+                    value: controller.model.value?.paymentMethodName ?? '',
+                  ),
+                if ((controller.model.value?.expenseType ?? '').isNotEmpty)
+                  _buildInfoCard(
+                    icon: Icons.category_outlined,
+                    title: "Expense Type",
+                    value: controller.model.value?.expenseType ?? '',
+                  ),
+                if ((controller.model.value?.businessName ?? '').isNotEmpty)
+                  _buildInfoCard(
+                    icon: Icons.apartment,
+                    title: "Business",
+                    value: controller.model.value?.businessName ?? '',
+                    onTap: controller.model.value == null
+                        ? null
+                        : () {
+                            final ExpenseModel m = controller.model.value!;
+                            if (m.businessId == null || m.businessName == null) return;
+                            Get.toNamed(
+                              Routes.businessDetailScreen,
+                              arguments: BusinessModel(
+                                id: m.businessId,
+                                businessName: m.businessName ?? '',
+                                businessAddress: '',
+                                phoneNumber: '',
+                                currency: '',
+                              ),
+                            );
+                          },
                   ),
                 //
                 // const Padding(
@@ -87,58 +149,116 @@ class ExpenseDetailScreen extends GetView<ExpenseDetailController> {
                 _buildInfoCard(
                   icon: Icons.store,
                   title: "Vendor / Supplier",
-                  value: controller.vendorName.value.isEmpty ? "Not Provided" : controller.vendorName.value,
+                  value: (controller.model.value?.vendorName ?? '').isEmpty
+                      ? "Not Provided"
+                      : controller.model.value?.vendorName ?? '',
+                  onTap: controller.model.value == null
+                      ? null
+                      : () {
+                          final ExpenseModel m = controller.model.value!;
+                          if (m.vendorId == null || m.vendorName == null) return;
+                          Get.to(
+                            () => VendorDetailScreen(
+                              vendor: VendorModel(
+                                id: m.vendorId,
+                                vendorName: m.vendorName ?? '',
+                                phoneNumber: '',
+                              ),
+                            ),
+                          );
+                        },
                 ),
                 _buildInfoCard(
                   icon: Icons.receipt_long,
                   title: "Reference / Bill Number",
-                  value: controller.referenceNumber.value.isEmpty ? "N/A" : controller.referenceNumber.value,
+                  value: (controller.model.value?.referenceNumber ?? '').isEmpty
+                      ? "N/A"
+                      : controller.model.value?.referenceNumber ?? '',
                 ),
                 _buildInfoCard(
                   icon: Icons.percent,
                   title: "Tax Amount",
-                  value: controller.taxAmount.value.toString(),
+                  value: (controller.model.value?.taxAmount ?? '').toString(),
                 ),
                 _buildInfoCard(
                   icon: Icons.work,
                   title: "Project Name",
-                  value: controller.projectName.value.isEmpty ? "N/A" : controller.projectName.value,
+                  value: (controller.model.value?.projectName ?? '').isEmpty
+                      ? "N/A"
+                      : controller.model.value?.projectName ?? '',
                 ),
                 _buildInfoCard(
                   icon: Icons.person,
                   title: "Customer Name",
-                  value: controller.customerName.value.isEmpty ? "N/A" : controller.customerName.value,
+                  value: (controller.model.value?.customerName ?? '').isEmpty
+                      ? "N/A"
+                      : controller.model.value?.customerName ?? '',
+                  onTap: controller.model.value == null
+                      ? null
+                      : () {
+                          final ExpenseModel m = controller.model.value!;
+                          if (m.customerId == null || m.customerName == null) return;
+                          Get.to(
+                            () => CustomerDetailScreen(
+                              customer: CustomerModel(
+                                id: m.customerId,
+                                customerName: m.customerName ?? '',
+                                phoneNumber: '',
+                                address: '',
+                              ),
+                            ),
+                          );
+                        },
                 ),
-                // --- Receipt Preview Section ---
-                // if (controller.receiptPath.value.isNotEmpty)
-                //   Padding(
-                //     padding: const EdgeInsets.symmetric(vertical: 12.0),
-                //     child: Column(
-                //       crossAxisAlignment: CrossAxisAlignment.start,
-                //       children: [
-                //         const Text("Receipt / Attachment",
-                //             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 14)),
-                //         const SizedBox(height: 10),
-                //         ClipRRect(
-                //           borderRadius: BorderRadius.circular(15),
-                //           child: Container(
-                //             width: double.infinity,
-                //             height: 200,
-                //             color: Colors.grey[200],
-                //             // Agar file path hai to Image.file use karein, warna placeholder
-                //             child: Icon(Icons.image, size: 50, color: Colors.grey),
-                //             // Image.file(File(controller.receiptPath.value), fit: BoxFit.cover),
-                //           ),
-                //         ),
-                //       ],
-                //     ),
-                //   ),
+                if ((controller.model.value?.receiptUrl ?? '').isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Receipt / Attachment",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        GestureDetector(
+                            onTap: () => _showReceiptPreview(context),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(15),
+                              child: SizedBox(
+                                width: double.infinity,
+                                height: 200,
+                                child: CachedNetworkImage(
+                                  imageUrl: controller.model.value?.receiptUrl ?? '',
+                                fit: BoxFit.cover,
+                                placeholder: (_, __) => Container(
+                                  color: Colors.grey[200],
+                                ),
+                                errorWidget: (_, __, ___) => Container(
+                                  color: Colors.grey[200],
+                                  child: const Icon(
+                                    Icons.image,
+                                    size: 50,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
 
-                if (controller.notes.value.isNotEmpty)
+                if (controller.model.value?.notes != null)
                   _buildInfoCard(
                     icon: Icons.note,
                     title: "Notes",
-                    value: controller.notes.value,
+                    value: controller.model.value?.notes ?? '',
                   ),
 
                 const SizedBox(height: 10),
@@ -164,14 +284,36 @@ class ExpenseDetailScreen extends GetView<ExpenseDetailController> {
                         ],
                       ),
                       Switch(
-                        value: controller.isRepeatMonthly.value,
+                        value: controller.model.value?.isRecurringMonthly == true,
                         onChanged: (val) {}, // View only mode
                         activeColor: AppColors.primary,
                       ),
                     ],
                   ),
                 ),
-                CustomButton(text: "Download PDF", onPressed: (){}),
+                const SizedBox(height: 16),
+                if ((controller.model.value?.updatedAt ?? '').isNotEmpty)
+                  _buildInfoCard(
+                    icon: Icons.update,
+                    title: "Updated At",
+                    value: controller.formattedUpdatedAt(),
+                  ),
+                CustomButton(
+                  text: "Download PDF",
+                  onPressed: () {
+                    controller.downloadPdf();
+                  },
+                ),
+                const SizedBox(height: 12),
+                CustomButton(
+                  text: "Delete Expense",
+                  color: Colors.white,
+                  textColor: Colors.red,
+                  borderColor: Colors.red,
+                  onPressed: () {
+                    controller.confirmDelete();
+                  },
+                ),
                 const SizedBox(height: 30),
               ],
             ),
@@ -189,8 +331,9 @@ class ExpenseDetailScreen extends GetView<ExpenseDetailController> {
     Color valueColor = Colors.black87,
     double valueFontSize = 15,
     FontWeight valueFontWeight = FontWeight.w500,
+    VoidCallback? onTap,
   }) {
-    return Container(
+    final card = Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -237,8 +380,75 @@ class ExpenseDetailScreen extends GetView<ExpenseDetailController> {
               ],
             ),
           ),
+          if (onTap != null)
+            const Icon(Icons.chevron_right, color: Colors.grey),
         ],
       ),
+    );
+
+    if (onTap == null) return card;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(15),
+      child: card,
+    );
+  }
+
+  void _showReceiptPreview(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) {
+        return Dialog(
+          backgroundColor: Colors.black,
+          insetPadding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                height: 420,
+                width: double.infinity,
+                child: InteractiveViewer(
+                  child: CachedNetworkImage(
+                    imageUrl: controller.model.value?.receiptUrl ?? '',
+                    fit: BoxFit.contain,
+                    placeholder: (_, __) => Container(color: Colors.black),
+                    errorWidget: (_, __, ___) => const Center(
+                      child: Icon(Icons.image, color: Colors.white, size: 50),
+                    ),
+                  ),
+                ),
+              ),
+              Container(
+                color: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: CustomButton(
+                        text: "Download",
+                        onPressed: () {
+                          Get.back();
+                          controller.downloadReceipt();
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: CustomButton(
+                        text: "Close",
+                        color: Colors.grey.shade700,
+                        onPressed: () {
+                          Get.back();
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -4,7 +4,7 @@ import 'package:bizly/utils/app_colors.dart';
 // import 'package:bizly/components/common/circle_icon_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:bizly/modules/expense/controllers/expense_screen_controller.dart';
+import 'package:bizly/modules/expense/controllers/expenses_list_controller.dart';
 import 'package:bizly/routes/routes.dart';
 import 'package:bizly/components/common/add_button.dart';
 import 'package:bizly/components/common/custom_search_field.dart';
@@ -12,11 +12,12 @@ import 'package:bizly/components/common/custom_tab_bar.dart';
 import 'package:bizly/modules/expense/components/expense_card_widget.dart';
 import 'package:bizly/components/home/custom_app_bar.dart';
 import 'package:bizly/components/common/top_border_ccontainer.dart';
+import 'package:bizly/components/common/loader/loader.dart';
+import 'package:bizly/modules/expense/models/expense_model.dart';
 
-class ExpenseScreen extends StatelessWidget {
+class ExpenseScreen extends GetView<ExpensesListController> {
   ExpenseScreen({super.key});
 
-  final ExpenseScreenController controller = Get.find<ExpenseScreenController>();
 
   @override
   Widget build(BuildContext context) {
@@ -60,28 +61,42 @@ class ExpenseScreen extends StatelessWidget {
 
 
                     Expanded(
-                      child: Obx(() => ListView.builder(
-                        padding: const EdgeInsets.only(top: 20, bottom: 100),
-                        itemCount: controller.filteredExpenses.length,
-                        itemBuilder: (context, index) {
-                          final e = controller.filteredExpenses[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child:  ExpenseCard(
-
-                              title: e["title"] ?? '',
-                              category: e["category"] ?? '',
-                              amount: e["amount"] ?? '',
-                              date: e["date"] ?? '',
-                              iconPath: e["icon"],
-                              onTap: () {
-                                Get.toNamed(Routes.expenseDetailScreen);
-                                // placeholder for tap action
-                              },
-                            ),
+                      child: Obx(() {
+                        if (controller.isLoading.value) {
+                          return const Center(
+                            child: FinancePulseLoader(),
                           );
-                        },
-                      )),
+                        }
+                        if (controller.error.value.isNotEmpty) {
+                          return Center(
+                            child: Text(controller.error.value),
+                          );
+                        }
+                        return ListView.builder(
+                          padding: const EdgeInsets.only(top: 20, bottom: 100),
+                          itemCount: controller.filteredExpenses.length,
+                          itemBuilder: (context, index) {
+                            final ExpenseModel e = controller.filteredExpenses[index];
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: ExpenseCard(
+                                title: e.title ?? '',
+                                category: e.categoryName ?? '',
+                                amount: e.amount?.toString() ?? '',
+                                date: e.expenseDate ?? '',
+                                iconPath: null,
+                                onTap: () {
+                                  Get.toNamed(
+                                    Routes.expenseDetailScreen,
+                                    arguments: e,
+                                  );
+                                  // placeholder for tap action
+                                },
+                              ),
+                            );
+                          },
+                        );
+                      }),
                     ),
                   ],
                 ),
