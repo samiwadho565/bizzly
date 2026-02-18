@@ -1,6 +1,7 @@
 import 'package:bizly/components/home/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:bizly/models/tasks_model.dart';
 import 'package:bizly/modules/tasks/controllers/tasks_screen_controller.dart';
 import 'package:bizly/routes/routes.dart';
 import 'package:bizly/utils/app_colors.dart';
@@ -11,13 +12,14 @@ import 'package:bizly/components/common/task_card_widget.dart';
 import 'package:bizly/components/common/top_border_ccontainer.dart';
 import 'package:bizly/utils/date_formats.dart';
 
+import '../../../components/common/loader/loader.dart';
 import '../../business/screens/business_detail_screen.dart';
 // import 'tasks_screen_controller.dart';
 
-class TasksScreen extends StatelessWidget {
+class TasksScreen extends GetView<TasksScreenController> {
   TasksScreen({super.key});
 
-  final TasksScreenController controller = Get.find<TasksScreenController>();
+
 
   @override
   Widget build(BuildContext context) {
@@ -26,8 +28,15 @@ class TasksScreen extends StatelessWidget {
       appBar:CustomAppBar(title: "Tasks"),
       body:  TopBorderContainer(
         padding: const EdgeInsets.symmetric(vertical: 32),
-        child: CustomScrollView(
-          slivers: [
+        child: RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: () async {
+            controller.clearSelectedFilters();
+            await controller.fetchTasks();
+          },
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
             /// 🔹 Top Section (Add button, search, filters)
             SliverToBoxAdapter(
               child: Padding(
@@ -37,7 +46,16 @@ class TasksScreen extends StatelessWidget {
                   children: [
                     // const SizedBox(height: 20),
 
-                    addButton("Add Task"),
+                    addButton(
+                      "Add Task",
+                      onTap: () async {
+                        final dynamic result =
+                            await Get.toNamed(Routes.createTaskScreen);
+                        if (result != null) {
+                          controller.fetchTasks();
+                        }
+                      },
+                    ),
                     const SizedBox(height: 20),
 
                     /// Search + Filter
@@ -47,6 +65,8 @@ class TasksScreen extends StatelessWidget {
                           child: CustomSearchField(
                             hintText: "Search here...",
                             controller: controller.searchController,
+                            onChanged: (_) => controller.tasks.refresh(),
+                            onClear: () => controller.tasks.refresh(),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -90,7 +110,11 @@ class TasksScreen extends StatelessWidget {
                       ],
                     ),
                     /// Filters (Responsive)
-                    controller.showFilter.value?SizedBox(height: 15,):SizedBox(),
+                    Obx(
+                      () => controller.showFilter.value
+                          ? const SizedBox(height: 15)
+                          : const SizedBox.shrink(),
+                    ),
                     Obx(() => controller.showFilter.value
                         ? LayoutBuilder(
                       builder: (context, constraints) {
@@ -202,39 +226,74 @@ class TasksScreen extends StatelessWidget {
             SliverPadding(
               // padding:
             padding: EdgeInsets.only(top: 20,bottom: 100,left: 20,right: 20),
-              sliver: Obx(() => SliverList(
-
-                delegate: SliverChildBuilderDelegate(
-
-                      (context, index) {
-                    final task = controller.tasks[index];
-                    return GestureDetector(
-                      onTap: (){
-                        Get.toNamed(Routes.taskDetailScreen);
-                      },
+              sliver: Obx(() {
+                if (controller.isLoading.value) {
+                  return const SliverToBoxAdapter(
+                    child: Center(
                       child: Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: TaskCardWidget(
-                          priority: task.priority,
-                          title: task.title,
-                          subtitle: task.description,
-                          date: task.dueDate == null
-                              ? "-"
-                              : DateFormats.dMonY(task.dueDate!),
-                          assignTo: task.assignedTo,
-                          status: task.status,
-                        ),
+                        padding: EdgeInsets.only(top: 40),
+                        child: FinancePulseLoader(),
                       ),
-                    );
-                  },
-                  childCount: controller.tasks.length,
-                ),
-              )),
+                    ),
+                  );
+                }
+                if (controller.error.value.isNotEmpty) {
+                  return SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 20),
+                      child: Center(child: Text(controller.error.value)),
+                    ),
+                  );
+                }
+                if (controller.filteredTasks.isEmpty) {
+                  return const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.only(top: 20),
+                      child: Center(child: Text("No tasks found")),
+                    ),
+                  );
+                }
+                return SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final task = controller.filteredTasks[index];
+                      return GestureDetector(
+                        onTap: () {
+                          Get.toNamed(
+                            Routes.taskDetailScreen,
+                            arguments: task,
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: TaskCardWidget(
+                            priority: task.priorityLevel,
+                            title: task.taskTitle,
+                            subtitle: task.description,
+                            date: _taskDate(task),
+                            assignTo: task.assignedEmployeeName ?? "-",
+                            status: task.displayStatus,
+                          ),
+                        ),
+                      );
+                    },
+                    childCount: controller.filteredTasks.length,
+                  ),
+                );
+              }),
             ),
-          ],
+            ],
+          ),
         ),
       ),
 
     );
+  }
+
+  String _taskDate(TaskModel task) {
+    final DateTime? parsed = task.dueDateParsed;
+    if (parsed != null) return DateFormats.dMonY(parsed);
+    final String raw = task.dueDate.toString().trim();
+    return raw.isEmpty ? "-" : raw;
   }
 }

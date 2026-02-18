@@ -1,7 +1,6 @@
 import 'package:bizly/utils/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:bizly/modules/invoice/controllers/invoice_screen_controller.dart';
 import 'package:bizly/routes/routes.dart';
 import 'package:bizly/components/common/add_button.dart';
@@ -61,33 +60,43 @@ class InvoiceScreen extends StatelessWidget {
                         if (controller.error.value.isNotEmpty) {
                           return Center(child: Text(controller.error.value));
                         }
-                        return ListView.builder(
-                          padding: const EdgeInsets.only(top: 20, bottom: 100),
-                          itemCount: controller.filteredInvoices.length,
-                          itemBuilder: (context, index) {
-                            final invoice = controller.filteredInvoices[index];
-                            final String itemName = invoice.items.isNotEmpty
-                                ? invoice.items.first.itemName
-                                : "-";
-                            return GestureDetector(
-                              onTap: () {
-                                Get.toNamed(
-                                  Routes.invoiceDetailScreen,
-                                  arguments: invoice,
-                                );
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: InvoiceCard(
-                                  clientName: invoice.customerName ?? '-',
-                                  businessName: invoice.businessName ?? '-',
-                                  itemName: itemName,
-                                  amount: invoice.totalAmount?.toString() ?? '-',
-                                  status: invoice.status ?? '-',
+                        if (controller.filteredInvoices.isEmpty) {
+                          return const Center(
+                            child: Text("No invoices found."),
+                          );
+                        }
+                        return RefreshIndicator(
+                          color: AppColors.primary,
+                          onRefresh: controller.fetchInvoices,
+                          child: ListView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.only(top: 20, bottom: 100),
+                            itemCount: controller.filteredInvoices.length,
+                            itemBuilder: (context, index) {
+                              final invoice = controller.filteredInvoices[index];
+                              final String itemName = invoice.items.isNotEmpty
+                                  ? invoice.items.first.itemName
+                                  : "-";
+                              return GestureDetector(
+                                onTap: () {
+                                  Get.toNamed(
+                                    Routes.invoiceDetailScreen,
+                                    arguments: invoice,
+                                  );
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: InvoiceCard(
+                                    clientName: invoice.customerName ?? '-',
+                                    businessName: invoice.businessName ?? '-',
+                                    itemName: itemName,
+                                    amount: invoice.totalAmount?.toString() ?? '-',
+                                    status: invoice.status ?? '-',
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
+                              );
+                            },
+                          ),
                         );
                       }),
                     ),

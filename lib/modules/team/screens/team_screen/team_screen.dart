@@ -1,87 +1,31 @@
-import 'package:bizly/modules/team/screens/team_screen/team_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:bizly/utils/app_colors.dart';
+
 import 'package:bizly/components/common/custom_app_bar_2.dart';
 import 'package:bizly/components/common/custom_search_field.dart';
+import 'package:bizly/components/common/loader/loader.dart';
+import 'package:bizly/modules/customers/models/customer_model.dart';
+import 'package:bizly/modules/customers/screens/customers_screen/customer_detail_screen.dart';
+import 'package:bizly/modules/team/controllers/team_controller.dart';
+import 'package:bizly/modules/team/models/employee_model.dart';
+import 'package:bizly/utils/app_colors.dart';
+import 'package:bizly/utils/app_dialouge.dart';
 import 'create_team_member.dart';
+import 'team_detail_screen.dart';
 
-class TeamEmployeesScreen extends StatefulWidget {
-  const TeamEmployeesScreen({super.key});
+class TeamEmployeesScreen extends StatelessWidget {
+  TeamEmployeesScreen({super.key});
 
-  @override
-  State<TeamEmployeesScreen> createState() => _TeamEmployeesScreenState();
-}
-
-class _TeamEmployeesScreenState extends State<TeamEmployeesScreen> {
-  final TextEditingController _searchController = TextEditingController();
-
-  List<Map<String, dynamic>> employees = [
- {
-    "name": "Ahmed Khan",
-    "role": "Sales Manager",
-    "phone": "+92 300 1234567",
-    "email": "ahmed@bizly.com",
-    "address": "Karachi, Pakistan",
-    "tasks": ["Lead follow-up", "Monthly report", "Client meeting"],
-    "joinDate": "01-01-2024",
-    "salary": "150,000 PKR",
-    "status": "Active",
-    "notes": "Top performer",
-  },
-
-    {
-      "name": "Sara Ali",
-      "role": "Accountant",
-      "phone": "+92 301 9876543",
-      "email": "sara@bizly.com",
-      "status": "Active",
-      "tasks": ["Lead follow-up", "Monthly report", "Client meeting"],
-      "joinDate": "01-01-2024",
-      "salary": "150,000 PKR",
-      // "status": "Active",
-      "notes": "Top performer",
-    },
-    {
-      "name": "Usman Raza",
-      "role": "Technician",
-      "phone": "+92 302 5544332",
-      "email": "usman@bizly.com",
-      "status": "Inactive",
-      "tasks": ["Lead follow-up", "Monthly report", "Client meeting"],
-      "joinDate": "01-01-2024",
-      "salary": "150,000 PKR",
-      // "status": "Active",
-      "notes": "Top performer",
-    },
-  ];
-
-  List<Map<String, dynamic>> filteredEmployees = [];
-
-  @override
-  void initState() {
-    super.initState();
-    filteredEmployees = employees;
-  }
-
-  void _filterEmployees(String query) {
-    setState(() {
-      filteredEmployees = employees.where((e) {
-        return e["name"].toLowerCase().contains(query.toLowerCase()) ||
-            e["role"].toLowerCase().contains(query.toLowerCase()) ||
-            e["phone"].contains(query);
-      }).toList();
-    });
-  }
+  final TeamController controller = Get.isRegistered<TeamController>()
+      ? Get.find<TeamController>()
+      : Get.put(TeamController());
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-
       body: Column(
         children: [
-          /// 🔹 Header + Search (same as Vendor)
           Container(
             decoration: const BoxDecoration(
               color: AppColors.primaryDense,
@@ -101,50 +45,70 @@ class _TeamEmployeesScreenState extends State<TeamEmployeesScreen> {
                   padding: const EdgeInsets.all(10),
                   child: CustomSearchField(
                     hintText: "Search employee...",
-                    controller: _searchController,
-                    onChanged: _filterEmployees,
-                    onClear: () => _filterEmployees(""),
+                    controller: controller.searchController,
+                    onChanged: (value) => controller.query.value = value,
+                    onClear: () => controller.query.value = '',
                   ),
                 ),
               ],
             ),
           ),
-
-          /// 🔹 Employee List
           Expanded(
-            child: filteredEmployees.isEmpty
-                ? const Center(child: Text("No employees found"))
-                : ListView.builder(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-              itemCount: filteredEmployees.length,
-              itemBuilder: (context, index) {
-                return _employeeCard(filteredEmployees[index]);
-              },
-            ),
+            child: Obx(() {
+              if (controller.isLoading.value) {
+                return const Center(child: FinancePulseLoader());
+              }
+              if (controller.error.value.isNotEmpty) {
+                return Center(child: Text(controller.error.value));
+              }
+              if (controller.filteredEmployees.isEmpty) {
+                return const Center(child: Text("No employees found"));
+              }
+              return RefreshIndicator(
+                color: AppColors.primary,
+                onRefresh: controller.fetchEmployees,
+                child: ListView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+                  itemCount: controller.filteredEmployees.length,
+                  itemBuilder: (context, index) {
+                    return _employeeCard(controller.filteredEmployees[index]);
+                  },
+                ),
+              );
+            }),
           ),
         ],
       ),
-
-      /// 🔹 Add Employee Button
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
-        onPressed: () {
-          Get.to(()=>AddEmployeeScreen());
-          // TODO: Navigate to AddEmployeeScreen
+        onPressed: () async {
+          final dynamic result = await Get.to(() => const AddEmployeeScreen());
+          if (result is EmployeeModel) {
+            controller.fetchEmployees();
+          }
         },
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 
-  /// 🔹 Employee Card (Enhanced)
-  Widget _employeeCard(Map<String, dynamic> employee) {
-    final bool isActive = employee["status"] == "Active";
-
+  Widget _employeeCard(EmployeeModel employee) {
+    final bool isActive = employee.status.toLowerCase() == "active";
     return GestureDetector(
-      onTap: (){
-        Get.to(() => EmployeeDetailScreen(employee: employee));
-
+      onTap: () async {
+        if (employee.userId != null) {
+          AppDialogs.showLoading(message: "Loading customer...");
+          final CustomerModel? customer = await controller.fetchCustomerByUserId(
+            employee.userId!,
+          );
+          AppDialogs.closeDialog();
+          if (customer != null) {
+            await Get.to(() => CustomerDetailScreen(customer: customer));
+            return;
+          }
+        }
+        await Get.to(() => EmployeeDetailScreen(employee: employee));
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 14),
@@ -162,12 +126,11 @@ class _TeamEmployeesScreenState extends State<TeamEmployeesScreen> {
         ),
         child: Row(
           children: [
-            /// Avatar
             CircleAvatar(
               radius: 26,
               backgroundColor: AppColors.primary.withOpacity(0.1),
               child: Text(
-                employee["name"][0],
+                employee.fullName.isEmpty ? "-" : employee.fullName[0],
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -176,14 +139,12 @@ class _TeamEmployeesScreenState extends State<TeamEmployeesScreen> {
               ),
             ),
             const SizedBox(width: 12),
-
-            /// Info
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    employee["name"],
+                    employee.fullName,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -191,7 +152,7 @@ class _TeamEmployeesScreenState extends State<TeamEmployeesScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    employee["role"],
+                    employee.role,
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.grey.shade700,
@@ -199,7 +160,7 @@ class _TeamEmployeesScreenState extends State<TeamEmployeesScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    employee["phone"],
+                    employee.phoneNumber,
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey.shade600,
@@ -208,16 +169,16 @@ class _TeamEmployeesScreenState extends State<TeamEmployeesScreen> {
                 ],
               ),
             ),
-
-            /// Status Chip
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: isActive ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                color: isActive
+                    ? Colors.green.withOpacity(0.1)
+                    : Colors.red.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                employee["status"],
+                isActive ? "Active" : "Inactive",
                 style: TextStyle(
                   fontSize: 12,
                   color: isActive ? Colors.green : Colors.red,

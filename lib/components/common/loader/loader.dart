@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:bizly/utils/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class FinancePulseLoader extends StatefulWidget {
@@ -7,7 +8,8 @@ class FinancePulseLoader extends StatefulWidget {
 
   const FinancePulseLoader({
     super.key,
-    this.color = const Color(0xFF2ECC71),
+    //this.color = const Color(0xFF2ECC71),
+    this.color = AppColors.primary,
     this.size = 80,
   });
 

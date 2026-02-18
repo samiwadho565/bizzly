@@ -249,7 +249,7 @@ class ApiService {
             ),
           );
         }
-        payload[entry.key] = files;
+        payload['${entry.key}[]'] = files;
         continue;
       }
 

@@ -140,48 +140,19 @@ class CreateCustomerController extends GetxController {
           );
 
     if (response.success) {
-      CustomerModel? created;
-      if (response.data is Map) {
-        final Map<String, dynamic> map =
-            Map<String, dynamic>.from(response.data as Map);
-        final Map<String, dynamic> payload = map['data'] is Map
-            ? Map<String, dynamic>.from(map['data'] as Map)
-            : map;
-        created = CustomerModel.fromJson(payload);
-      } else {
-        final CustomerModel? current = editingCustomer.value;
-        created = CustomerModel(
-          id: current?.id,
-          userId: current?.userId,
-          customerName: nameController.text.trim(),
-          phoneNumber: phoneController.text.trim(),
-          address: addressController.text.trim(),
-          email: emailController.text.trim().isNotEmpty
-              ? emailController.text.trim()
-              : null,
-          secondaryPhoneNumber: secondaryPhoneController.text.trim().isNotEmpty
-              ? secondaryPhoneController.text.trim()
-              : null,
-          companyName: companyController.text.trim().isNotEmpty
-              ? companyController.text.trim()
-              : null,
-          taxNtn: taxController.text.trim().isNotEmpty
-              ? taxController.text.trim()
-              : null,
-          website: websiteController.text.trim().isNotEmpty
-              ? websiteController.text.trim()
-              : null,
-          socialLink: socialController.text.trim().isNotEmpty
-              ? socialController.text.trim()
-              : null,
-          notes: notesController.text.trim().isNotEmpty
-              ? notesController.text.trim()
-              : null,
-          profileImage: current?.profileImage,
-          createdAt: current?.createdAt,
-          updatedAt: DateTime.now().toString(),
-        );
+      final int? editedId = editingCustomer.value?.id;
+      final CustomerModel? created = _resolveResultCustomer(response);
+      CustomerModel? doneResult;
+
+      if (isEdit) {
+        if (Get.isRegistered<CustomersController>()) {
+          await Get.find<CustomersController>().fetchCustomers();
+        }
+        final int? targetId = editedId ?? created?.id;
+        doneResult = targetId == null ? null : await _fetchCustomerById(targetId);
       }
+
+      isLoading.value = false;
 
       AppDialogs.showActionDialog(
         iconPath: AppImages.dialogSuccess,
@@ -196,6 +167,10 @@ class CreateCustomerController extends GetxController {
             }
           }),
           AppDialogAction(label: "Done", onPressed: () {
+            if (isEdit) {
+              Get.back(result: doneResult ?? created);
+              return;
+            }
             if (Get.isRegistered<CustomersController>()) {
               Get.find<CustomersController>().fetchCustomers();
             }
@@ -204,6 +179,7 @@ class CreateCustomerController extends GetxController {
         ],
       );
     } else {
+      isLoading.value = false;
       Get.snackbar(
         "Error",
         response.message,
@@ -213,7 +189,54 @@ class CreateCustomerController extends GetxController {
       );
     }
 
-    isLoading.value = false;
+  }
+
+  Future<CustomerModel?> _fetchCustomerById(int id) async {
+    final ApiResponse response = await ApiService().get(
+      '${AppUrls.createCustomer}/$id',
+      isAuth: true,
+    );
+    if (!response.success || response.data is! Map) return null;
+    final Map<String, dynamic> map =
+        Map<String, dynamic>.from(response.data as Map);
+    final Map<String, dynamic> payload =
+        map['data'] is Map ? Map<String, dynamic>.from(map['data'] as Map) : map;
+    return CustomerModel.fromJson(payload);
+  }
+
+  CustomerModel? _resolveResultCustomer(ApiResponse response) {
+    if (response.data is Map) {
+      final Map<String, dynamic> map =
+          Map<String, dynamic>.from(response.data as Map);
+      final Map<String, dynamic> payload =
+          map['data'] is Map ? Map<String, dynamic>.from(map['data'] as Map) : map;
+      return CustomerModel.fromJson(payload);
+    }
+
+    final CustomerModel? current = editingCustomer.value;
+    return CustomerModel(
+      id: current?.id,
+      userId: current?.userId,
+      customerName: nameController.text.trim(),
+      phoneNumber: phoneController.text.trim(),
+      address: addressController.text.trim(),
+      email: emailController.text.trim().isNotEmpty ? emailController.text.trim() : null,
+      secondaryPhoneNumber: secondaryPhoneController.text.trim().isNotEmpty
+          ? secondaryPhoneController.text.trim()
+          : null,
+      companyName: companyController.text.trim().isNotEmpty
+          ? companyController.text.trim()
+          : null,
+      taxNtn: taxController.text.trim().isNotEmpty ? taxController.text.trim() : null,
+      website: websiteController.text.trim().isNotEmpty ? websiteController.text.trim() : null,
+      socialLink: socialController.text.trim().isNotEmpty
+          ? socialController.text.trim()
+          : null,
+      notes: notesController.text.trim().isNotEmpty ? notesController.text.trim() : null,
+      profileImage: current?.profileImage,
+      createdAt: current?.createdAt,
+      updatedAt: DateTime.now().toString(),
+    );
   }
 
   @override

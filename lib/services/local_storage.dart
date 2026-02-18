@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bizly/modules/auth/models/user_model.dart';
 
@@ -10,6 +11,7 @@ class LocalStorage {
   static const String _rememberMeKey = 'remember_me';
   static const String _rememberEmailKey = 'remember_email';
   static const String _rememberPasswordKey = 'remember_password';
+  static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
   static Future<void> saveAuthToken(String token) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -75,18 +77,16 @@ class LocalStorage {
   }
 
   static Future<void> saveRememberedPassword(String password) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_rememberPasswordKey, password);
+    await _secureStorage.write(key: _rememberPasswordKey, value: password);
   }
 
   static Future<String?> getRememberedPassword() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_rememberPasswordKey);
+    return _secureStorage.read(key: _rememberPasswordKey);
   }
 
   static Future<void> clearRememberedCredentials() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.remove(_rememberEmailKey);
-    await prefs.remove(_rememberPasswordKey);
+    await _secureStorage.delete(key: _rememberPasswordKey);
   }
 }

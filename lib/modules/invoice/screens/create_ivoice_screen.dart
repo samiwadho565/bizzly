@@ -32,8 +32,11 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
             : "Create Invoice",
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Container(
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+          child: SingleChildScrollView(
+            child: Container(
             margin: const EdgeInsets.only(top: 10),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -82,6 +85,7 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
                               () => GestureDetector(
 
                               onTap: () async {
+                                FocusManager.instance.primaryFocus?.unfocus();
                                 final date = await AppUtils.pickDate();
                                 if (date != null) {
                                   controller.invoiceDate .value = date;
@@ -169,7 +173,7 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Optional Details", style: sectionTitleStyle),
+                        Text("Business & Payment", style: sectionTitleStyle),
                         const SizedBox(height: 12),
 
                         _buildBusinessDropdown(),
@@ -190,20 +194,23 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
                   const SizedBox(height: 30),
 
                   /// 🔹 Action Button
-                  CustomButton(
-                    text: controller.editingInvoiceId.value != null
-                        ? "Update Invoice"
-                        : "Create Invoice",
-                    isLoading: controller.isSubmitting.value,
-                    onPressed: controller.isSubmitting.value
-                        ? () {}
-                        : controller.createOrUpdateInvoice,
+                  Obx(
+                    () => CustomButton(
+                      text: controller.editingInvoiceId.value != null
+                          ? "Update Invoice"
+                          : "Create Invoice",
+                      isLoading: controller.isSubmitting.value,
+                      onPressed: controller.isSubmitting.value
+                          ? () {}
+                          : controller.createOrUpdateInvoice,
+                    ),
                   ),
 
                   const SizedBox(height: 20),
                 ],
               ),
               ),
+            ),
             ),
           ),
         ),
@@ -237,6 +244,7 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
         items: items,
         selectedItem: selectedName,
         onChanged: (value) {
+          FocusManager.instance.primaryFocus?.unfocus();
           int? id;
           for (final item in controller.customers) {
             if (item.customerName == value) {
@@ -276,6 +284,7 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
         items: items,
         selectedItem: selectedName,
         onChanged: (value) {
+          FocusManager.instance.primaryFocus?.unfocus();
           int? id;
           for (final item in controller.businesses) {
             if (item.businessName == value) {
@@ -315,6 +324,7 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
         items: items,
         selectedItem: selectedName,
         onChanged: (value) {
+          FocusManager.instance.primaryFocus?.unfocus();
           int? id;
           for (final item in controller.paymentMethods) {
             if (item['name']?.toString() == value) {
@@ -342,6 +352,7 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
           ? null
           : _cap(controller.status.value),
       onChanged: (value) {
+        FocusManager.instance.primaryFocus?.unfocus();
         if (value != null) {
           controller.status.value = value.toLowerCase();
         }
@@ -396,6 +407,7 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),

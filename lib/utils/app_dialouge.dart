@@ -226,7 +226,7 @@ class _AppActionDialog extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 14),
-            const Divider(height: 1, thickness: 1, color:Colors.grey),
+             Divider(height: 1, thickness: 1, color:Colors.grey.shade200),
             _buildActions(),
           ],
         ),
@@ -261,9 +261,9 @@ class _AppActionDialog extends StatelessWidget {
               },
             ),
           ),
-          const SizedBox(
+           SizedBox(
             height: 44,
-            child: VerticalDivider(width: 1, thickness: 1, color: Colors.grey),
+            child: VerticalDivider(width: 1, thickness: 1, color: Colors.grey.shade200),
           ),
           Expanded(
             child: _DialogActionButton(
@@ -284,7 +284,7 @@ class _AppActionDialog extends StatelessWidget {
       children: [
         for (int i = 0; i < actions.length; i++) ...[
           if (i > 0)
-            const Divider(height: 1, thickness: 1, color: Colors.grey),
+             Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
           _DialogActionButton(
             label: actions[i].label,
             textColor: actions[i].textColor ?? AppColors.viewAll,

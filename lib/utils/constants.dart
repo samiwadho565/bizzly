@@ -1,8 +1,0 @@
-class ApiConfig {
-  static const String baseUrl = 'https://rosybrown-ant-846135.hostingersite.com';
-  static const Duration timeout = Duration(seconds: 20);
-}
-
-class ApiEndpoints {
-  static const String signup = '/api/auth/signup';
-}

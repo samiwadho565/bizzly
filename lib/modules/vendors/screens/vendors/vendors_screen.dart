@@ -6,6 +6,7 @@ import 'package:bizly/modules/vendors/controllers/vendors_controller.dart';
 import 'package:bizly/utils/app_colors.dart';
 import 'package:bizly/components/common/custom_search_field.dart';
 import 'package:bizly/components/common/custom_app_bar_2.dart';
+import '../../../../components/common/loader/loader.dart';
 import '../../../../routes/routes.dart';
 // import 'vendor_detail_screen.dart';
 
@@ -51,11 +52,7 @@ class VendorsScreen extends GetView<VendorsController> {
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {
-                return const Center(
-                  child: CircularProgressIndicator(
-                    color: AppColors.primary,
-                  ),
-                );
+                return const Center(child: FinancePulseLoader());
               }
               return RefreshIndicator(
                 color: AppColors.primary,

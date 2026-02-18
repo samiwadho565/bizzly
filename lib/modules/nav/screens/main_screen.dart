@@ -35,7 +35,7 @@ class MainScreen extends GetView<MainScreenController> {
     switch (index) {
       case 0:
         return HomeScreen(
-          //openDrawer: () => controller.scaffoldKey.currentState?.openDrawer(),
+          openDrawer: () => controller.scaffoldKey.currentState?.openDrawer(),
         );
       case 1:
         return ExpenseScreen();

@@ -97,7 +97,11 @@ class CategoriesController extends GetxController {
         isAuth: true,
       );
       if (response.success) {
-        await fetchCategories();
+        if (Get.isRegistered<CategoriesController>()) {
+          await Get.find<CategoriesController>().fetchCategories();
+        } else {
+          await fetchCategories();
+        }
         return true;
       }
       AppDialogs.showActionDialog(

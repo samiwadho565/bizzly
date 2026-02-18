@@ -23,7 +23,7 @@ class InvoiceItemModel {
   Map<String, dynamic> toJson() {
     return {
       'item_name': itemName,
-      'amount': amount,
+      'amount': _toAmountString(amount),
     };
   }
 
@@ -31,5 +31,15 @@ class InvoiceItemModel {
     if (value is int) return value;
     if (value is String) return int.tryParse(value);
     return null;
+  }
+
+  static String? _toAmountString(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toStringAsFixed(2);
+    final String raw = value.toString().trim();
+    if (raw.isEmpty) return null;
+    final num? parsed = num.tryParse(raw);
+    if (parsed != null) return parsed.toStringAsFixed(2);
+    return raw;
   }
 }

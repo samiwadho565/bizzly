@@ -65,12 +65,24 @@ class CreateVendorController extends GetxController {
           );
 
     if (response.success) {
+      final int? editedId = editingVendor.value?.id;
       VendorModel? created;
+      VendorModel? doneResult;
       if (response.data is Map<String, dynamic>) {
         created = VendorModel.fromJson(
           response.data as Map<String, dynamic>,
         );
       }
+
+      if (isEdit) {
+        if (Get.isRegistered<VendorsController>()) {
+          await Get.find<VendorsController>().fetchVendors();
+        }
+        final int? targetId = editedId ?? created?.id;
+        doneResult = targetId == null ? null : await _fetchVendorById(targetId);
+      }
+
+      isLoading.value = false;
 
       AppDialogs.showActionDialog(
         iconPath: AppImages.dialogSuccess,
@@ -86,6 +98,10 @@ class CreateVendorController extends GetxController {
               }
             }),
           AppDialogAction(label: "Done", onPressed: () {
+            if (isEdit) {
+              Get.back(result: doneResult ?? created ?? vendor);
+              return;
+            }
             if (Get.isRegistered<VendorsController>()) {
               Get.find<VendorsController>().fetchVendors();
             }
@@ -94,6 +110,7 @@ class CreateVendorController extends GetxController {
         ],
       );
     } else {
+      isLoading.value = false;
       Get.snackbar(
         "Error",
         response.message,
@@ -102,8 +119,19 @@ class CreateVendorController extends GetxController {
         colorText: Colors.white,
       );
     }
+  }
 
-    isLoading.value = false;
+  Future<VendorModel?> _fetchVendorById(int id) async {
+    final ApiResponse response = await ApiService().get(
+      '${AppUrls.createVendor}/$id',
+      isAuth: true,
+    );
+    if (!response.success || response.data is! Map) return null;
+    final Map<String, dynamic> map =
+        Map<String, dynamic>.from(response.data as Map);
+    final Map<String, dynamic> payload =
+        map['data'] is Map ? Map<String, dynamic>.from(map['data'] as Map) : map;
+    return VendorModel.fromJson(payload);
   }
 
   @override

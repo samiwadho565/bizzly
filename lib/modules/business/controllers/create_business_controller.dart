@@ -14,6 +14,8 @@ import 'package:bizly/models/api_response.dart';
 import 'package:bizly/modules/business/models/business_model.dart';
 import 'package:bizly/services/api_service.dart';
 
+import '../../home/controllers/home_controller.dart';
+
 class CreateBusinessController extends GetxController {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   final Rxn<BusinessModel> editingBusiness = Rxn<BusinessModel>();
@@ -148,6 +150,7 @@ class CreateBusinessController extends GetxController {
     );
 
     ApiResponse response;
+    final int? editedId = editingBusiness.value?.id;
     if (isEdit) {
       final int? id = editingBusiness.value?.id;
       response = await ApiService().postMultipart(
@@ -162,7 +165,33 @@ class CreateBusinessController extends GetxController {
         isAuth: true,
       );
     }
-      print("response.message, : ${response.message}");
+    final BusinessModel? resultBusiness = _resolveResultBusiness(
+      response: response,
+      businessName: businessName,
+      businessAddress: businessAddress,
+      phoneNumber: phoneNumber,
+      currency: currency,
+      businessEmail: businessEmail,
+      taxNtnNumber: taxNtnNumber,
+      website: website,
+      socialMediaLink: socialMediaLink,
+      businessDescription: businessDescription,
+      operatingHours: operatingHours,
+      secondaryContact: secondaryContact,
+    );
+
+    BusinessModel? doneResult;
+    if (response.success && isEdit) {
+      if (Get.isRegistered<HomeScreenController>()) {
+        await Get.find<HomeScreenController>().fetchBusinesses();
+      }
+      final int? targetId = editedId ?? resultBusiness?.id;
+      doneResult = targetId == null ? null : await _fetchBusinessById(targetId);
+      doneResult ??= resultBusiness;
+    }
+
+    isLoading.value = false;
+
     AppDialogs.showActionDialog(
       iconPath:
           response.success ? AppImages.dialogSuccess : AppImages.dialogWarning,
@@ -176,48 +205,27 @@ class CreateBusinessController extends GetxController {
           : response.message,
       actions: response.success
           ? [
-              if (!isEdit) AppDialogAction(label: "New Business"),
+              if (!isEdit)
+                AppDialogAction(
+                  label: "New Business",
+                  onPressed: () {
+                    _resetForm();
+                    if (Get.isRegistered<HomeScreenController>()) {
+                      Get.find<HomeScreenController>().fetchBusinesses();
+                    }
+                  },
+                ),
               AppDialogAction(
                 label: "Done",
                 onPressed: () {
                   if (isEdit) {
-                    BusinessModel? updated;
-                    if (response.data is Map<String, dynamic>) {
-                      updated = BusinessModel.fromJson(
-                        response.data as Map<String, dynamic>,
-                      );
-                    } else {
-                      final BusinessModel? current = editingBusiness.value;
-                      updated = BusinessModel(
-                        id: current?.id,
-                        userId: current?.userId,
-                        businessName: businessName,
-                        businessAddress: businessAddress,
-                        phoneNumber: phoneNumber,
-                        currency: currency,
-                        businessEmail:
-                            businessEmail.isNotEmpty ? businessEmail : null,
-                        taxNtnNumber:
-                            taxNtnNumber.isNotEmpty ? taxNtnNumber : null,
-                        website: website.isNotEmpty ? website : null,
-                        socialMediaLink:
-                            socialMediaLink.isNotEmpty ? socialMediaLink : null,
-                        businessDescription: businessDescription.isNotEmpty
-                            ? businessDescription
-                            : null,
-                        operatingHours:
-                            operatingHours.isNotEmpty ? operatingHours : null,
-                        secondaryContact: secondaryContact.isNotEmpty
-                            ? secondaryContact
-                            : null,
-                        businessImageUrl: current?.businessImageUrl,
-                        businessCoverImageUrl: current?.businessCoverImageUrl,
-                        createdAt: current?.createdAt,
-                        updatedAt: DateTime.now().toString(),
-                      );
-                    }
-                    Get.back(result: updated);
+                    Get.back(result: doneResult ?? resultBusiness);
+                    return;
                   }
+                  if (Get.isRegistered<HomeScreenController>()) {
+                    Get.find<HomeScreenController>().fetchBusinesses();
+                  }
+                  Get.back(result: resultBusiness);
                 },
               ),
             ]
@@ -239,8 +247,80 @@ class CreateBusinessController extends GetxController {
     //   backgroundColor: response.success ? Colors.green : Colors.red,
     //   colorText: Colors.white,
     // );
+  }
 
-    isLoading.value = false;
+  Future<BusinessModel?> _fetchBusinessById(int id) async {
+    final ApiResponse response = await ApiService().get(
+      '${AppUrls.getAllBusinesses}/$id',
+      isAuth: true,
+    );
+    if (!response.success || response.data is! Map) return null;
+    final Map<String, dynamic> map =
+        Map<String, dynamic>.from(response.data as Map);
+    final Map<String, dynamic> payload =
+        map['data'] is Map ? Map<String, dynamic>.from(map['data'] as Map) : map;
+    return BusinessModel.fromJson(payload);
+  }
+
+  BusinessModel? _resolveResultBusiness({
+    required ApiResponse response,
+    required String businessName,
+    required String businessAddress,
+    required String phoneNumber,
+    required String currency,
+    required String businessEmail,
+    required String taxNtnNumber,
+    required String website,
+    required String socialMediaLink,
+    required String businessDescription,
+    required String operatingHours,
+    required String secondaryContact,
+  }) {
+    if (response.data is Map) {
+      final Map<String, dynamic> map =
+          Map<String, dynamic>.from(response.data as Map);
+      final Map<String, dynamic> payload =
+          map['data'] is Map ? Map<String, dynamic>.from(map['data'] as Map) : map;
+      return BusinessModel.fromJson(payload);
+    }
+
+    final BusinessModel? current = editingBusiness.value;
+    return BusinessModel(
+      id: current?.id,
+      userId: current?.userId,
+      businessName: businessName,
+      businessAddress: businessAddress,
+      phoneNumber: phoneNumber,
+      currency: currency,
+      businessEmail: businessEmail.isNotEmpty ? businessEmail : null,
+      taxNtnNumber: taxNtnNumber.isNotEmpty ? taxNtnNumber : null,
+      website: website.isNotEmpty ? website : null,
+      socialMediaLink: socialMediaLink.isNotEmpty ? socialMediaLink : null,
+      businessDescription: businessDescription.isNotEmpty ? businessDescription : null,
+      operatingHours: operatingHours.isNotEmpty ? operatingHours : null,
+      secondaryContact: secondaryContact.isNotEmpty ? secondaryContact : null,
+      businessImageUrl: current?.businessImageUrl,
+      businessCoverImageUrl: current?.businessCoverImageUrl,
+      createdAt: current?.createdAt,
+      updatedAt: DateTime.now().toString(),
+    );
+  }
+
+  void _resetForm() {
+    editingBusiness.value = null;
+    businessNameController.clear();
+    businessAddressController.clear();
+    phoneNumberController.clear();
+    currencyController.clear();
+    businessEmailController.clear();
+    taxNtnController.clear();
+    websiteController.clear();
+    socialMediaController.clear();
+    businessDescriptionController.clear();
+    operatingHoursController.clear();
+    secondaryContactController.clear();
+    businessImageFile.value = null;
+    businessCoverImageFile.value = null;
   }
 
   void loadForEdit(BusinessModel business) {

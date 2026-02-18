@@ -72,7 +72,7 @@ class SignInController extends GetxController {
           await LocalStorage.clearRememberedCredentials();
         }
 
-          Get.offAllNamed(Routes.homeScreen);
+          Get.offAllNamed(Routes.mainScreen);
       }
 
     }else{

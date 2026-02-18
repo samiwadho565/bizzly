@@ -7,7 +7,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 
 import 'package:bizly/routes/routes.dart';
 import 'package:bizly/components/common/add_button.dart';
@@ -21,25 +20,22 @@ import 'package:bizly/components/home/custom_app_bar.dart';
 import 'package:bizly/components/home/custom_revenue_chart.dart';
 import 'package:bizly/components/home/expense_chart.dart';
 import 'package:bizly/components/home/flow_chart.dart';
-import 'package:bizly/components/home/side_bar.dart';
 import 'package:bizly/components/common/top_border_ccontainer.dart';
 
 class HomeScreen extends GetView<HomeScreenController> {
-  final VoidCallback? openDrawer; // Callback add karein
+  final VoidCallback? openDrawer;
    HomeScreen({super.key, this.openDrawer});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: controller.scaffoldKey,
       backgroundColor: AppColors.background,
       extendBody: true,
-      drawer: const CustomSideBar(),
       appBar: CustomAppBar(
         title: "Dashboard",
         leading: Image.asset(AppImages.menu, height: 40),
         onLeadingTap: () {
-          controller.scaffoldKey.currentState?.openDrawer();
+          openDrawer?.call();
         },
       ),
 

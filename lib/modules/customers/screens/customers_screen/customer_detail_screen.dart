@@ -116,6 +116,7 @@ class CustomerDetailScreen extends StatelessWidget {
                                   label: "Delete Customer",
                                   textColor: Colors.red,
                                   onPressed: () {
+                                    if (!Get.isRegistered<CustomersController>()) return;
                                     Get.find<CustomersController>()
                                         .deleteCustomer(customer);
                                   },

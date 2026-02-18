@@ -138,18 +138,18 @@ class InvoiceDetailScreen extends GetView<InvoiceDetailController> {
                         child: CustomButton(
                           color: AppColors.textPrimary,
                           text: "Edit Invoice",
-                          onPressed: () {
-                            () async {
-                              final result = await Get.toNamed(
-                                Routes.createInvoiceScreen,
-                                arguments: controller.model.value,
-                              );
-                              if (result == true &&
-                                  Get.isRegistered<InvoiceScreenController>()) {
-                                Get.find<InvoiceScreenController>()
-                                    .fetchInvoices();
-                              }
-                            }();
+                          onPressed: () async {
+                            final dynamic result = await Get.toNamed(
+                              Routes.createInvoiceScreen,
+                              arguments: controller.model.value,
+                            );
+                            if (result is InvoiceModel) {
+                              controller.model.value = result;
+                            }
+                            if (Get.isRegistered<InvoiceScreenController>()) {
+                              Get.find<InvoiceScreenController>()
+                                  .fetchInvoices();
+                            }
                           },
                         ),
                       ),

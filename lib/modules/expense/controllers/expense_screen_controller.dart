@@ -303,23 +303,22 @@ class AddExpenseScreenController extends GetxController {
   }
 
   bool validateRequiredSelections() {
-    String error = "";
-    if (selectedCategoryId.value == null) { error = "Please select Category"; }
-    if (!hasSelectedExpenseType.value) { error =  "Please select Expense Type"; }
-    if (!hasSelectedDate.value) { error =   "Please select Expense Date";}
-    if (selectedPaymentMethodId.value == null) { error =   "Please select Payment Method"; }
-    if (selectedBusinessId.value == null) { error =  "Please select Business"; }
+    final List<String> missing = <String>[];
+    if (selectedCategoryId.value == null) missing.add('Category');
+    if (!hasSelectedExpenseType.value) missing.add('Expense Type');
+    if (!hasSelectedDate.value) missing.add('Expense Date');
+    if (selectedPaymentMethodId.value == null) missing.add('Payment Method');
+    if (selectedBusinessId.value == null) missing.add('Business');
 
-    if(error.isNotEmpty){
+    if (missing.isNotEmpty) {
       AppDialogs.showActionDialog(
         iconPath: AppImages.dialogWarning,
         title: "Required Fields",
-        message: error,
+        message: 'Please provide: ${missing.join(', ')}',
         actions: [AppDialogAction(label: "Ok")],
       );
       return false;
     }
-    error = "";
     return true;
   }
 
@@ -372,7 +371,9 @@ class AddExpenseScreenController extends GetxController {
 
 
 
-    final ApiResponse response = editingExpenseId.value != null
+    final bool isEdit = editingExpenseId.value != null;
+    final int? editedId = editingExpenseId.value;
+    final ApiResponse response = isEdit
         ? await ApiService().postMultipart(
             '${AppUrls.updateExpense}/${editingExpenseId.value}',
             data: model.toJson(),
@@ -385,21 +386,35 @@ class AddExpenseScreenController extends GetxController {
           );
 
     expenseModel = model;
-
-    expenseModel.receiptUrl = response.data['receipt'] ?? "";
-    print("response.data : ${response.data}");
-    //AppDialogs.closeDialog();
-    isSubmitting.value = false;
-
+    if (response.success && response.data is Map) {
+      final Map<String, dynamic> map =
+          Map<String, dynamic>.from(response.data as Map);
+      final dynamic nested = map['data'];
+      if (nested is Map && nested['receipt'] != null) {
+        expenseModel.receiptUrl = nested['receipt'].toString();
+      } else if (map['receipt'] != null) {
+        expenseModel.receiptUrl = map['receipt'].toString();
+      }
+    }
     if (response.success) {
+      ExpenseModel? doneResult;
+      if (isEdit) {
+        if (Get.isRegistered<ExpensesListController>()) {
+          await Get.find<ExpensesListController>().fetchExpenses();
+        }
+        doneResult = editedId == null ? null : await _fetchExpenseById(editedId);
+      }
+
+      isSubmitting.value = false;
+
       AppDialogs.showActionDialog(
         iconPath: AppImages.dialogSuccess,
-        title: editingExpenseId.value != null ? "Expense Updated!" : "Expense Added!",
-        message: editingExpenseId.value != null
+        title: isEdit ? "Expense Updated!" : "Expense Added!",
+        message: isEdit
             ? "Expense updated successfully."
             : "Expense created successfully.",
         actions: [
-          if (editingExpenseId.value == null)
+          if (!isEdit)
             AppDialogAction(
               label: "New Expense",
               onPressed: () {
@@ -409,12 +424,12 @@ class AddExpenseScreenController extends GetxController {
           AppDialogAction(
             label: "Done",
             onPressed: () {
+              if (isEdit) {
+                Get.back(result: doneResult ?? expenseModel);
+                return;
+              }
               if (Get.isRegistered<ExpensesListController>()) {
                 Get.find<ExpensesListController>().fetchExpenses();
-              }
-              if (editingExpenseId.value != null) {
-                Get.back(result: expenseModel);
-                return;
               }
               Get.back();
             },
@@ -422,6 +437,7 @@ class AddExpenseScreenController extends GetxController {
         ],
       );
     } else {
+      isSubmitting.value = false;
       AppDialogs.showActionDialog(
         iconPath: AppImages.dialogWarning,
         title: "Error!",
@@ -431,10 +447,22 @@ class AddExpenseScreenController extends GetxController {
     }
   }
 
+  Future<ExpenseModel?> _fetchExpenseById(int id) async {
+    final ApiResponse response = await ApiService().get(
+      '${AppUrls.createExpense}/$id',
+      isAuth: true,
+    );
+    if (!response.success || response.data is! Map) return null;
+    final Map<String, dynamic> map =
+        Map<String, dynamic>.from(response.data as Map);
+    final Map<String, dynamic> payload =
+        map['data'] is Map ? Map<String, dynamic>.from(map['data'] as Map) : map;
+    return ExpenseModel.fromJson(payload);
+  }
+
   void loadForEditFromModel(ExpenseModel model) {
     editingExpenseId.value = model.id;
     editingExpenseId.refresh();
-    print("editingExpenseId.value : ${editingExpenseId.value}");
     titleController.text = model.title ?? '';
     amountController.text = model.amount?.toString() ?? '';
     referenceNumberController.text = model.referenceNumber ?? '';
@@ -458,10 +486,6 @@ class AddExpenseScreenController extends GetxController {
     receiptCleared.value = false;
     receiptFile.value = null;
     expenseModel = model;
-    print("model : ${model.toJson()}");
-    print("");
-    print("");
-    print("expenseModel : ${expenseModel.toJson()}");
   }
 
   String? _nameById(

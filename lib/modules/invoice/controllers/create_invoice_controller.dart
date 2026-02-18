@@ -32,6 +32,7 @@ class CreateInvoiceController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxBool isSubmitting = false.obs;
   final RxnInt editingInvoiceId = RxnInt();
+  final Rxn<InvoiceModel> editingInvoice = Rxn<InvoiceModel>();
 
   final RxList<InvoiceItemModel> items = <InvoiceItemModel>[].obs;
 
@@ -120,14 +121,17 @@ class CreateInvoiceController extends GetxController {
     if (isSubmitting.value) return;
     final bool ok = formKey.currentState?.validate() ?? false;
     if (!ok) return;
-    if (selectedCustomerId.value == null ||
-        selectedBusinessId.value == null ||
-        selectedPaymentMethodId.value == null ||
-        invoiceDate.value == null) {
+    final List<String> missing = <String>[];
+    if (selectedCustomerId.value == null) missing.add('Customer');
+    if (selectedBusinessId.value == null) missing.add('Business');
+    if (selectedPaymentMethodId.value == null) missing.add('Payment Method');
+    if (invoiceDate.value == null) missing.add('Invoice Date');
+
+    if (missing.isNotEmpty) {
       AppDialogs.showActionDialog(
         iconPath: AppImages.dialogWarning,
         title: "Required Fields",
-        message: "Please fill all required fields.",
+        message: 'Please provide: ${missing.join(', ')}',
         actions: [AppDialogAction(label: "Ok")],
       );
       return;
@@ -156,7 +160,9 @@ class CreateInvoiceController extends GetxController {
       items: items.toList(),
     );
 
-    final ApiResponse response = editingInvoiceId.value != null
+    final bool isEdit = editingInvoiceId.value != null;
+    final int? editedId = editingInvoiceId.value;
+    final ApiResponse response = isEdit
         ? await ApiService().post(
             '${AppUrls.updateInvoice}/${editingInvoiceId.value}',
             data: model.toJson(),
@@ -168,28 +174,59 @@ class CreateInvoiceController extends GetxController {
             isAuth: true,
           );
 
-    isSubmitting.value = false;
-
     if (response.success) {
+      final InvoiceModel updatedInvoice = _buildUpdatedInvoice(
+        requestModel: model,
+        response: response,
+      );
+      InvoiceModel? doneResult;
+      if (isEdit) {
+        if (Get.isRegistered<InvoiceScreenController>()) {
+          await Get.find<InvoiceScreenController>().fetchInvoices();
+        }
+        doneResult = editedId == null ? null : await _fetchInvoiceById(editedId);
+      }
+
+      isSubmitting.value = false;
+
       AppDialogs.showActionDialog(
         iconPath: AppImages.dialogSuccess,
-        title: editingInvoiceId.value != null
+        title: isEdit
             ? "Invoice Updated!"
             : "Invoice Added!",
         message: response.message,
-        actions: [
-          AppDialogAction(
-            label: "Done",
-            onPressed: () {
-              if (Get.isRegistered<InvoiceScreenController>()) {
-                Get.find<InvoiceScreenController>().fetchInvoices();
-              }
-              Get.back(result: true);
-            },
-          ),
-        ],
+        actions: isEdit
+            ? [
+                AppDialogAction(
+                  label: "Done",
+                  onPressed: () {
+                    Get.back(result: doneResult ?? updatedInvoice);
+                  },
+                ),
+              ]
+            : [
+                AppDialogAction(
+                  label: "Add New Invoice",
+                  onPressed: () {
+                    _resetFormForNewInvoice();
+                    if (Get.isRegistered<InvoiceScreenController>()) {
+                      Get.find<InvoiceScreenController>().fetchInvoices();
+                    }
+                  },
+                ),
+                AppDialogAction(
+                  label: "Done",
+                  onPressed: () {
+                    if (Get.isRegistered<InvoiceScreenController>()) {
+                      Get.find<InvoiceScreenController>().fetchInvoices();
+                    }
+                    Get.back(result: updatedInvoice);
+                  },
+                ),
+              ],
       );
     } else {
+      isSubmitting.value = false;
       AppDialogs.showActionDialog(
         iconPath: AppImages.dialogWarning,
         title: "Error!",
@@ -199,7 +236,33 @@ class CreateInvoiceController extends GetxController {
     }
   }
 
+  Future<InvoiceModel?> _fetchInvoiceById(int id) async {
+    final ApiResponse response = await ApiService().get(
+      '${AppUrls.createInvoice}/$id',
+      isAuth: true,
+    );
+    if (!response.success || response.data is! Map) return null;
+    final Map<String, dynamic> map =
+        Map<String, dynamic>.from(response.data as Map);
+    final Map<String, dynamic> payload =
+        map['data'] is Map ? Map<String, dynamic>.from(map['data'] as Map) : map;
+    return InvoiceModel.fromJson(payload);
+  }
+
+  void _resetFormForNewInvoice() {
+    editingInvoiceId.value = null;
+    invoiceNumberController.clear();
+    notesController.clear();
+    invoiceDate.value = null;
+    status.value = 'pending';
+    selectedCustomerId.value = null;
+    selectedBusinessId.value = null;
+    selectedPaymentMethodId.value = null;
+    items.clear();
+  }
+
   void loadForEdit(InvoiceModel model) {
+    editingInvoice.value = model;
     editingInvoiceId.value = model.id;
     invoiceNumberController.text = model.invoiceNumber ?? '';
     notesController.text = model.notes ?? '';
@@ -214,6 +277,110 @@ class CreateInvoiceController extends GetxController {
     if (model.items.isNotEmpty) {
       items.addAll(model.items);
     }
+  }
+
+  InvoiceModel _buildUpdatedInvoice({
+    required InvoiceModel requestModel,
+    required ApiResponse response,
+  }) {
+    InvoiceModel? apiInvoice;
+    if (response.data is Map) {
+      apiInvoice = InvoiceModel.fromJson(
+        Map<String, dynamic>.from(response.data as Map),
+      );
+    }
+
+    final InvoiceModel? previous = editingInvoice.value;
+    final int? customerId =
+        apiInvoice?.customerId ?? requestModel.customerId ?? previous?.customerId;
+    final int? businessId =
+        apiInvoice?.businessId ?? requestModel.businessId ?? previous?.businessId;
+    final int? paymentMethodId = apiInvoice?.paymentMethodId ??
+        requestModel.paymentMethodId ??
+        previous?.paymentMethodId;
+
+    final List<InvoiceItemModel> resolvedItems =
+        (apiInvoice?.items.isNotEmpty == true)
+            ? apiInvoice!.items
+            : requestModel.items;
+
+    final double calculatedTotal = _calculateItemsTotal(resolvedItems);
+    final dynamic totalAmount =
+        apiInvoice?.totalAmount ?? previous?.totalAmount ?? calculatedTotal;
+    final dynamic paidAmount = apiInvoice?.paidAmount ?? previous?.paidAmount ?? 0;
+    final dynamic remainingAmount =
+        apiInvoice?.remainingAmount ?? previous?.remainingAmount ?? totalAmount;
+
+    return InvoiceModel(
+      id: apiInvoice?.id ?? editingInvoiceId.value ?? previous?.id,
+      userId: apiInvoice?.userId ?? previous?.userId,
+      customerId: customerId,
+      customerName:
+          apiInvoice?.customerName ?? previous?.customerName ?? _customerNameById(customerId),
+      businessId: businessId,
+      businessName:
+          apiInvoice?.businessName ?? previous?.businessName ?? _businessNameById(businessId),
+      paymentMethodId: paymentMethodId,
+      paymentMethodName: apiInvoice?.paymentMethodName ??
+          previous?.paymentMethodName ??
+          _paymentMethodNameById(paymentMethodId),
+      invoiceNumber:
+          apiInvoice?.invoiceNumber ?? requestModel.invoiceNumber ?? previous?.invoiceNumber,
+      invoiceDate:
+          apiInvoice?.invoiceDate ?? requestModel.invoiceDate ?? previous?.invoiceDate,
+      status: apiInvoice?.status ?? requestModel.status ?? previous?.status,
+      notes: apiInvoice?.notes ?? requestModel.notes ?? previous?.notes,
+      totalAmount: totalAmount,
+      paidAmount: paidAmount,
+      remainingAmount: remainingAmount,
+      paymentStatus:
+          apiInvoice?.paymentStatus ?? previous?.paymentStatus ?? 'unpaid',
+      items: resolvedItems,
+      createdAt: apiInvoice?.createdAt ?? previous?.createdAt,
+      updatedAt: apiInvoice?.updatedAt ?? DateTime.now().toIso8601String(),
+    );
+  }
+
+  String? _customerNameById(int? id) {
+    if (id == null) return null;
+    for (final customer in customers) {
+      if (customer.id == id) return customer.customerName;
+    }
+    return null;
+  }
+
+  String? _businessNameById(int? id) {
+    if (id == null) return null;
+    for (final business in businesses) {
+      if (business.id == id) return business.businessName;
+    }
+    return null;
+  }
+
+  String? _paymentMethodNameById(int? id) {
+    if (id == null) return null;
+    for (final method in paymentMethods) {
+      final int? methodId = method['id'] is int
+          ? method['id'] as int
+          : int.tryParse(method['id']?.toString() ?? '');
+      if (methodId == id) return method['name']?.toString();
+    }
+    return null;
+  }
+
+  double _calculateItemsTotal(List<InvoiceItemModel> lineItems) {
+    double total = 0;
+    for (final line in lineItems) {
+      final double? amount = _toDouble(line.amount);
+      if (amount != null) total += amount;
+    }
+    return total;
+  }
+
+  double? _toDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString().trim());
   }
 
   @override

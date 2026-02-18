@@ -20,10 +20,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         textTheme: GoogleFonts.akatabTextTheme()
       ),
-      // initialBinding: InitialBindings(),
-      // getPages: AppPages.routes,
-      getPages: AppPages.routes,
       initialRoute: Routes.splash,
+      getPages: AppPages.routes,
     );
   }
 }

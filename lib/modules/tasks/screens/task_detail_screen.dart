@@ -1,428 +1,291 @@
-import 'package:bizly/components/common/add_button.dart';
-import 'package:bizly/components/common/custom_button.dart';
-import 'package:bizly/components/home/custom_app_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:bizly/utils/app_colors.dart';
 import 'package:get/get.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 
-import 'package:bizly/modules/tasks/controllers/task_detail_controller.dart';
 import 'package:bizly/components/common/custom_app_bar_2.dart';
+import 'package:bizly/components/common/custom_button.dart';
+import 'package:bizly/components/common/task_card_widget.dart';
+import 'package:bizly/models/tasks_model.dart';
+import 'package:bizly/modules/tasks/controllers/task_detail_controller.dart';
+import 'package:bizly/utils/app_colors.dart';
+import 'package:bizly/utils/date_formats.dart';
 
-class TaskDetailScreen extends StatelessWidget {
-  final TaskDetailController controller = Get.find<TaskDetailController>();
-
-  TaskDetailScreen({super.key});
+class TaskDetailScreen extends GetView<TaskDetailController> {
+  const TaskDetailScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final task = controller.task;
-
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: CustomAppBar2(title: "Task Detail"),
-      body: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(40),
-            topRight: Radius.circular(40),
+      appBar: const CustomAppBar2(title: "Task Detail"),
+      body: Obx(() {
+        final task = controller.task.value;
+        if (task == null) {
+          return const Center(child: Text("Task not found"));
+        }
+
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(40),
+              topRight: Radius.circular(40),
+            ),
           ),
-        ),
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: addButton(
-                  "Edit",
-                  icon: Icon(
-                    Icons.edit,
-                    color: Colors.black54,
-                    size: 17,
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TaskCardWidget(
+                  priority: task.priorityLevel,
+                  title: task.taskTitle,
+                  subtitle: task.description,
+                  date: _taskDate(task),
+                  assignTo: task.assignedEmployeeName ?? "",
+                  status: task.displayStatus,
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  "Due Date",
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey.shade600,
                   ),
                 ),
-              ),
-              const SizedBox(height: 25),
-
-              /// Title + Priority
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      task.title,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                        height: 1.3,
-                      ),
-                    ),
-                  ),
-                  _priorityChip(task.priority),
-                ],
-              ),
-
-              const SizedBox(height: 25),
-
-              /// Company
-              Text(
-                "Company",
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey.shade600,
-                  letterSpacing: 0.2,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                task.companyName,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              /// Assigned To
-              Text(
-                "Assigned To",
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey.shade600,
-                  letterSpacing: 0.2,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                task.assignedTo,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-
-              const SizedBox(height: 25),
-
-              /// Description
-              Text(
-                "Description",
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey.shade600,
-                  letterSpacing: 0.2,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.greyCard.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  task.description,
+                const SizedBox(height: 6),
+                Text(
+                  _taskDate(task),
                   style: const TextStyle(
-                    fontSize: 15,
-                    color: Colors.black87,
-                    height: 1.4,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-              ),
-
-              const SizedBox(height: 25),
-
-              /// Due Date
-              Row(
-                children: [
-                  Icon(
-                    Icons.calendar_month_outlined,
-                    size: 18,
-                    color: Colors.grey.shade700,
+                const SizedBox(height: 20),
+                Text(
+                  "Assigned Employee",
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey.shade600,
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    task.dueDate != null
-                        ? "${task.dueDate!.day}-${task.dueDate!.month}-${task.dueDate!.year}"
+                ),
+                const SizedBox(height: 6),
+                InkWell(
+                  onTap:  () {
+                    controller.openAssignedEmployeeDetail();
+                  },
+                  child: Text(
+                    task.assignedEmployeeName?.isNotEmpty == true
+                        ? task.assignedEmployeeName!
                         : "-",
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: task.assignTo == null
+                          ? Colors.black87
+                          : AppColors.primary,
+                      decoration: task.assignTo == null
+                          ? TextDecoration.none
+                          : TextDecoration.underline,
                     ),
                   ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              /// Attachments
-              if (task.attachments.isNotEmpty) ...[
-                const Text(
-                  "Attachments",
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  "Status",
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  task.displayStatus,
                   style: TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
+                    color: controller.statusColor,
                   ),
                 ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  height: 90, // thoda zyada height taake file name bhi dikh sake
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: task.attachments.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 12),
-                    itemBuilder: (context, index) {
-                      String file = task.attachments[index];
+                const SizedBox(height: 20),
+                if (task.attachments.isNotEmpty) ...[
+                  const Text(
+                    "Attachments",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: task.attachments.map((attachment) {
                       return GestureDetector(
-                        onTap: () {},
-                        child: Column(
+                        onTap: () => _openImagePreview(context, attachment.fileUrl),
+                        child: Stack(
                           children: [
-                            Container(
-                              width: 60,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                color: AppColors.greyCard,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Center(
-                                child: Icon(
-                                  Icons.insert_drive_file,
-                                  color: Colors.grey.shade700,
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: CachedNetworkImage(
+                                imageUrl: attachment.fileUrl,
+                                width: 95,
+                                height: 95,
+                                fit: BoxFit.cover,
+                                placeholder: (_, __) => Container(
+                                  width: 95,
+                                  height: 95,
+                                  color: Colors.grey.shade200,
+                                  alignment: Alignment.center,
+                                  child: const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                ),
+                                errorWidget: (_, __, ___) => Container(
+                                  width: 95,
+                                  height: 95,
+                                  color: Colors.grey.shade200,
+                                  alignment: Alignment.center,
+                                  child: const Icon(Icons.broken_image),
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            SizedBox(
-                              width: 60, // same width as container
-                              child: Text(
-                                file,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
+                            Positioned(
+                              right: 4,
+                              top: 4,
+                              child: GestureDetector(
+                                onTap: () => controller.deleteAttachment(attachment),
+                                child: Container(
+                                  width: 24,
+                                  height: 24,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.black87,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.delete_outline,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
                                 ),
                               ),
                             ),
                           ],
                         ),
                       );
-                    },
+                    }).toList(),
                   ),
+                ],
+                const SizedBox(height: 30),
+                Row(
+                  children: [
+                    Expanded(
+                      child: CustomButton(
+                        text: "Edit Task",
+                        color: AppColors.textPrimary,
+                        onPressed: controller.editTask,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: CustomButton(
+                        text: "Delete Task",
+                        color: Colors.white,
+                        textColor: Colors.red,
+                        borderColor: Colors.red,
+                        onPressed: controller.deleteTask,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 25),
+                const SizedBox(height: 15),
               ],
+            ),
+          ),
+        );
+      }),
+    );
+  }
 
-              /// Status
-              const Text(
-                "Status",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 10),
-              _statusSlider(controller.statusText, context),
+  String _taskDate(TaskModel task) {
+    final DateTime? parsed = task.dueDateParsed;
+    if (parsed != null) return DateFormats.dMonY(parsed);
+    final String raw = task.dueDate.trim();
+    return raw.isEmpty ? "-" : raw;
+  }
 
-              const SizedBox(height: 25),
-
-              /// 🔹 Action Buttons
-              CustomButton(
-                text: "Update",
-                onPressed: () {},
+  void _openImagePreview(BuildContext context, String imageUrl) {
+    showDialog<void>(
+      context: context,
+      builder: (_) {
+        return Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.black,
+            elevation: 0,
+            leading: IconButton(
+              onPressed: () => Get.back(),
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+            ),
+            actions: [
+              IconButton(
+                onPressed: () => _downloadImage(imageUrl),
+                icon: const Icon(Icons.download, color: Colors.white),
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  /// 🔹 Priority Chip
-  Widget _priorityChip(int priority) {
-    String text =
-    priority == 1 ? "High" : priority == 2 ? "Medium" : "Low";
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: BoxDecoration(
-        color: priority==1?AppColors.priorityHigh:priority==2?AppColors.priorityMedium:priority==3?AppColors.priorityLow:AppColors.greyCard,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-
-  /// 🔹 Status Selector (UI only)
-  Widget _statusSelector(String currentStatus,) {
-    final statuses = ["To-Do", "In Progress", "Done"];
-
-    return Row(
-      children: statuses.map((s) {
-        bool selected = s == currentStatus;
-        return Expanded(
-          child: GestureDetector(
-            onTap: () {
-              // TODO: change status via controller
-            },
-            child: Container(
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: selected ? AppColors.primary : Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                s,
-                style: TextStyle(
-                  color: selected ? Colors.white : Colors.black,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 12,
+          body: Center(
+            child: InteractiveViewer(
+              child: CachedNetworkImage(
+                imageUrl: imageUrl,
+                fit: BoxFit.contain,
+                errorWidget: (_, __, ___) => const Icon(
+                  Icons.broken_image,
+                  color: Colors.white,
+                  size: 40,
                 ),
               ),
             ),
           ),
         );
-      }).toList(),
+      },
     );
   }
 
-  Widget _statusSlider(String currentStatus,BuildContext context) {
-    int statusValue = currentStatus == "To-Do"
-        ? 0
-        : currentStatus == "In Progress"
-        ? 1
-        : 2;
-
-    Color statusColor = statusValue == 0
-        ? Colors.orange
-        : statusValue == 1
-        ? Colors.blue
-        : Colors.green;
-
-    String statusText = statusValue == 0
-        ? "To-Do"
-        : statusValue == 1
-        ? "In Progress"
-        : "Done";
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.greyCard.withOpacity(0.6),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          /// 🔹 Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: const [
-                  Icon(Icons.tune, size: 18, color: Colors.black54),
-                  SizedBox(width: 6),
-                  Text(
-                    "Update Status",
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-
-              /// 🔹 Current Status Chip
-      Obx(() => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-        decoration: BoxDecoration(
-          color: controller.statusColor.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          controller.statusText,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: controller.statusColor,
-          ),
-        ),
-      ))
-      ],
-          ),
-
-          const SizedBox(height: 18),
-
-          /// 🔹 Slider
-        Obx(() {
-          return SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: controller.statusColor,
-              inactiveTrackColor: controller.statusColor.withOpacity(0.2),
-              thumbColor: controller.statusColor,
-              overlayColor: controller.statusColor.withOpacity(0.15),
-              trackHeight: 7,
-            ),
-            child: Slider(
-              value: controller.statusValue.value.toDouble(),
-              min: 0,
-              max: 2,
-              divisions: 2,
-              onChanged: (value) {
-                controller.statusValue.value = value.toInt();
-              },
-            ),
-          );
-        }),
-
-
-          const SizedBox(height: 6),
-
-          /// 🔹 Labels
-          Obx(() => Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _statusLabel("To-Do", 0, controller.statusValue.value),
-              _statusLabel("In Progress", 1, controller.statusValue.value),
-              _statusLabel("Done", 2, controller.statusValue.value),
-            ],
-          )),
-
-        ],
-      ),
-    );
+  Future<void> _downloadImage(String imageUrl) async {
+    try {
+      final Directory dir = await getApplicationDocumentsDirectory();
+      final String ext = _extractExt(imageUrl);
+      final String filePath =
+          '${dir.path}/task_image_${DateTime.now().millisecondsSinceEpoch}.$ext';
+      await Dio().download(imageUrl, filePath);
+      Get.snackbar(
+        "Downloaded",
+        "Saved to $filePath",
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (_) {
+      Get.snackbar(
+        "Error",
+        "Unable to download image",
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
   }
 
-  /// 🔹 Label Widget
-  Widget _statusLabel(String text, int index, int currentIndex) {
-    bool isActive = index == currentIndex;
-
-    return Text(
-      text,
-      style: TextStyle(
-        fontSize: 12,
-        fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-        color: isActive ? Colors.black : Colors.grey,
-      ),
-    );
+  String _extractExt(String url) {
+    final Uri? uri = Uri.tryParse(url);
+    final String path = uri?.path ?? '';
+    final String last = path.split('.').last.toLowerCase();
+    if (last == 'png' || last == 'jpg' || last == 'jpeg' || last == 'webp') {
+      return last;
+    }
+    return 'jpg';
   }
-
-
 }

@@ -24,6 +24,19 @@ class TaskCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String priorityLabel =
+        priority == 1 ? "High" : priority == 2 ? "Medium" : "Low";
+    final Color priorityBackgroundColor = priority == 1
+        ? const Color(0xFFFEE2E2)
+        : priority == 2
+            ? const Color(0xFFE0E7FF)
+            : Colors.white;
+    final Color priorityTextColor = priority == 1
+        ? const Color(0xFFB91C1C)
+        : priority == 2
+            ? const Color(0xFF3730A3)
+            : Colors.black;
+
     return Container(
       padding:  EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -71,14 +84,14 @@ class TaskCardWidget extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: priorityBackgroundColor,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  priority==1?"High":priority==2?"Medium":priority==3?"low":"",
-                  style: const TextStyle(
+                  priorityLabel,
+                  style: TextStyle(
                     fontSize: 11,
-                    color: Colors.black,
+                    color: priorityTextColor,
                     fontWeight: FontWeight.w500,
                   ),
                 ),

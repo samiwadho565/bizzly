@@ -28,4 +28,17 @@ class AppUrls {
   static const String createInvoice = '/api/invoices';
   static const String updateInvoice = '/api/invoices';
   static const String deleteInvoice = '/api/invoices';
+  static const String createEmployee = '/api/employees';
+  static const String getAllEmployees = '/api/employees';
+  static const String updateEmployee = '/api/employees';
+  static const String deleteEmployee = '/api/employees';
+  static const String createTask = '/api/tasks';
+  static const String getAllTasks = '/api/tasks';
+  static const String updateTask = '/api/tasks';
+  static const String deleteTask = '/api/tasks';
+  static const String deleteTaskAttachment = '/api/tasks';
+  static const String createAsset = '/api/assets';
+  static const String getAllAssets = '/api/assets';
+  static const String updateAsset = '/api/assets';
+  static const String deleteAsset = '/api/assets';
 }

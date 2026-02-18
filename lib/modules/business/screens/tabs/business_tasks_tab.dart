@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:bizly/models/tasks_model.dart';
 import 'package:bizly/modules/business/controllers/business_controller.dart';
 import 'package:bizly/components/common/task_card_widget.dart';
 import 'package:bizly/utils/date_formats.dart';
@@ -26,17 +27,22 @@ class BusinessTasksTab extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: TaskCardWidget(
-            priority: task.priority,
-            title: task.title,
+            priority: task.priorityLevel,
+            title: task.taskTitle,
             subtitle: task.description,
-            date: task.dueDate == null
-                ? "-"
-                : DateFormats.dMonY(task.dueDate!),
-            assignTo: task.assignedTo,
-            status: task.status,
+            date: _taskDate(task),
+            assignTo: task.assignedEmployeeName ?? "-",
+            status: task.displayStatus,
           ),
         );
       }, childCount: controller.tasks.length),
     );
+  }
+
+  String _taskDate(TaskModel task) {
+    final DateTime? parsed = task.dueDateParsed;
+    if (parsed != null) return DateFormats.dMonY(parsed);
+    final String raw = task.dueDate.trim();
+    return raw.isEmpty ? "-" : raw;
   }
 }

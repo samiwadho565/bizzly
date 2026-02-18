@@ -27,7 +27,7 @@ class _SplashScreenState extends State<SplashScreen> {
     String next = Routes.onBoardingScreen;
     if (onboardingSeen) {
       if (rememberMe && token != null && token.isNotEmpty) {
-        next = Routes.homeScreen;
+        next = Routes.mainScreen;
       } else {
         next = Routes.loginScreen;
       }

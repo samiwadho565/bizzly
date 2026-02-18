@@ -44,52 +44,57 @@ class InvoiceModel {
   final String? updatedAt;
 
   factory InvoiceModel.fromJson(Map<String, dynamic> json) {
-    final Map<String, dynamic>? customer =
-        json['customer'] is Map ? Map<String, dynamic>.from(json['customer']) : null;
-    final Map<String, dynamic>? business =
-        json['business'] is Map ? Map<String, dynamic>.from(json['business']) : null;
-    final Map<String, dynamic>? payment =
-        json['payment_method'] is Map ? Map<String, dynamic>.from(json['payment_method']) : null;
 
-    final List<InvoiceItemModel> items = (json['items'] is List)
-        ? (json['items'] as List)
+    final Map<String, dynamic> payload = json['data'] is Map
+        ? Map<String, dynamic>.from(json['data'] as Map)
+        : json;
+
+    final Map<String, dynamic>? customer =
+        payload['customer'] is Map ? Map<String, dynamic>.from(payload['customer']) : null;
+    final Map<String, dynamic>? business =
+        payload['business'] is Map ? Map<String, dynamic>.from(payload['business']) : null;
+    final Map<String, dynamic>? payment =
+        payload['payment_method'] is Map ? Map<String, dynamic>.from(payload['payment_method']) : null;
+
+    final List<InvoiceItemModel> items = (payload['items'] is List)
+        ? (payload['items'] as List)
             .whereType<Map<String, dynamic>>()
             .map(InvoiceItemModel.fromJson)
             .toList()
         : <InvoiceItemModel>[];
-
+    print(" _toInt(payload['id']), :${ _toInt(payload['id'])}");
     return InvoiceModel(
-      id: _toInt(json['id']),
-      userId: _toInt(json['user_id']),
-      customerId: _toInt(customer?['id'] ?? json['customer_id']),
+      id: _toInt(payload['id']),
+      userId: _toInt(payload['user_id']),
+      customerId: _toInt(customer?['id'] ?? payload['customer_id']),
       customerName: customer?['customer_name']?.toString(),
-      businessId: _toInt(business?['id'] ?? json['business_id']),
+      businessId: _toInt(business?['id'] ?? payload['business_id']),
       businessName: business?['business_name']?.toString(),
-      paymentMethodId: _toInt(payment?['id'] ?? json['payment_method_id']),
+      paymentMethodId: _toInt(payment?['id'] ?? payload['payment_method_id']),
       paymentMethodName: payment?['name']?.toString(),
-      invoiceNumber: json['invoice_number']?.toString(),
-      invoiceDate: json['invoice_date']?.toString(),
-      status: json['status']?.toString(),
-      notes: json['notes']?.toString(),
-      totalAmount: json['total_amount'],
-      paidAmount: json['paid_amount'],
-      remainingAmount: json['remaining_amount'],
-      paymentStatus: json['payment_status']?.toString(),
+      invoiceNumber: payload['invoice_number']?.toString(),
+      invoiceDate: payload['invoice_date']?.toString(),
+      status: payload['status']?.toString(),
+      notes: payload['notes']?.toString(),
+      totalAmount: payload['total_amount'],
+      paidAmount: payload['paid_amount'],
+      remainingAmount: payload['remaining_amount'],
+      paymentStatus: payload['payment_status']?.toString(),
       items: items,
-      createdAt: json['created_at']?.toString(),
-      updatedAt: json['updated_at']?.toString(),
+      createdAt: payload['created_at']?.toString(),
+      updatedAt: payload['updated_at']?.toString(),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'customer_id': customerId,
+      'customer_id': customerId?.toString(),
       'invoice_number': invoiceNumber,
       'invoice_date': invoiceDate,
       'status': status,
       'items': items.map((e) => e.toJson()).toList(),
-      'business_id': businessId,
-      'payment_method_id': paymentMethodId,
+      'business_id': businessId?.toString(),
+      'payment_method_id': paymentMethodId?.toString(),
       'notes': notes?.trim().isNotEmpty == true ? notes : null,
     };
   }
