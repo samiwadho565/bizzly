@@ -35,16 +35,24 @@ class BusinessDetailScreen extends GetView<BusinessDetailController> {
           InkWell(
             onTap: () => _showActionsSheet(business),
             child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              child: Center(
-                child: Text(
-                  "Actions",
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.tune_rounded,
+                    size: 18,
                     color: AppColors.primary,
                   ),
-                ),
+                  SizedBox(width: 6),
+                  Text(
+                    "Settings",
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -307,7 +315,7 @@ class BusinessDetailScreen extends GetView<BusinessDetailController> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                "Choose an action",
+                "Business Settings",
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -316,13 +324,49 @@ class BusinessDetailScreen extends GetView<BusinessDetailController> {
               ),
               const SizedBox(height: 6),
               const Text(
-                "You can edit business details or delete this business.",
+                "Manage settings and actions for this specific business.",
                 style: TextStyle(
                   fontSize: 12,
                   color: AppColors.textSecondary,
                 ),
               ),
               const SizedBox(height: 16),
+              CustomButton(
+                text: "Tax Settings",
+                color: Colors.white,
+                textColor: AppColors.textPrimary,
+                borderColor: AppColors.lightGrey,
+                onPressed: () {
+                  Get.back();
+                  if (business != null) {
+                    Get.toNamed(
+                      Routes.taxSettingsScreen,
+                      arguments: business,
+                    );
+                    return;
+                  }
+                  Get.toNamed(Routes.taxSettingsScreen);
+                },
+              ),
+              const SizedBox(height: 10),
+              CustomButton(
+                text: "Invoice Customization",
+                color: Colors.white,
+                textColor: AppColors.textPrimary,
+                borderColor: AppColors.lightGrey,
+                onPressed: () {
+                  Get.back();
+                  if (business != null) {
+                    Get.toNamed(
+                      Routes.invoiceCustomizationScreen,
+                      arguments: business,
+                    );
+                    return;
+                  }
+                  Get.toNamed(Routes.invoiceCustomizationScreen);
+                },
+              ),
+              const SizedBox(height: 10),
               CustomButton(
                 text: "Edit Business",
                 onPressed: () async {

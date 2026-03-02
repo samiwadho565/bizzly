@@ -4,6 +4,7 @@ import 'package:bizly/modules/expense/controllers/expense_screen_controller.dart
 import 'package:bizly/modules/expense/controllers/expenses_list_controller.dart';
 import 'package:bizly/modules/invoice/controllers/invoice_screen_controller.dart';
 import 'package:bizly/modules/tasks/controllers/tasks_screen_controller.dart';
+import 'package:bizly/modules/profile/controllers/profile_controller.dart';
 import 'package:get/get.dart';
 
 class MainBinding extends Bindings {
@@ -15,5 +16,6 @@ class MainBinding extends Bindings {
     Get.lazyPut<ExpensesListController>(() => ExpensesListController());
     Get.lazyPut<InvoiceScreenController>(() => InvoiceScreenController());
     Get.lazyPut<TasksScreenController>(() => TasksScreenController());
+    Get.lazyPut<ProfileController>(() => ProfileController());
   }
 }

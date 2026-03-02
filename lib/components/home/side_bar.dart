@@ -107,6 +107,22 @@ class CustomSideBar extends StatelessWidget {
                         Get.toNamed(Routes.companyAssetsScreen);
                       },
                     ),
+                    _drawerItem(
+                      icon: AppImages.bill,
+                      title: "Balance Sheet",
+                      onTap: () {
+                        Get.back();
+                        Get.toNamed(Routes.balanceSheetScreen);
+                      },
+                    ),
+                    _drawerItem(
+                      icon: AppImages.expense,
+                      title: "Trial Balance",
+                      onTap: () {
+                        Get.back();
+                        Get.toNamed(Routes.trialBalanceScreen);
+                      },
+                    ),
                   ],
                 ),
               ),

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bizly/components/common/custom_app_bar_2.dart';
 import 'package:bizly/components/common/custom_button.dart';
 import 'package:bizly/modules/profile/controllers/invoice_customization_controller.dart';
@@ -17,45 +19,76 @@ class InvoiceCustomizationScreen extends StatelessWidget {
     return Scaffold(
 
       backgroundColor: AppColors.background,
-      appBar: const CustomAppBar2(title: "Invoice Customization"),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      appBar:  CustomAppBar2(
+          title: controller.business.value?.businessName.isNotEmpty == true
+              ? "Invoice Customization - ${controller.business.value!.businessName}"
+              : "Invoice Customization",
+
+      ),
+      body: Obx(
+        () => Stack(
           children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
             // 🔹 Invoice Header
             _buildSectionCard(
               title: "Invoice Header",
               children: [
-                _infoRow("Business Logo", "Upload / Change", isAction: true),
+                Obx(
+                  () => _infoRow(
+                    "Invoice Logo",
+                    _invoiceLogoLabel(
+                      controller.invoiceLogoFile.value,
+                      controller.business.value?.invoiceLogoUrl,
+                    ),
+                    onTap: controller.pickInvoiceLogo,
+                    isAction: true,
+                  ),
+                ),
                 Obx(() => _infoRow("Business Name", controller.businessName.value, onTap: () => controller.editField("Business Name", controller.businessName))),
                 Obx(() => _infoRow("Business Address", controller.businessAddress.value, onTap: () => controller.editField("Business Address", controller.businessAddress))),
                 Obx(() => _infoRow("Email / Phone", controller.businessEmail.value, onTap: () => controller.editField("Email / Phone", controller.businessEmail))),
-                Obx(() => _infoRow("Tax / Registration No.", controller.taxNo.value, onTap: () => controller.editField("Tax No", controller.taxNo))),
+                Obx(() => _infoRow("Tax / Registration No.", controller.taxNo.value, onTap: null, showIcon: false)),
+                //Obx(() => _infoRow("Tax / Registration No.", controller.taxNo.value, onTap: () => controller.editField("Tax No", controller.taxNo))),
               ],
             ),
 
             const SizedBox(height: 20),
 
             // 🔹 Invoice Numbering
-            _buildSectionCard(
-              title: "Invoice Numbering",
-              children: [
-                Obx(() => _infoRow("Start Number", controller.startNumber.value, onTap: () => controller.editField("Start Number", controller.startNumber))),
-                Obx(() => _infoRow("Prefix / Suffix", controller.prefix.value, onTap: () => controller.editField("Prefix", controller.prefix))),
-                Obx(() => _infoRow("Auto Increment", controller.autoIncrement.value, onTap: () => controller.editField("Auto Increment", controller.autoIncrement))),
-              ],
-            ),
-
-            const SizedBox(height: 20),
+            // _buildSectionCard(
+            //   title: "Invoice Numbering",
+            //   children: [
+            //     Obx(() => _infoRow("Start Number", controller.startNumber.value, onTap: () => controller.editField("Start Number", controller.startNumber))),
+            //     Obx(() => _infoRow("Prefix / Suffix", controller.prefix.value, onTap: () => controller.editField("Prefix", controller.prefix))),
+            //     Obx(() => _infoRow("Auto Increment", controller.autoIncrement.value, onTap: () => controller.editField("Auto Increment", controller.autoIncrement))),
+            //   ],
+            // ),
+            //
+            // const SizedBox(height: 20),
 
             // 🔹 Customer Details
             _buildSectionCard(
               title: "Customer Details",
               children: [
-                Obx(() => _infoRow("Show Email", controller.showEmail.value, onTap: () => controller.editField("Show Email", controller.showEmail))),
-                Obx(() => _infoRow("Show Phone", controller.showPhone.value, onTap: () => controller.editField("Show Phone", controller.showPhone))),
-                Obx(() => _infoRow("Show Notes Field", controller.showNotes.value, onTap: () => controller.editField("Show Notes", controller.showNotes))),
+                Obx(
+                  () => _toggleRow(
+                    "Show Email",
+                    controller.showEmail.value,
+                    (bool value) => controller.showEmail.value = value,
+                  ),
+                ),
+                Obx(
+                  () => _toggleRow(
+                    "Show Phone",
+                    controller.showPhone.value,
+                    (bool value) => controller.showPhone.value = value,
+                  ),
+                ),
+                //Obx(() => _infoRow("Show Notes Field", controller.showNotes.value, onTap: () => controller.editField("Show Notes", controller.showNotes))),
               ],
             ),
 
@@ -63,9 +96,10 @@ class InvoiceCustomizationScreen extends StatelessWidget {
 
             // 🔹 Item & Table Settings
             _buildSectionCard(
-              title: "Item & Table Settings",
+              //title: "Item & Table Settings",
+              title: "Currency Settings",
               children: [
-                Obx(() => _infoRow("Columns", controller.columns.value, onTap: () => controller.editField("Columns", controller.columns))),
+                //Obx(() => _infoRow("Columns", controller.columns.value, onTap: () => controller.editField("Columns", controller.columns))),
                 Obx(() => _infoRow("Currency", controller.currency.value, onTap: () => controller.editField("Currency", controller.currency))),
                 Obx(() => _infoRow("Decimal Precision", controller.precision.value, onTap: () => controller.editField("Precision", controller.precision))),
               ],
@@ -88,8 +122,8 @@ class InvoiceCustomizationScreen extends StatelessWidget {
             _buildSectionCard(
               title: "Footer Notes",
               children: [
-                Obx(() => _infoRow("Terms & Conditions", controller.terms.value, onTap: () => controller.editField("Terms", controller.terms))),
-                Obx(() => _infoRow("Additional Notes", controller.additionalNotes.value, onTap: () => controller.editField("Notes", controller.additionalNotes))),
+                Obx(() => _infoRow("Terms & Conditions", controller.terms.value, onTap: () => controller.editField("Terms", controller.terms, maxLength: 120))),
+                Obx(() => _infoRow("Additional Notes", controller.additionalNotes.value, onTap: () => controller.editField("Notes", controller.additionalNotes, maxLength: 100))),
                 Obx(() => _infoRow("Thank You Message", controller.thankYouMsg.value, onTap: () => controller.editField("Thank You Message", controller.thankYouMsg))),
               ],
             ),
@@ -97,48 +131,65 @@ class InvoiceCustomizationScreen extends StatelessWidget {
             const SizedBox(height: 20),
 
             // 🔹 Colors & Theme
-            _buildSectionCard(
-              title: "Colors & Theme",
-              children: [
-                Obx(() => _infoRow("Primary Color", controller.primaryColor.value, onTap: () => controller.editField("Primary Color", controller.primaryColor))),
-                Obx(() => _infoRow("Background Color", controller.bgColor.value, onTap: () => controller.editField("Background Color", controller.bgColor))),
-                Obx(() => _infoRow("Font Style / Size", controller.fontStyle.value, onTap: () => controller.editField("Font Style", controller.fontStyle))),
-              ],
-            ),
+            // _buildSectionCard(
+            //   title: "Colors & Theme",
+            //   children: [
+            //     Obx(() => _infoRow("Primary Color", controller.primaryColor.value, onTap: () => controller.editField("Primary Color", controller.primaryColor))),
+            //     Obx(() => _infoRow("Background Color", controller.bgColor.value, onTap: () => controller.editField("Background Color", controller.bgColor))),
+            //     Obx(() => _infoRow("Font Style / Size", controller.fontStyle.value, onTap: () => controller.editField("Font Style", controller.fontStyle))),
+            //   ],
+            // ),/
 
             const SizedBox(height: 30),
 
             // 🔹 Buttons
 
+                ],
+              ),
+            ),
+            if (controller.isLoading.value)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.white.withOpacity(0.45),
+                  child: const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
 
         // / 2. Buttons ko yahan BottomNavigationBar mein rakhein
-    bottomNavigationBar: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20,vertical: 10),
-      child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-      Expanded(
-      child: CustomButton(
-      text: "Save Template",
-      onPressed: () => Get.back()
-      )
-      ),
-      const SizedBox(width: 12),
-      Expanded(
-      child: OutlinedButton(
-      onPressed: () => _previewInvoice(),
-      style: OutlinedButton.styleFrom(
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      side: const BorderSide(color: AppColors.primary),
-      ),
-      child: const Text("Preview", style: TextStyle(color: AppColors.primary)),
-      ),
-      ),
-      ],
+    bottomNavigationBar: Obx(
+      () => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20,vertical: 10),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Expanded(
+              child: CustomButton(
+                text: "Save Template",
+                isLoading: controller.isSaving.value,
+                onPressed: controller.isSaving.value
+                    ? () {}
+                    : controller.saveSettings,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: OutlinedButton(
+                onPressed: controller.isLoading.value ? null : () => _previewInvoice(),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  side: const BorderSide(color: AppColors.primary),
+                ),
+                child: const Text("Preview", style: TextStyle(color: AppColors.primary)),
+              ),
+            ),
+          ],
+        ),
       ),
     ),
     );
@@ -151,6 +202,9 @@ class InvoiceCustomizationScreen extends StatelessWidget {
       businessAddress: controller.businessAddress.value,
       businessEmail: controller.businessEmail.value,
       taxRegistrationNo: controller.taxNo.value, // Added
+      invoiceLogoFile: controller.invoiceLogoFile.value,
+      invoiceLogoUrl: controller.business.value?.invoiceLogoUrl,
+      businessLogoUrl: controller.business.value?.businessImageUrl,
 
       // 🔹 Invoice Metadata
       invoiceNumber: "${controller.prefix.value}${controller.startNumber.value}",
@@ -159,8 +213,9 @@ class InvoiceCustomizationScreen extends StatelessWidget {
 
       // 🔹 Client Info (Placeholder for now, or use controller if available)
       clientName: "Lisa Smith",
-      clientEmail: "LisaSmith@gmail.com",
-      clientPhone: "+92 300 9876543", // Added
+      clientEmail: controller.showEmail.value ? "LisaSmith@gmail.com" : "",
+      clientPhone:
+          controller.showPhone.value ? "+92 300 9876543" : null, // Added
 
       // 🔹 Items & Pricing
       items: const [
@@ -174,8 +229,21 @@ class InvoiceCustomizationScreen extends StatelessWidget {
       // 🔹 Extra Terms & Notes
       paymentTerms: "Due within ${controller.dueDate.value}",
       lateFee: controller.lateFee.value, // Added
-      footerNote: "${controller.terms.value}\n${controller.additionalNotes.value}", // Combined terms and notes
+      termsAndConditions:
+          controller.limitedText(controller.terms.value, 120),
+      additionalNotes:
+          controller.limitedText(controller.additionalNotes.value, 100),
     ));
+  }
+
+  String _invoiceLogoLabel(File? file, String? url) {
+    if (file != null) {
+      return "Selected: ${file.path.split('/').last}";
+    }
+    if ((url ?? '').trim().isNotEmpty) {
+      return "Change uploaded logo";
+    }
+    return "Upload / Change";
   }
 
   Widget _buildSectionCard({required String title, required List<Widget> children}) {
@@ -197,7 +265,7 @@ class InvoiceCustomizationScreen extends StatelessWidget {
     );
   }
 
-  Widget _infoRow(String title, String value, {VoidCallback? onTap, bool isAction = false}) {
+  Widget _infoRow(String title, String value, {VoidCallback? onTap, bool isAction = false, bool showIcon = true}) {
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -214,9 +282,47 @@ class InvoiceCustomizationScreen extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(isAction ? Icons.file_upload_outlined : Icons.edit_outlined, size: 18, color: AppColors.primary),
+            !showIcon ? SizedBox.shrink() : Icon(isAction ? Icons.file_upload_outlined : Icons.edit_outlined, size: 18, color: AppColors.primary),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _toggleRow(
+    String title,
+    bool value,
+    ValueChanged<bool> onChanged,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value ? 'Enabled' : 'Disabled',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeColor: AppColors.primary,
+          ),
+        ],
       ),
     );
   }

@@ -41,4 +41,6 @@ class AppUrls {
   static const String getAllAssets = '/api/assets';
   static const String updateAsset = '/api/assets';
   static const String deleteAsset = '/api/assets';
+  static const String balanceSheet = '/api/reports/balance-sheet';
+  static const String trialBalance = '/api/reports/trial-balance';
 }

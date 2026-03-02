@@ -8,6 +8,7 @@ import 'package:bizly/components/home/side_bar.dart';
 import 'package:bizly/modules/expense/screens/expense_screen.dart';
 import 'package:bizly/modules/invoice/screens/invoice_screen.dart';
 import 'package:bizly/modules/tasks/screens/tasks_screen.dart';
+import 'package:bizly/modules/profile/screens/profile_screen/profile_screen.dart';
 
 class MainScreen extends GetView<MainScreenController> {
   final int initialIndex;
@@ -41,8 +42,10 @@ class MainScreen extends GetView<MainScreenController> {
         return ExpenseScreen();
       case 2:
         return InvoiceScreen();
-      default:
+      case 3:
         return TasksScreen();
+      default:
+        return const ProfileScreen();
     }
   }
 }

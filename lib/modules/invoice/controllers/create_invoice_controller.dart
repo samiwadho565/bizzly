@@ -18,8 +18,10 @@ class CreateInvoiceController extends GetxController {
 
   final TextEditingController invoiceNumberController = TextEditingController();
   final TextEditingController notesController = TextEditingController();
+  final TextEditingController partialPaidAmountController = TextEditingController();
   final Rxn<DateTime> invoiceDate = Rxn<DateTime>();
-  final RxString status = 'pending'.obs;
+  final RxString status = 'unpaid'.obs;
+  final RxBool taxEnabled = false.obs;
 
   final RxList<CustomerModel> customers = <CustomerModel>[].obs;
   final RxList<BusinessModel> businesses = <BusinessModel>[].obs;
@@ -35,6 +37,10 @@ class CreateInvoiceController extends GetxController {
   final Rxn<InvoiceModel> editingInvoice = Rxn<InvoiceModel>();
 
   final RxList<InvoiceItemModel> items = <InvoiceItemModel>[].obs;
+
+  bool get isPaidStatus => status.value == 'paid';
+  bool get isPartialPaidStatus => status.value == 'partialy-paid';
+  double get invoiceItemsTotal => _calculateItemsTotal(items);
 
   @override
   void onInit() {
@@ -119,6 +125,7 @@ class CreateInvoiceController extends GetxController {
 
   Future<void> createOrUpdateInvoice() async {
     if (isSubmitting.value) return;
+    final bool isEdit = editingInvoiceId.value != null;
     final bool ok = formKey.currentState?.validate() ?? false;
     if (!ok) return;
     final List<String> missing = <String>[];
@@ -147,6 +154,29 @@ class CreateInvoiceController extends GetxController {
       return;
     }
 
+    final double totalAmount = invoiceItemsTotal;
+    if (!isEdit && isPartialPaidStatus) {
+      final double? partialAmount = _toDouble(partialPaidAmountController.text);
+      if (partialAmount == null || partialAmount <= 0) {
+        AppDialogs.showActionDialog(
+          iconPath: AppImages.dialogWarning,
+          title: "Required Fields",
+          message: "Please enter a valid partial payment amount.",
+          actions: [AppDialogAction(label: "Ok")],
+        );
+        return;
+      }
+      if (partialAmount > totalAmount) {
+        AppDialogs.showActionDialog(
+          iconPath: AppImages.dialogWarning,
+          title: "Invalid Amount",
+          message: "Partial payment amount cannot be greater than invoice total amount.",
+          actions: [AppDialogAction(label: "Ok")],
+        );
+        return;
+      }
+    }
+
     isSubmitting.value = true;
 
     final InvoiceModel model = InvoiceModel(
@@ -157,10 +187,10 @@ class CreateInvoiceController extends GetxController {
       invoiceDate: DateFormats.yyyyMmDd(invoiceDate.value!),
       status: status.value,
       notes: notesController.text.trim(),
+      taxEnabled: taxEnabled.value,
       items: items.toList(),
     );
 
-    final bool isEdit = editingInvoiceId.value != null;
     final int? editedId = editingInvoiceId.value;
     final ApiResponse response = isEdit
         ? await ApiService().post(
@@ -175,11 +205,40 @@ class CreateInvoiceController extends GetxController {
           );
 
     if (response.success) {
-      final InvoiceModel updatedInvoice = _buildUpdatedInvoice(
+      InvoiceModel updatedInvoice = _buildUpdatedInvoice(
         requestModel: model,
         response: response,
       );
       InvoiceModel? doneResult;
+      final int? createdInvoiceId = updatedInvoice.id;
+
+      if (!isEdit && (isPaidStatus || isPartialPaidStatus)) {
+        final double? paymentAmount = isPaidStatus
+            ? _toDouble(updatedInvoice.totalAmount) ?? totalAmount
+            : _toDouble(partialPaidAmountController.text.trim());
+        if (createdInvoiceId != null && paymentAmount != null && paymentAmount > 0) {
+          final ApiResponse paymentResponse = await _createInvoicePayment(
+            invoiceId: createdInvoiceId,
+            paymentAmount: paymentAmount,
+          );
+          if (!paymentResponse.success) {
+            isSubmitting.value = false;
+            AppDialogs.showActionDialog(
+              iconPath: AppImages.dialogWarning,
+              title: "Payment Failed",
+              message:
+                  'Invoice created but payment could not be recorded. ${paymentResponse.message}',
+              actions: [AppDialogAction(label: "Ok")],
+            );
+            return;
+          }
+          final InvoiceModel? refreshed = await _fetchInvoiceById(createdInvoiceId);
+          if (refreshed != null) {
+            updatedInvoice = refreshed;
+          }
+        }
+      }
+
       if (isEdit) {
         if (Get.isRegistered<InvoiceScreenController>()) {
           await Get.find<InvoiceScreenController>().fetchInvoices();
@@ -254,7 +313,9 @@ class CreateInvoiceController extends GetxController {
     invoiceNumberController.clear();
     notesController.clear();
     invoiceDate.value = null;
-    status.value = 'pending';
+    partialPaidAmountController.clear();
+    status.value = 'unpaid';
+    taxEnabled.value = false;
     selectedCustomerId.value = null;
     selectedBusinessId.value = null;
     selectedPaymentMethodId.value = null;
@@ -266,7 +327,12 @@ class CreateInvoiceController extends GetxController {
     editingInvoiceId.value = model.id;
     invoiceNumberController.text = model.invoiceNumber ?? '';
     notesController.text = model.notes ?? '';
-    status.value = model.status ?? 'pending';
+    status.value = model.status ?? 'unpaid';
+    if (status.value == 'pending') {
+      status.value = 'unpaid';
+    }
+    taxEnabled.value = model.taxEnabled ?? false;
+    partialPaidAmountController.clear();
     if (model.invoiceDate != null && model.invoiceDate!.isNotEmpty) {
       invoiceDate.value = DateTime.tryParse(model.invoiceDate!);
     }
@@ -330,6 +396,10 @@ class CreateInvoiceController extends GetxController {
           apiInvoice?.invoiceDate ?? requestModel.invoiceDate ?? previous?.invoiceDate,
       status: apiInvoice?.status ?? requestModel.status ?? previous?.status,
       notes: apiInvoice?.notes ?? requestModel.notes ?? previous?.notes,
+      taxEnabled:
+          apiInvoice?.taxEnabled ?? requestModel.taxEnabled ?? previous?.taxEnabled ?? false,
+      subtotalAmount: apiInvoice?.subtotalAmount ?? previous?.subtotalAmount ?? calculatedTotal,
+      taxAmount: apiInvoice?.taxAmount ?? previous?.taxAmount ?? 0,
       totalAmount: totalAmount,
       paidAmount: paidAmount,
       remainingAmount: remainingAmount,
@@ -371,10 +441,35 @@ class CreateInvoiceController extends GetxController {
   double _calculateItemsTotal(List<InvoiceItemModel> lineItems) {
     double total = 0;
     for (final line in lineItems) {
-      final double? amount = _toDouble(line.amount);
-      if (amount != null) total += amount;
+      final double? unitPrice = _toDouble(line.unitPrice);
+      final int qty = _toInt(line.qty) ?? 0;
+      if (unitPrice != null && qty > 0) {
+        total += unitPrice * qty;
+      } else if (line.totalAmount != null) {
+        final double? lineTotal = _toDouble(line.totalAmount);
+        if (lineTotal != null) total += lineTotal;
+      }
     }
     return total;
+  }
+
+  Future<ApiResponse> _createInvoicePayment({
+    required int invoiceId,
+    required double paymentAmount,
+  }) {
+    return ApiService().post(
+      '${AppUrls.createInvoice}/$invoiceId/payments',
+      isAuth: true,
+      data: {
+        'payment_amount': paymentAmount.toStringAsFixed(2),
+        'payment_date': DateFormats.yyyyMmDd(invoiceDate.value!),
+        'payment_method_id': selectedPaymentMethodId.value?.toString(),
+        'reference_number': null,
+        'notes': notesController.text.trim().isNotEmpty
+            ? 'Auto payment on invoice create'
+            : null,
+      },
+    );
   }
 
   double? _toDouble(dynamic value) {
@@ -383,10 +478,18 @@ class CreateInvoiceController extends GetxController {
     return double.tryParse(value.toString().trim());
   }
 
+  int? _toInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value.toString().trim());
+  }
+
   @override
   void onClose() {
     invoiceNumberController.dispose();
     notesController.dispose();
+    partialPaidAmountController.dispose();
     super.onClose();
   }
 }

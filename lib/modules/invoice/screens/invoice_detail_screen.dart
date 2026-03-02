@@ -103,6 +103,20 @@ class InvoiceDetailScreen extends GetView<InvoiceDetailController> {
                           _buildItems(controller.model.value!),
                         _buildInfoCard(
                           icon: Icons.attach_money,
+                          title: "Subtotal",
+                          value: controller.model.value?.subtotalAmount?.toString() ?? '',
+                          valueColor: AppColors.primary,
+                          valueFontSize: 18,
+                          valueFontWeight: FontWeight.bold,
+                        ),
+                        _buildInfoCard(
+                          icon: Icons.receipt,
+                          title: "Tax",
+                          value:
+                              '${controller.model.value?.taxEnabled == true ? "Enabled" : "Disabled"} (${controller.model.value?.taxAmount?.toString() ?? "0"})',
+                        ),
+                        _buildInfoCard(
+                          icon: Icons.attach_money,
                           title: "Total Amount",
                           value: controller.model.value?.totalAmount?.toString() ?? '',
                           valueColor: AppColors.primary,
@@ -132,13 +146,25 @@ class InvoiceDetailScreen extends GetView<InvoiceDetailController> {
                 /// 🔹 Action Buttons
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  child: Obx(
+                    () => CustomButton(
+                      text: "Download PDF",
+                      isLoading: controller.isDownloadingPdf.value,
+                      onPressed: controller.isDownloadingPdf.value
+                          ? () {}
+                          : controller.downloadPdf,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
                   child: Row(
                     children: [
                       Expanded(
-                        child: CustomButton(
-                          color: AppColors.textPrimary,
-                          text: "Edit Invoice",
-                          onPressed: () async {
+                        child: _actionIconButton(
+                          icon: Icons.edit_outlined,
+                          label: 'Edit',
+                          onTap: () async {
                             final dynamic result = await Get.toNamed(
                               Routes.createInvoiceScreen,
                               arguments: controller.model.value,
@@ -147,32 +173,42 @@ class InvoiceDetailScreen extends GetView<InvoiceDetailController> {
                               controller.model.value = result;
                             }
                             if (Get.isRegistered<InvoiceScreenController>()) {
-                              Get.find<InvoiceScreenController>()
-                                  .fetchInvoices();
+                              Get.find<InvoiceScreenController>().fetchInvoices();
                             }
                           },
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       Expanded(
-                        child: CustomButton(
-                          text: "Download PDF",
-                          onPressed: () {
-                            // TODO: Download invoice
+                        child: _actionIconButton(
+                          icon: Icons.history,
+                          label: 'History',
+                          onTap: () async {
+                            final dynamic result = await Get.toNamed(
+                              Routes.invoicePaymentsScreen,
+                              arguments: controller.model.value,
+                            );
+                            if (result is InvoiceModel) {
+                              controller.model.value = result;
+                            } else {
+                              await controller.refreshInvoice();
+                            }
+                            if (Get.isRegistered<InvoiceScreenController>()) {
+                              Get.find<InvoiceScreenController>().fetchInvoices();
+                            }
                           },
                         ),
                       ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _actionIconButton(
+                          icon: Icons.delete_outline,
+                          label: 'Delete',
+                          iconColor: Colors.red,
+                          onTap: controller.confirmDelete,
+                        ),
+                      ),
                     ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-                  child: CustomButton(
-                    text: "Delete Invoice",
-                    color: Colors.white,
-                    textColor: Colors.red,
-                    borderColor: Colors.red,
-                    onPressed: controller.confirmDelete,
                   ),
                 ),
                           ],
@@ -278,7 +314,7 @@ class InvoiceDetailScreen extends GetView<InvoiceDetailController> {
                   ),
                 ),
                 Text(
-                  item.amount?.toString() ?? '',
+                  'Qty: ${item.qty ?? 0}  |  Unit: ${item.unitPrice ?? 0}  |  Total: ${item.totalAmount ?? _fallbackTotal(item)}',
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ],
@@ -288,5 +324,54 @@ class InvoiceDetailScreen extends GetView<InvoiceDetailController> {
         ],
       ),
     );
+  }
+
+  Widget _actionIconButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    Color iconColor = AppColors.textPrimary,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: iconColor, size: 22),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: iconColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  dynamic _fallbackTotal(dynamic item) {
+    final num? qty = num.tryParse((item.qty ?? '').toString());
+    final num? unit = num.tryParse((item.unitPrice ?? '').toString());
+    if (qty != null && unit != null) return qty * unit;
+    return 0;
   }
 }

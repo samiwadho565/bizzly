@@ -2,20 +2,26 @@ class InvoiceItemModel {
   InvoiceItemModel({
     this.id,
     required this.itemName,
-    required this.amount,
+    this.qty,
+    this.unitPrice,
+    this.totalAmount,
     this.sortOrder,
   });
 
   final int? id;
   final String itemName;
-  final dynamic amount;
+  final dynamic qty;
+  final dynamic unitPrice;
+  final dynamic totalAmount;
   final int? sortOrder;
 
   factory InvoiceItemModel.fromJson(Map<String, dynamic> json) {
     return InvoiceItemModel(
       id: _toInt(json['id']),
       itemName: json['item_name']?.toString() ?? '',
-      amount: json['amount'],
+      qty: json['qty'],
+      unitPrice: json['unit_price'],
+      totalAmount: json['total_amount'],
       sortOrder: _toInt(json['sort_order']),
     );
   }
@@ -23,13 +29,15 @@ class InvoiceItemModel {
   Map<String, dynamic> toJson() {
     return {
       'item_name': itemName,
-      'amount': _toAmountString(amount),
+      'qty': _toInt(qty),
+      'unit_price': _toAmountString(unitPrice),
     };
   }
 
   static int? _toInt(dynamic value) {
     if (value is int) return value;
-    if (value is String) return int.tryParse(value);
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value.trim());
     return null;
   }
 

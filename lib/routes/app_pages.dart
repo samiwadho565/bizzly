@@ -5,6 +5,8 @@ import 'package:bizly/modules/expense/screens/expense_screen.dart';
 import 'package:bizly/modules/expense/screens/expense_detail_screen.dart';
 import 'package:bizly/modules/home/screens/home_screen.dart';
 import 'package:bizly/modules/invoice/screens/invoice_detail_screen.dart';
+import 'package:bizly/modules/invoice/screens/invoice_payments_screen.dart';
+import 'package:bizly/modules/invoice/screens/create_invoice_payment_screen.dart';
 import 'package:bizly/modules/nav/screens/main_screen.dart';
 import 'package:bizly/modules/onboarding/screens/onboarding.dart';
 import 'package:bizly/modules/profile/screens/profile_screen/profile_screen.dart';
@@ -18,7 +20,9 @@ import 'package:bizly/modules/expense/bindings/expense_binding.dart';
 import 'package:bizly/modules/expense/bindings/expense_detail_binding.dart';
 import 'package:bizly/modules/home/bindings/home_binding.dart';
 import 'package:bizly/modules/invoice/bindings/create_invoice_binding.dart';
+import 'package:bizly/modules/invoice/bindings/create_invoice_payment_binding.dart';
 import 'package:bizly/modules/invoice/bindings/invoice_detail_binding.dart';
+import 'package:bizly/modules/invoice/bindings/invoice_payments_binding.dart';
 import 'package:bizly/modules/nav/bindings/main_binding.dart';
 import 'package:bizly/modules/onboarding/bindings/onboarding_binding.dart';
 import 'package:bizly/modules/profile/bindings/invoice_customization_binding.dart';
@@ -56,6 +60,10 @@ import 'package:bizly/modules/company_assets/bindings/company_assets_binding.dar
 import 'package:bizly/modules/categories/screens/categories_screen.dart';
 import 'package:bizly/modules/categories/bindings/categories_binding.dart';
 import 'package:bizly/modules/profile/bindings/profile_binding.dart';
+import 'package:bizly/modules/reports/bindings/balance_sheet_binding.dart';
+import 'package:bizly/modules/reports/bindings/trial_balance_binding.dart';
+import 'package:bizly/modules/reports/screens/balance_sheet_screen.dart';
+import 'package:bizly/modules/reports/screens/trial_balance_screen.dart';
 import 'routes.dart';
 
 class AppPages {
@@ -142,6 +150,18 @@ class AppPages {
       transition: Transition.fadeIn,
     ),
     GetPage(
+      name: Routes.invoicePaymentsScreen,
+      page: () => const InvoicePaymentsScreen(),
+      binding: InvoicePaymentsBinding(),
+      transition: Transition.fadeIn,
+    ),
+    GetPage(
+      name: Routes.createInvoicePaymentScreen,
+      page: () => const CreateInvoicePaymentScreen(),
+      binding: CreateInvoicePaymentBinding(),
+      transition: Transition.fadeIn,
+    ),
+    GetPage(
       name: Routes.businessDetailScreen,
       page: () => BusinessDetailScreen(),
       binding: BusinessDetailBinding(),
@@ -160,7 +180,7 @@ class AppPages {
     ),
     GetPage(
       name: Routes.profileScreen,
-      page: () => const ProfileScreen(),
+      page: () => const ProfileScreen(showBackButton: true),
       binding: ProfileBinding(),
     ),
     GetPage(
@@ -202,6 +222,16 @@ class AppPages {
       name: Routes.categoriesScreen,
       page: () => const CategoriesScreen(),
       binding: CategoriesBinding(),
+    ),
+    GetPage(
+      name: Routes.balanceSheetScreen,
+      page: () => const BalanceSheetScreen(),
+      binding: BalanceSheetBinding(),
+    ),
+    GetPage(
+      name: Routes.trialBalanceScreen,
+      page: () => const TrialBalanceScreen(),
+      binding: TrialBalanceBinding(),
     ),
     GetPage(
       name: Routes.businessTabsScreen,

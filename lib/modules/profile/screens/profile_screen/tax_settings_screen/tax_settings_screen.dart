@@ -15,12 +15,18 @@ class TaxSettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const CustomAppBar2(title: "Tax Settings"),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      appBar:  CustomAppBar2(
+          title: controller.business.value?.businessName.isNotEmpty == true
+              ? "Tax Settings - ${controller.business.value!.businessName}"
+              : "Tax Settings",),
+      body: Obx(
+        () => Stack(
           children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
             /// 🔹 Enable/Disable Tax Section
             Container(
               padding: const EdgeInsets.all(16),
@@ -72,24 +78,25 @@ class TaxSettingsScreen extends StatelessWidget {
 
                       _buildTaxInputField(
                         label: "Tax Name (e.g. GST, VAT)",
-                        value: controller.taxName.value,
-                        onTap: () => _showEditDialog("Tax Name", controller.taxName),
+                        controller: controller.taxNameController,
+                        hintText: "Enter tax name",
                       ),
 
                       const SizedBox(height: 20),
 
                       _buildTaxInputField(
                         label: "Tax Rate (%)",
-                        value: "${controller.taxRate.value}%",
-                        onTap: () => _showEditDialog("Tax Rate", controller.taxRate, isNumber: true),
+                        controller: controller.taxRateController,
+                        hintText: "Enter tax rate",
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       ),
 
                       const SizedBox(height: 20),
 
                       _buildTaxInputField(
                         label: "Tax Registration Number (NTN)",
-                        value: controller.taxId.value,
-                        onTap: () => _showEditDialog("Tax Number", controller.taxId),
+                        controller: controller.taxIdController,
+                        hintText: "Enter tax number",
                       ),
                     ],
                   ),
@@ -99,14 +106,27 @@ class TaxSettingsScreen extends StatelessWidget {
 
             const SizedBox(height: 40),
 
-            CustomButton(
-              text: "Save Tax Settings",
-              onPressed: () {
-                Get.back();
-                Get.snackbar("Success", "Tax settings updated successfully",
-                    snackPosition: SnackPosition.BOTTOM);
-              },
+            Obx(
+              () => CustomButton(
+                text: "Save Tax Settings",
+                isLoading: controller.isSaving.value,
+                onPressed: controller.isSaving.value
+                    ? () {}
+                    : controller.saveSettings,
+              ),
             ),
+                ],
+              ),
+            ),
+            if (controller.isLoading.value)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.white.withOpacity(0.45),
+                  child: const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -114,53 +134,43 @@ class TaxSettingsScreen extends StatelessWidget {
   }
 
   /// 🔹 Tax Input UI Widget
-  Widget _buildTaxInputField({required String label, required String value, required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade200),
+  Widget _buildTaxInputField({
+    required String label,
+    required TextEditingController controller,
+    required String hintText,
+    TextInputType? keyboardType,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          decoration: InputDecoration(
+            hintText: hintText,
+            filled: true,
+            fillColor: Colors.grey.shade50,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-                const Icon(Icons.edit_outlined, size: 18, color: Colors.blue),
-              ],
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade200),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade200),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.primary),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  /// 🔹 Quick Edit Dialog
-  void _showEditDialog(String title, RxString val, {bool isNumber = false}) {
-    TextEditingController editController = TextEditingController(text: val.value);
-    Get.defaultDialog(
-      backgroundColor: Colors.white,
-      title: "Edit $title",
-      content: TextField(
-        controller: editController,
-        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-        decoration: InputDecoration(hintText: "Enter $title"),
-      ),
-      confirm: TextButton(
-        onPressed: () {
-          val.value = editController.text;
-          Get.back();
-        },
-        child: const Text("Update"),
-      ),
-      cancel: TextButton(onPressed: () => Get.back(), child: const Text("Cancel")),
+        ),
+      ],
     );
   }
 }

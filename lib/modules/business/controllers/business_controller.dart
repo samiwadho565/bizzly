@@ -107,6 +107,11 @@ class BusinessDetailController extends GetxController {
     detailsExpanded.value = !detailsExpanded.value;
   }
 
+  void applyUpdatedBusiness(BusinessModel updated) {
+    business.value = updated;
+    _syncHomeBusiness(updated);
+  }
+
   Future<void> editBusiness() async {
     final BusinessModel? current = business.value;
     if (current == null) {
@@ -119,8 +124,7 @@ class BusinessDetailController extends GetxController {
       arguments: current,
     );
     if (updated is BusinessModel) {
-      business.value = updated;
-      _syncHomeBusiness(updated);
+      applyUpdatedBusiness(updated);
     }
   }
 

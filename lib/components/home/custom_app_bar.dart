@@ -83,19 +83,16 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                                 height: 36,
                                 fit: BoxFit.cover,
                                 placeholder: (_, __) => const Image(
-                                  image:
-                                      AssetImage(AppImages.profilePlaceholder),
+                                  image: AssetImage(AppImages.bizzlyLogo),
                                   fit: BoxFit.cover,
                                 ),
                                 errorWidget: (_, __, ___) => const Image(
-                                  image:
-                                      AssetImage(AppImages.profilePlaceholder),
+                                  image: AssetImage(AppImages.bizzlyLogo),
                                   fit: BoxFit.cover,
                                 ),
                               )
                             : const Image(
-                                image:
-                                    AssetImage(AppImages.profilePlaceholder),
+                                image: AssetImage(AppImages.bizzlyLogo),
                                 fit: BoxFit.cover,
                               ),
                       ),

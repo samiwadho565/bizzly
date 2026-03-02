@@ -64,9 +64,13 @@ class HomeScreenController extends GetxController {
     monthlyData[0].isSelected.value = true;
     yearlyData[0].isSelected.value = true;
 
-    _loadUser();
-    _fetchUserProfile();
+    _bootstrapUser();
     fetchBusinesses();
+  }
+
+  Future<void> _bootstrapUser() async {
+    await _loadUser();
+    await _fetchUserProfile();
   }
 
   List<RevenueBar> get currentData {
@@ -143,11 +147,11 @@ class HomeScreenController extends GetxController {
     final UserModel? local = await LocalStorage.getUser();
     if (local != null) {
       user.value = local;
-      _bustCache();
     }
   }
 
   Future<void> _fetchUserProfile() async {
+    final String? previousImage = user.value?.imageUrl;
     final ApiResponse response = await ApiService().get(
       AppUrls.profile,
       isAuth: true,
@@ -159,14 +163,19 @@ class HomeScreenController extends GetxController {
           map['data'] is Map ? Map<String, dynamic>.from(map['data'] as Map) : map;
       final UserModel updated = UserModel.fromJson(payload);
       user.value = updated;
-      _bustCache();
+      if (_didImageChange(previousImage, updated.imageUrl)) {
+        _bustCache();
+      }
       await LocalStorage.saveUser(updated);
     }
   }
 
   void setUser(UserModel updated) {
+    final String? previousImage = user.value?.imageUrl;
     user.value = updated;
-    _bustCache();
+    if (_didImageChange(previousImage, updated.imageUrl)) {
+      _bustCache();
+    }
   }
 
   String? get displayImageUrl {
@@ -181,6 +190,12 @@ class HomeScreenController extends GetxController {
   void _bustCache() {
     imageCacheBuster.value =
         DateTime.now().millisecondsSinceEpoch.toString();
+  }
+
+  bool _didImageChange(String? previous, String? current) {
+    final String before = (previous ?? '').trim();
+    final String after = (current ?? '').trim();
+    return before != after;
   }
 }
 

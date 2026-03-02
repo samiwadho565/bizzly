@@ -301,6 +301,7 @@ class CreateBusinessController extends GetxController {
       secondaryContact: secondaryContact.isNotEmpty ? secondaryContact : null,
       businessImageUrl: current?.businessImageUrl,
       businessCoverImageUrl: current?.businessCoverImageUrl,
+      invoiceLogoUrl: current?.invoiceLogoUrl,
       createdAt: current?.createdAt,
       updatedAt: DateTime.now().toString(),
     );

@@ -6,6 +6,7 @@ import 'package:bizly/utils/app_colors.dart';
 import 'package:bizly/utils/app_utils.dart';
 import 'package:bizly/components/common/custom_app_bar_2.dart';
 import 'package:bizly/components/common/custom_button.dart';
+import 'package:bizly/components/common/loader/loader.dart';
 import 'package:bizly/components/common/custom_text_field.dart';
 import 'package:bizly/components/common/custom_drop_down.dart';
 import 'package:bizly/utils/form_validations.dart';
@@ -32,33 +33,38 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
             : "Create Invoice",
       ),
       body: SafeArea(
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-          child: SingleChildScrollView(
-            child: Container(
-            margin: const EdgeInsets.only(top: 10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(40),
-                topRight: Radius.circular(40),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.15),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
+        child: Obx(
+          () {
+            if (controller.isLoading.value) {
+              return const Center(child: FinancePulseLoader());
+            }
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+              child: SingleChildScrollView(
+                child: Container(
+                margin: const EdgeInsets.only(top: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(40),
+                    topRight: Radius.circular(40),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.15),
+                      blurRadius: 10,
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
-              child: Form(
-                key: controller.formKey,
-                child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
+                  child: Form(
+                    key: controller.formKey,
+                    child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
 
                   /// 🔹 Client & Invoice Info
                   Text("Invoice Information", style: sectionTitleStyle),
@@ -68,12 +74,8 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
                   const SizedBox(height: 12),
 
                   CustomTextField(
-                    hintText: "Invoice Number",
+                    hintText: "Invoice Number (Optional)",
                     controller: controller.invoiceNumberController,
-                    validator: (v) => FormValidations.validateRequired(
-                      v ?? '',
-                      fieldName: "Invoice Number",
-                    ),
                   ),
                   const SizedBox(height: 12),
 
@@ -130,6 +132,35 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
                       Expanded(child: _buildStatusDropdown()),
                     ],
                   ),
+                  Obx(
+                    () => controller.editingInvoiceId.value == null &&
+                            controller.isPartialPaidStatus
+                        ? Padding(
+                            padding: const EdgeInsets.only(top: 12),
+                            child: CustomTextField(
+                              hintText: "Partial Paid Amount",
+                              controller: controller.partialPaidAmountController,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(decimal: true),
+                              validator: (v) {
+                                if (!controller.isPartialPaidStatus) return null;
+                                final String value = (v ?? '').trim();
+                                final String? base = FormValidations.validateRequiredNumber(
+                                  value,
+                                  fieldName: "Partial Paid Amount",
+                                );
+                                if (base != null) return base;
+                                final num? entered = num.tryParse(value);
+                                final double total = controller.invoiceItemsTotal;
+                                if (entered != null && entered >= total) {
+                                  return "Partial paid amount cannot be equal or exceed invoice total (${total.toStringAsFixed(2)})";
+                                }
+                                return null;
+                              },
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
 
                   const SizedBox(height: 25),
 
@@ -179,6 +210,29 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
                         _buildBusinessDropdown(),
                         const SizedBox(height: 12),
 
+                        Obx(
+                          () => Row(
+                            children: [
+                              const Expanded(
+                                child: Text(
+                                  "Apply Tax",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              Switch(
+                                value: controller.taxEnabled.value,
+                                onChanged: (value) =>
+                                    controller.taxEnabled.value = value,
+                                activeColor: AppColors.primary,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+
                         CustomTextField(
                           hintText: "Notes",
                           maxLine: 3,
@@ -207,14 +261,17 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
                   ),
 
                   const SizedBox(height: 20),
-                ],
+                    ],
+                  ),
+                  ),
+                ),
+                ),
               ),
-              ),
-            ),
-            ),
-          ),
+            );
+          },
         ),
       ),
+      
     );
   }
 
@@ -339,7 +396,7 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
   }
 
   Widget _buildStatusDropdown() {
-    final List<String> items = ["Pending", "Paid", "Unpaid"];
+    const List<String> items = ["Paid", "Unpaid", "Partialy Paid"];
     return CustomSearchDropdown(
       height: 50,
       horizontalPadding: 12,
@@ -348,13 +405,14 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
       textStyle: TextStyle(fontSize: 16, color: Colors.grey.shade700),
       hintText: "Status",
       items: items,
-      selectedItem: controller.status.value.isEmpty
-          ? null
-          : _cap(controller.status.value),
+      selectedItem: _statusValueToLabel(controller.status.value),
       onChanged: (value) {
         FocusManager.instance.primaryFocus?.unfocus();
         if (value != null) {
-          controller.status.value = value.toLowerCase();
+          controller.status.value = _statusLabelToValue(value);
+          if (!controller.isPartialPaidStatus) {
+            controller.partialPaidAmountController.clear();
+          }
         }
       },
     );
@@ -384,7 +442,7 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  item.amount?.toString() ?? '',
+                  'Qty: ${_displayQty(item.qty)}  |  Unit: ${_displayMoney(item.unitPrice)}  |  Total: ${_displayMoney(_lineTotal(item))}',
                   style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
                 ),
               ],
@@ -401,7 +459,8 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
 
   void _showAddItemSheet(BuildContext context) {
     final TextEditingController nameController = TextEditingController();
-    final TextEditingController amountController = TextEditingController();
+    final TextEditingController qtyController = TextEditingController(text: '1');
+    final TextEditingController unitPriceController = TextEditingController();
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
     showModalBottomSheet(
@@ -452,12 +511,25 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
                 ),
                 const SizedBox(height: 12),
                 CustomTextField(
-                  controller: amountController,
-                  hintText: "Amount",
+                  controller: qtyController,
+                  hintText: "Quantity",
+                  keyboardType: TextInputType.number,
+                  validator: (v) => FormValidations.validateRequiredNumber(
+                    v ?? '',
+                    fieldName: "Quantity",
+                  ),
+                  textInputAction: TextInputAction.next,
+                  onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
+                  verticalPadding: 15,
+                ),
+                const SizedBox(height: 12),
+                CustomTextField(
+                  controller: unitPriceController,
+                  hintText: "Unit Price",
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   validator: (v) => FormValidations.validateRequiredNumber(
                     v ?? '',
-                    fieldName: "Amount",
+                    fieldName: "Unit Price",
                   ),
                   textInputAction: TextInputAction.done,
                   onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
@@ -476,11 +548,13 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
                           controller.items.add(
                             InvoiceItemModel(
                               itemName: nameController.text.trim(),
-                              amount: amountController.text.trim(),
+                              qty: qtyController.text.trim(),
+                              unitPrice: unitPriceController.text.trim(),
                             ),
                           );
                           nameController.clear();
-                          amountController.clear();
+                          qtyController.text = '1';
+                          unitPriceController.clear();
                         },
                       ),
                     ),
@@ -505,5 +579,47 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
   String _cap(String v) {
     if (v.isEmpty) return v;
     return v[0].toUpperCase() + v.substring(1);
+  }
+
+  String _statusValueToLabel(String value) {
+    switch (value) {
+      case 'paid':
+        return 'Paid';
+      case 'partialy-paid':
+        return 'Partialy Paid';
+      case 'unpaid':
+      default:
+        return 'Unpaid';
+    }
+  }
+
+  String _statusLabelToValue(String label) {
+    switch (label.toLowerCase().trim()) {
+      case 'paid':
+        return 'paid';
+      case 'partialy paid':
+        return 'partialy-paid';
+      case 'unpaid':
+      default:
+        return 'unpaid';
+    }
+  }
+
+  String _displayQty(dynamic value) {
+    if (value == null) return '0';
+    return value.toString();
+  }
+
+  String _displayMoney(dynamic value) {
+    if (value == null) return '0';
+    return value.toString();
+  }
+
+  dynamic _lineTotal(InvoiceItemModel item) {
+    if (item.totalAmount != null) return item.totalAmount;
+    final num? qty = num.tryParse((item.qty ?? '').toString());
+    final num? unit = num.tryParse((item.unitPrice ?? '').toString());
+    if (qty != null && unit != null) return qty * unit;
+    return null;
   }
 }

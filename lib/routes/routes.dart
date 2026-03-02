@@ -17,6 +17,8 @@ class Routes {
   static const  companyAssetsScreen  = '/company_assets_screen';
   static const  categoriesScreen  = '/categories_screen';
   static const  addCompanyAssetScreen  = '/add_company_asset_screen';
+  static const  balanceSheetScreen  = '/balance_sheet_screen';
+  static const  trialBalanceScreen  = '/trial_balance_screen';
   static const  invoiceCustomizationScreen  = '/invoice_customization_screen';
   static const  invoicePreviewScreen  = '/invoice_preview_screen';
   static const  taxSettingsScreen  = '/tax_settings_screen';
@@ -27,6 +29,8 @@ class Routes {
   static const expenseDetailScreen = '/expense_detail_screen';
   static const expenseScreen = '/expense_screen';
   static const invoiceDetailScreen = '/invoice_detail_screen';
+  static const invoicePaymentsScreen = '/invoice_payments_screen';
+  static const createInvoicePaymentScreen = '/create_invoice_payment_screen';
   static const taskDetailScreen = '/task_detail_screen';
   static const addNewBusiness = '/add_new_business_screen';
   static const addExpenseScreen = '/add_expense_screen';

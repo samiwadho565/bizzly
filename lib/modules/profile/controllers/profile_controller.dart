@@ -37,8 +37,12 @@ class ProfileController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _loadFromLocal();
-    fetchProfile();
+    _bootstrapProfile();
+  }
+
+  Future<void> _bootstrapProfile() async {
+    await _loadFromLocal();
+    await fetchProfile();
   }
 
   Future<void> _loadFromLocal() async {
@@ -51,6 +55,7 @@ class ProfileController extends GetxController {
   Future<void> fetchProfile() async {
     if (isLoading.value) return;
     isLoading.value = true;
+    final String? previousImage = user.value?.imageUrl;
     final ApiResponse response = await ApiService().get(
       AppUrls.profile,
       isAuth: true,
@@ -62,8 +67,9 @@ class ProfileController extends GetxController {
           map['data'] is Map ? Map<String, dynamic>.from(map['data'] as Map) : map;
       final UserModel updated = UserModel.fromJson(payload);
       user.value = updated;
-      imageCacheBuster.value =
-          DateTime.now().millisecondsSinceEpoch.toString();
+      if (_didImageChange(previousImage, updated.imageUrl)) {
+        _bustCache();
+      }
       await LocalStorage.saveUser(updated);
     }
     isLoading.value = false;
@@ -124,8 +130,9 @@ class ProfileController extends GetxController {
       if (updated != null) {
         user.value = updated;
         user.refresh();
-        imageCacheBuster.value =
-            DateTime.now().millisecondsSinceEpoch.toString();
+        if (_didImageChange(previousImage, updated.imageUrl)) {
+          _bustCache();
+        }
         await LocalStorage.saveUser(updated);
         if (Get.isRegistered<HomeScreenController>()) {
           Get.find<HomeScreenController>().setUser(updated);
@@ -416,6 +423,16 @@ class ProfileController extends GetxController {
     if (buster.isEmpty) return url;
     final String separator = url.contains('?') ? '&' : '?';
     return '$url${separator}v=$buster';
+  }
+
+  void _bustCache() {
+    imageCacheBuster.value = DateTime.now().millisecondsSinceEpoch.toString();
+  }
+
+  bool _didImageChange(String? previous, String? current) {
+    final String before = (previous ?? '').trim();
+    final String after = (current ?? '').trim();
+    return before != after;
   }
 
   void _evictImage(String url) {

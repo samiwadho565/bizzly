@@ -4,6 +4,12 @@ import 'package:get/get.dart';
 class InvoiceCustomizationBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<InvoiceCustomizationController>(() => InvoiceCustomizationController());
+    if (Get.isRegistered<InvoiceCustomizationController>()) {
+      Get.delete<InvoiceCustomizationController>();
+    }
+    Get.lazyPut<InvoiceCustomizationController>(
+      () => InvoiceCustomizationController(),
+      fenix: true,
+    );
   }
 }

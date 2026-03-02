@@ -11,15 +11,32 @@ import 'package:cached_network_image/cached_network_image.dart';
 // import 'package:bizly/widgets/profile_tile.dart';
 
 class ProfileScreen extends GetView<ProfileController> {
-  const ProfileScreen({super.key});
+  const ProfileScreen({
+    super.key,
+    this.showBackButton = false,
+  });
+
+  final bool showBackButton;
+
+  @override
+  ProfileController get controller {
+    if (Get.isRegistered<ProfileController>()) {
+      return Get.find<ProfileController>();
+    }
+    return Get.put(ProfileController());
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: CustomAppBar2(title: "Profile"),
+      appBar: CustomAppBar2(
+        title: "Profile",
+        isBackArrow: showBackButton,
+      ),
 
       body: SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: 120),
         child: Obx(() {
           final user = controller.user.value;
           final String? displayImageUrl = controller.displayImageUrl;
@@ -64,19 +81,16 @@ class ProfileScreen extends GetView<ProfileController> {
                                 height: 80,
                                 fit: BoxFit.cover,
                                 placeholder: (_, __) => const Image(
-                                  image:
-                                      AssetImage(AppImages.profilePlaceholder),
+                                  image: AssetImage(AppImages.bizzlyLogo),
                                   fit: BoxFit.cover,
                                 ),
                                 errorWidget: (_, __, ___) => const Image(
-                                  image:
-                                      AssetImage(AppImages.profilePlaceholder),
+                                  image: AssetImage(AppImages.bizzlyLogo),
                                   fit: BoxFit.cover,
                                 ),
                               )
                             : const Image(
-                                image:
-                                    AssetImage(AppImages.profilePlaceholder),
+                                image: AssetImage(AppImages.bizzlyLogo),
                                 fit: BoxFit.cover,
                               )),
                   ),
@@ -165,17 +179,6 @@ class ProfileScreen extends GetView<ProfileController> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  _buildSectionTitle("Financial"),
-                  ProfileTile(title: "Tax Settings", onTap: () {
-
-                    Get.toNamed(Routes.taxSettingsScreen);
-                        }),
-                  ProfileTile(title: "Invoice Customization", onTap: () {
-
-                    Get.toNamed(Routes.invoiceCustomizationScreen);
-                  }),
-
-                  const SizedBox(height: 10),
                   _buildSectionTitle("Security "),
                   ProfileTile(title: "Change Password", onTap: () {}),
 
@@ -198,7 +201,7 @@ class ProfileScreen extends GetView<ProfileController> {
                       textColor: Colors.red,
                       onTap: controller.showDeleteAccountSheet
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 50),
                 ],
               ),
             ),

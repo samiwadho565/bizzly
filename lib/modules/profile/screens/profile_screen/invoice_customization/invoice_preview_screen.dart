@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bizly/assets/images.dart';
 import 'package:bizly/components/common/custom_app_bar_2.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +11,9 @@ class InvoicePreviewScreen extends StatelessWidget {
   final String businessAddress;
   final String businessEmail;
   final String? taxRegistrationNo; // New
+  final File? invoiceLogoFile;
+  final String? invoiceLogoUrl;
+  final String? businessLogoUrl;
 
   final String invoiceNumber;
   final DateTime invoiceDate;
@@ -24,7 +29,8 @@ class InvoicePreviewScreen extends StatelessWidget {
 
   final String? paymentTerms;
   final String? lateFee; // New
-  final String? footerNote;
+  final String? termsAndConditions;
+  final String? additionalNotes;
 
   const InvoicePreviewScreen({
     super.key,
@@ -32,6 +38,9 @@ class InvoicePreviewScreen extends StatelessWidget {
     required this.businessAddress,
     required this.businessEmail,
     this.taxRegistrationNo,
+    this.invoiceLogoFile,
+    this.invoiceLogoUrl,
+    this.businessLogoUrl,
     required this.invoiceNumber,
     required this.invoiceDate,
     this.dueDate,
@@ -43,7 +52,8 @@ class InvoicePreviewScreen extends StatelessWidget {
     this.currency = "PKR",
     this.paymentTerms,
     this.lateFee,
-    this.footerNote,
+    this.termsAndConditions,
+    this.additionalNotes,
   });
 
   @override
@@ -77,12 +87,7 @@ class InvoicePreviewScreen extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Image.asset(
-                    AppImages.bizzlyLogo,
-                    width: 35,
-                    height: 35,
-                    fit: BoxFit.contain,
-                  ),
+                  _buildLogo(),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -138,7 +143,8 @@ class InvoicePreviewScreen extends StatelessWidget {
                       const Text("BILL TO", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 1.2)),
                       const SizedBox(height: 6),
                       Text(clientName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                      _buildText(clientEmail, size: 12),
+                      if (clientEmail.trim().isNotEmpty)
+                        _buildText(clientEmail, size: 12),
                       if (clientPhone != null) _buildText(clientPhone!, size: 12),
                     ],
                   ),
@@ -204,9 +210,16 @@ class InvoicePreviewScreen extends StatelessWidget {
                           _buildText(lateFee!, size: 11, color: Colors.red.shade700),
                           const SizedBox(height: 12),
                         ],
-                        if (footerNote != null && footerNote!.isNotEmpty) ...[
-                          _sectionTitle("Notes"),
-                          _buildText(footerNote!, size: 11),
+                        if (termsAndConditions != null &&
+                            termsAndConditions!.isNotEmpty) ...[
+                          _sectionTitle("Terms & Conditions"),
+                          _buildText(termsAndConditions!, size: 11),
+                          const SizedBox(height: 12),
+                        ],
+                        if (additionalNotes != null &&
+                            additionalNotes!.isNotEmpty) ...[
+                          _sectionTitle("Additional Notes"),
+                          _buildText(additionalNotes!, size: 11),
                         ],
                       ],
                     ),
@@ -223,6 +236,64 @@ class InvoicePreviewScreen extends StatelessWidget {
   }
 
   // --- Helper Widgets ---
+
+  Widget _buildLogo() {
+    final File? localLogo = invoiceLogoFile;
+    final String invoiceLogo = (invoiceLogoUrl ?? '').trim();
+    final String businessLogo = (businessLogoUrl ?? '').trim();
+
+    if (localLogo != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.file(
+          localLogo,
+          width: 35,
+          height: 35,
+          fit: BoxFit.cover,
+        ),
+      );
+    }
+
+    if (invoiceLogo.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.network(
+          invoiceLogo,
+          width: 35,
+          height: 35,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _fallbackLogo(businessLogo),
+        ),
+      );
+    }
+
+    return _fallbackLogo(businessLogo);
+  }
+
+  Widget _fallbackLogo(String businessLogo) {
+    if (businessLogo.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.network(
+          businessLogo,
+          width: 35,
+          height: 35,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _appLogo(),
+        ),
+      );
+    }
+    return _appLogo();
+  }
+
+  Widget _appLogo() {
+    return Image.asset(
+      AppImages.bizzlyLogo,
+      width: 35,
+      height: 35,
+      fit: BoxFit.contain,
+    );
+  }
 
   Widget _buildText(String text, {double size = 12, Color? color}) {
     return Text(
