@@ -7,6 +7,7 @@ import 'package:bizly/modules/vendors/models/vendor_model.dart';
 import 'package:bizly/services/api_service.dart';
 import 'package:bizly/utils/app_colors.dart';
 import 'package:bizly/utils/app_dialouge.dart';
+import 'package:bizly/utils/app_utils.dart';
 import 'package:bizly/assets/images.dart';
 import 'package:bizly/modules/vendors/controllers/vendors_controller.dart';
 
@@ -111,12 +112,11 @@ class CreateVendorController extends GetxController {
       );
     } else {
       isLoading.value = false;
-      Get.snackbar(
+      AppUtils.showAppSnackbar(
         "Error",
         response.message,
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
+        type: AppSnackType.error,
       );
     }
   }

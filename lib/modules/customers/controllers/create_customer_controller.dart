@@ -12,6 +12,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import 'package:bizly/utils/app_utils.dart';
 
 class CreateCustomerController extends GetxController {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
@@ -180,12 +181,11 @@ class CreateCustomerController extends GetxController {
       );
     } else {
       isLoading.value = false;
-      Get.snackbar(
+      AppUtils.showAppSnackbar(
         "Error",
         response.message,
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
+        type: AppSnackType.error,
       );
     }
 

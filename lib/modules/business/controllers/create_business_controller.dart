@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:bizly/assets/images.dart';
 import 'package:bizly/utils/app_colors.dart';
 import 'package:bizly/utils/app_dialouge.dart';
+import 'package:bizly/utils/app_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -95,29 +96,24 @@ class CreateBusinessController extends GetxController {
     if (isLoading.value) return;
     FocusManager.instance.primaryFocus?.unfocus();
 
+    final bool formOk = formKey.currentState?.validate() ?? false;
+    if (!formOk) return;
+
     final String businessName = businessNameController.text.trim();
     final String businessAddress = businessAddressController.text.trim();
     final String phoneNumber = phoneNumberController.text.trim();
-    final String currency = currencyController.text.trim();
+    // Currency input is temporarily disabled in UI.
+    final String currency =
+        editingBusiness.value?.currency ?? currencyController.text.trim();
 
-    final List<String> missing = [];
-    if (businessName.isEmpty) missing.add('Business Name');
-    if (businessAddress.isEmpty) missing.add('Business Address');
-    if (phoneNumber.isEmpty) missing.add('Phone Number');
-    if (currency.isEmpty) missing.add('Currency');
     final bool hasExistingImage =
         (editingBusiness.value?.businessImageUrl ?? '').isNotEmpty;
     if (businessImageFile.value == null && !hasExistingImage) {
-      missing.add('Business Image');
-    }
-
-    if (missing.isNotEmpty) {
-      Get.snackbar(
-        'Required Fields',
-        'Please fill: ${missing.join(', ')}',
+      AppUtils.showAppSnackbar(
+        'Business Image Required',
+        'Please upload a business image.',
         snackPosition: SnackPosition.TOP,
         backgroundColor: AppColors.primary.withAlpha(200),
-        colorText: Colors.white,
       );
       return;
     }
@@ -148,6 +144,8 @@ class CreateBusinessController extends GetxController {
       operatingHours: operatingHours.isNotEmpty ? operatingHours : null,
       secondaryContact: secondaryContact.isNotEmpty ? secondaryContact : null,
     );
+    final Map<String, dynamic> requestPayload = business.toJson()
+      ..remove('currency');
 
     ApiResponse response;
     final int? editedId = editingBusiness.value?.id;
@@ -155,13 +153,13 @@ class CreateBusinessController extends GetxController {
       final int? id = editingBusiness.value?.id;
       response = await ApiService().postMultipart(
         '${AppUrls.updateBusiness}/$id',
-        data: business.toJson(),
+        data: requestPayload,
         isAuth: true,
       );
     } else {
       response = await ApiService().postMultipart(
         AppUrls.createBusiness,
-        data: business.toJson(),
+        data: requestPayload,
         isAuth: true,
       );
     }
@@ -232,9 +230,6 @@ class CreateBusinessController extends GetxController {
           : [
               AppDialogAction(
                 label: "Ok",
-                onPressed: () {
-                  Get.back();
-                },
               ),
             ],
     );

@@ -11,6 +11,7 @@ import 'package:bizly/routes/routes.dart';
 import 'package:bizly/services/api_service.dart';
 import 'package:bizly/utils/app_dialouge.dart';
 import 'package:bizly/modules/team/models/employee_model.dart';
+import 'package:bizly/utils/app_utils.dart';
 
 class TaskDetailController extends GetxController {
   final Rxn<TaskModel> task = Rxn<TaskModel>();
@@ -149,10 +150,11 @@ class TaskDetailController extends GetxController {
 
     final EmployeeModel? foundEmployee = employee;
     if (foundEmployee == null) {
-      Get.snackbar(
+      AppUtils.showAppSnackbar(
         "Not found",
         "Employee details not found",
         snackPosition: SnackPosition.BOTTOM,
+        type: AppSnackType.warning,
       );
       return;
     }

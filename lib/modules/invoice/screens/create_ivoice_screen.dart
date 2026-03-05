@@ -331,26 +331,32 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
           }
         }
       }
-      return CustomSearchDropdown(
-        height: 50,
-        horizontalPadding: 12,
-        verticalPadding: 20,
-        iconSize: 25,
-        textStyle: TextStyle(fontSize: 16, color: Colors.grey.shade700),
-        hintText: "Business",
-        items: items,
-        selectedItem: selectedName,
-        onChanged: (value) {
-          FocusManager.instance.primaryFocus?.unfocus();
-          int? id;
-          for (final item in controller.businesses) {
-            if (item.businessName == value) {
-              id = item.id;
-              break;
-            }
-          }
-          controller.selectedBusinessId.value = id;
-        },
+      return IgnorePointer(
+        ignoring: controller.isBusinessLocked.value,
+        child: Opacity(
+          opacity: controller.isBusinessLocked.value ? 0.75 : 1,
+          child: CustomSearchDropdown(
+            height: 50,
+            horizontalPadding: 12,
+            verticalPadding: 20,
+            iconSize: 25,
+            textStyle: TextStyle(fontSize: 16, color: Colors.grey.shade700),
+            hintText: "Business",
+            items: items,
+            selectedItem: selectedName,
+            onChanged: (value) {
+              FocusManager.instance.primaryFocus?.unfocus();
+              int? id;
+              for (final item in controller.businesses) {
+                if (item.businessName == value) {
+                  id = item.id;
+                  break;
+                }
+              }
+              controller.selectedBusinessId.value = id;
+            },
+          ),
+        ),
       );
     });
   }

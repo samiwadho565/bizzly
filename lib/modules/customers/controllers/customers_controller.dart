@@ -6,6 +6,7 @@ import 'package:bizly/models/api_response.dart';
 import 'package:bizly/modules/customers/models/customer_model.dart';
 import 'package:bizly/services/api_service.dart';
 import 'package:bizly/utils/app_dialouge.dart';
+import 'package:bizly/utils/app_utils.dart';
 import 'package:bizly/assets/images.dart';
 
 class CustomersController extends GetxController {
@@ -87,10 +88,11 @@ class CustomersController extends GetxController {
       filtered.removeWhere((c) => c.id == customer.id);
       Get.back();
       Future.microtask(() {
-        Get.snackbar(
+        AppUtils.showAppSnackbar(
           "Success",
           "Customer deleted successfully",
           snackPosition: SnackPosition.BOTTOM,
+          type: AppSnackType.success,
         );
       });
     } else {

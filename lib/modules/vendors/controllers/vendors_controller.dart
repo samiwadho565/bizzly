@@ -5,6 +5,7 @@ import 'package:bizly/models/api_response.dart';
 import 'package:bizly/modules/vendors/models/vendor_model.dart';
 import 'package:bizly/services/api_service.dart';
 import 'package:bizly/utils/app_dialouge.dart';
+import 'package:bizly/utils/app_utils.dart';
 import 'package:bizly/assets/images.dart';
 
 class VendorsController extends GetxController {
@@ -86,10 +87,11 @@ class VendorsController extends GetxController {
       filtered.removeWhere((v) => v.id == vendor.id);
       Get.back();
       Future.microtask(() {
-        Get.snackbar(
+        AppUtils.showAppSnackbar(
           "Success",
           "Vendor deleted successfully",
           snackPosition: SnackPosition.BOTTOM,
+          type: AppSnackType.success,
         );
       });
     } else {

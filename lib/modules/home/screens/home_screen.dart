@@ -6,6 +6,7 @@ import 'package:bizly/components/common/circle_icon_widget.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import 'package:bizly/routes/routes.dart';
@@ -28,16 +29,22 @@ class HomeScreen extends GetView<HomeScreenController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      extendBody: true,
-      appBar: CustomAppBar(
-        title: "Dashboard",
-        leading: Image.asset(AppImages.menu, height: 40),
-        onLeadingTap: () {
-          openDrawer?.call();
-        },
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: AppColors.background,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
       ),
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        extendBody: true,
+        appBar: CustomAppBar(
+          title: "Dashboard",
+          leading: Image.asset(AppImages.menu, height: 40),
+          onLeadingTap: () {
+            openDrawer?.call();
+          },
+        ),
 
     body: Column(
         children: [
@@ -301,6 +308,7 @@ class HomeScreen extends GetView<HomeScreenController> {
           ),
 
         ],
+      ),
       ),
     );
   }

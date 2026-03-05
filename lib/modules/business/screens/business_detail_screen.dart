@@ -130,6 +130,7 @@ class BusinessDetailScreen extends GetView<BusinessDetailController> {
                           child: addDropdownButton(
                             leftText: '',
                             title: "Add",
+                            business: business,
                           ),
                         ),
                       ],
@@ -451,7 +452,7 @@ class BusinessDetailScreen extends GetView<BusinessDetailController> {
           _detailRow("Business Name", business.businessName),
           _detailRow("Address", business.businessAddress),
           _detailRow("Phone", business.phoneNumber),
-          _detailRow("Currency", business.currency),
+          //_detailRow("Currency", business.currency),
           if (controller.detailsExpanded.value) ...[
             _detailRow("Email", business.businessEmail),
             _detailRow("Tax / NTN", business.taxNtnNumber),
@@ -545,19 +546,36 @@ class BusinessDetailScreen extends GetView<BusinessDetailController> {
         height: 150,
         width: double.infinity,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Image.asset(
-          AppImages.background,
-          height: 150,
-          width: double.infinity,
-          fit: BoxFit.cover,
-        ),
+        errorBuilder: (_, __, ___) => _buildCoverPlaceholder(),
       );
     }
-    return Image.asset(
-      AppImages.background,
+    return _buildCoverPlaceholder();
+  }
+
+  Widget _buildCoverPlaceholder() {
+    return Container(
       height: 150,
       width: double.infinity,
-      fit: BoxFit.cover,
+      color: AppColors.textField,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Icon(
+            Icons.image_outlined,
+            color: AppColors.primary,
+            size: 28,
+          ),
+          SizedBox(height: 6),
+          Text(
+            "No cover image",
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

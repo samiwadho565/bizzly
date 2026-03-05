@@ -11,6 +11,7 @@ import 'package:bizly/components/common/task_card_widget.dart';
 import 'package:bizly/models/tasks_model.dart';
 import 'package:bizly/modules/tasks/controllers/task_detail_controller.dart';
 import 'package:bizly/utils/app_colors.dart';
+import 'package:bizly/utils/app_utils.dart';
 import 'package:bizly/utils/date_formats.dart';
 
 class TaskDetailScreen extends GetView<TaskDetailController> {
@@ -265,16 +266,18 @@ class TaskDetailScreen extends GetView<TaskDetailController> {
       final String filePath =
           '${dir.path}/task_image_${DateTime.now().millisecondsSinceEpoch}.$ext';
       await Dio().download(imageUrl, filePath);
-      Get.snackbar(
+      AppUtils.showAppSnackbar(
         "Downloaded",
         "Saved to $filePath",
         snackPosition: SnackPosition.BOTTOM,
+        type: AppSnackType.success,
       );
     } catch (_) {
-      Get.snackbar(
+      AppUtils.showAppSnackbar(
         "Error",
         "Unable to download image",
         snackPosition: SnackPosition.BOTTOM,
+        type: AppSnackType.error,
       );
     }
   }

@@ -8,6 +8,7 @@ import 'package:bizly/modules/customers/models/customer_model.dart';
 import 'package:bizly/modules/team/models/employee_model.dart';
 import 'package:bizly/services/api_service.dart';
 import 'package:bizly/utils/app_dialouge.dart';
+import 'package:bizly/utils/app_utils.dart';
 
 class TeamController extends GetxController {
   final TextEditingController searchController = TextEditingController();
@@ -110,12 +111,13 @@ class TeamController extends GetxController {
     isSubmitting.value = false;
 
     if (!response.success) {
-      Get.snackbar(
+      AppUtils.showAppSnackbar(
         "Error",
         response.message,
         snackPosition: SnackPosition.BOTTOM,
+        type: AppSnackType.error,
         backgroundColor: Colors.red.shade100,
-        colorText: Colors.black,
+        textColor: Colors.black,
       );
       return null;
     }

@@ -57,6 +57,7 @@ class AddExpenseScreenController extends GetxController {
   final RxnInt selectedCustomerId = RxnInt();
   final RxnInt selectedVendorId = RxnInt();
   final RxnInt selectedBusinessId = RxnInt();
+  final RxBool isBusinessLocked = false.obs;
 
   ExpenseModel expenseModel = ExpenseModel();
 
@@ -84,7 +85,10 @@ class AddExpenseScreenController extends GetxController {
     resetFormState();
     final dynamic args = Get.arguments;
     if (args is ExpenseModel) {
+      isBusinessLocked.value = false;
       loadForEditFromModel(args);
+    } else {
+      _applyBusinessSelectionFromArgs(args);
     }
     // Sample data
     expenses.addAll([
@@ -119,6 +123,8 @@ class AddExpenseScreenController extends GetxController {
   }
 
   void resetFormState() {
+    final int? lockedBusinessId =
+        isBusinessLocked.value ? selectedBusinessId.value : null;
     expenseType.value = '';
     hasSelectedExpenseType.value = false;
     hasSelectedDate.value = false;
@@ -127,7 +133,7 @@ class AddExpenseScreenController extends GetxController {
     selectedPaymentMethodId.value = null;
     selectedCustomerId.value = null;
     selectedVendorId.value = null;
-    selectedBusinessId.value = null;
+    selectedBusinessId.value = lockedBusinessId;
     titleController.clear();
     amountController.clear();
     referenceNumberController.clear();
@@ -140,6 +146,35 @@ class AddExpenseScreenController extends GetxController {
     isRecurringMonthly.value = false;
     editingExpenseId.value = null;
     didResetForm.value = true;
+  }
+
+  void _applyBusinessSelectionFromArgs(dynamic args) {
+    int? businessId;
+    bool lockBusiness = true;
+
+    if (args is BusinessModel) {
+      businessId = args.id;
+    } else if (args is Map) {
+      final Map<String, dynamic> map = Map<String, dynamic>.from(args as Map);
+      businessId = _asInt(map['businessId'] ?? map['business_id']);
+      if (businessId == null && map['business'] is BusinessModel) {
+        businessId = (map['business'] as BusinessModel).id;
+      }
+      if (map['lockBusiness'] is bool) {
+        lockBusiness = map['lockBusiness'] as bool;
+      }
+    }
+
+    if (businessId != null) {
+      selectedBusinessId.value = businessId;
+      isBusinessLocked.value = lockBusiness;
+    }
+  }
+
+  int? _asInt(dynamic value) {
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    return null;
   }
 
   void setCategory(String c) {

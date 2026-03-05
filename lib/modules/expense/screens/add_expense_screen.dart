@@ -131,17 +131,20 @@ class AddExpenseScreen extends GetView<AddExpenseScreenController>{
                                 borderRadius: BorderRadius.circular(15),
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                    controller.hasSelectedDate.value
-                                        ? "${controller.selectedDate.value.day}-${controller.selectedDate.value.month}-${controller.selectedDate.value.year}"
-                                        : "Expanse Date",
-                                    style: TextStyle(
-                                      color: controller.hasSelectedDate.value
-                                          ? Colors.black
-                                          : Colors.grey.shade700,
-                                      fontSize: 15,
+                                  Expanded(
+                                    child: Text(
+                                      controller.hasSelectedDate.value
+                                          ? "${controller.selectedDate.value.day}-${controller.selectedDate.value.month}-${controller.selectedDate.value.year}"
+                                          : "Expanse Date",
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: controller.hasSelectedDate.value
+                                            ? Colors.black
+                                            : Colors.grey.shade700,
+                                        fontSize: 15,
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 5),
@@ -453,20 +456,26 @@ class AddExpenseScreen extends GetView<AddExpenseScreenController>{
           }
         }
       }
-      return _buildSelectionRow(
-        hintText: "Business",
-        items: items,
-        selectedItem: selectedName,
-        onChanged: (value) {
-          int? id;
-          for (final item in controller.businesses) {
-            if (item.businessName == value) {
-              id = item.id;
-              break;
-            }
-          }
-          controller.selectedBusinessId.value = id;
-        },
+      return IgnorePointer(
+        ignoring: controller.isBusinessLocked.value,
+        child: Opacity(
+          opacity: controller.isBusinessLocked.value ? 0.75 : 1,
+          child: _buildSelectionRow(
+            hintText: "Business",
+            items: items,
+            selectedItem: selectedName,
+            onChanged: (value) {
+              int? id;
+              for (final item in controller.businesses) {
+                if (item.businessName == value) {
+                  id = item.id;
+                  break;
+                }
+              }
+              controller.selectedBusinessId.value = id;
+            },
+          ),
+        ),
       );
     });
   }

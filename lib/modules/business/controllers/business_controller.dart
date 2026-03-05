@@ -10,6 +10,7 @@ import 'package:bizly/models/api_response.dart';
 import 'package:bizly/utils/app_dialouge.dart';
 import 'package:bizly/assets/images.dart';
 import 'package:bizly/routes/routes.dart';
+import 'package:bizly/utils/app_utils.dart';
 
 class BusinessDetailController extends GetxController {
   /// Selected Tab
@@ -145,12 +146,11 @@ class BusinessDetailController extends GetxController {
       _removeFromHome(id);
       Get.back();
       Future.microtask(() {
-        Get.snackbar(
+        AppUtils.showAppSnackbar(
           "Success",
           "Business deleted successfully",
           snackPosition: SnackPosition.BOTTOM,
-          // backgroundColor: const Color(0xFF16A34A),
-          // colorText: Colors.white,
+          type: AppSnackType.success,
         );
       });
     } else {

@@ -156,15 +156,17 @@ class AppDialogs {
     required String title,
     String? message,
     required List<AppDialogAction> actions,
-    bool barrierDismissible = true,
+    bool barrierDismissible = false,
+    bool backDismissible = false,
   }) {
+    final Widget dialog = _AppActionDialog(
+      iconPath: iconPath,
+      title: title,
+      message: message,
+      actions: actions,
+    );
     Get.dialog(
-      _AppActionDialog(
-        iconPath: iconPath,
-        title: title,
-        message: message,
-        actions: actions,
-      ),
+      backDismissible ? dialog : PopScope(canPop: false, child: dialog),
       barrierDismissible: barrierDismissible,
     );
   }

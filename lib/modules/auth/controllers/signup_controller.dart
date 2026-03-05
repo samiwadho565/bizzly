@@ -5,6 +5,7 @@ import 'package:bizly/modules/auth/models/user_model.dart';
 import 'package:bizly/services/api_service.dart';
 import 'package:bizly/services/local_storage.dart';
 import 'package:bizly/app/constants/app_urls.dart';
+import 'package:bizly/utils/app_utils.dart';
 
 class SignupController extends GetxController {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
@@ -47,7 +48,11 @@ class SignupController extends GetxController {
       }
     }
 
-    Get.snackbar(response.success ? 'Success' : 'Error', response.message);
+    AppUtils.showAppSnackbar(
+      response.success ? 'Success' : 'Error',
+      response.message,
+      type: response.success ? AppSnackType.success : AppSnackType.error,
+    );
     isLoading.value = false;
     return user;
   }

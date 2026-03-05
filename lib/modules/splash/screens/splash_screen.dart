@@ -2,6 +2,7 @@ import 'package:bizly/assets/images.dart';
 import 'package:bizly/routes/routes.dart';
 import 'package:bizly/services/local_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -39,14 +40,21 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: Hero(
-          tag: 'logo',
-          child: Image.asset(
-            AppImages.logo,
-            width: 180,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.white,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Hero(
+            tag: 'logo',
+            child: Image.asset(
+              AppImages.logo,
+              width: 180,
+            ),
           ),
         ),
       ),

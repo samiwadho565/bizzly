@@ -1,4 +1,5 @@
 import 'package:bizly/components/common/add_button.dart';
+import 'package:bizly/modules/business/models/business_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -6,13 +7,17 @@ import 'package:get/get.dart';
 import 'package:bizly/routes/routes.dart';
 import 'package:bizly/utils/app_colors.dart';
 
-Widget addDropdownButton({required String leftText, required String title}) {
+Widget addDropdownButton({
+  required String leftText,
+  required String title,
+  BusinessModel? business,
+}) {
   final List<Map<String, dynamic>> items = [
-    {
-      'text': 'Add New Business',
-      'icon': Icons.receipt_long,
-      'route': Routes.addNewBusiness, // define this route in your Routes
-    },
+    // {
+    //   'text': 'Add New Business',
+    //   'icon': Icons.receipt_long,
+    //   'route': Routes.addNewBusiness, // define this route in your Routes
+    // },
     {
       'text': 'Add Expense',
       'icon': Icons.money,
@@ -55,7 +60,22 @@ Widget addDropdownButton({required String leftText, required String title}) {
           final selectedItem =
           items.firstWhere((item) => item['text'] == value);
           if (selectedItem['route'] != null) {
-            Get.toNamed(selectedItem['route']); // Navigate to the route
+            final String route = selectedItem['route'] as String;
+            final bool shouldLockBusiness =
+                route == Routes.addExpenseScreen ||
+                    route == Routes.createInvoiceScreen;
+            final int? businessId = business?.id;
+            if (shouldLockBusiness && businessId != null) {
+              Get.toNamed(
+                route,
+                arguments: <String, dynamic>{
+                  'businessId': businessId,
+                  'lockBusiness': true,
+                },
+              );
+              return;
+            }
+            Get.toNamed(route); // Navigate to the route
           }
         },
         color: Colors.white,

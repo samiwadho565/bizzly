@@ -6,6 +6,7 @@ import 'package:bizly/modules/auth/models/user_model.dart';
 import 'package:bizly/routes/routes.dart';
 import 'package:bizly/services/api_service.dart';
 import 'package:bizly/services/local_storage.dart';
+import 'package:bizly/utils/app_utils.dart';
 
 class SignInController extends GetxController {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
@@ -76,10 +77,11 @@ class SignInController extends GetxController {
       }
 
     }else{
-      Get.snackbar(
-          'Error',
-          response.message,snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red
+      AppUtils.showAppSnackbar(
+        'Error',
+        response.message,
+        snackPosition: SnackPosition.BOTTOM,
+        type: AppSnackType.error,
       );
     }
 

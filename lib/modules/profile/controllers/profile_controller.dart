@@ -14,6 +14,7 @@ import 'package:bizly/services/api_service.dart';
 import 'package:bizly/app/constants/app_urls.dart';
 import 'package:bizly/models/api_response.dart';
 import 'package:bizly/utils/app_dialouge.dart';
+import 'package:bizly/utils/app_utils.dart';
 import 'package:bizly/assets/images.dart';
 import 'package:bizly/routes/routes.dart';
 import 'package:bizly/components/common/custom_button.dart';
@@ -152,10 +153,11 @@ class ProfileController extends GetxController {
       avatarFile.value = null;
 
       Future.microtask(() {
-        Get.snackbar(
+        AppUtils.showAppSnackbar(
           "Success",
           "Profile updated successfully",
           snackPosition: SnackPosition.TOP,
+          type: AppSnackType.success,
         );
       });
     } else {
@@ -309,10 +311,11 @@ class ProfileController extends GetxController {
       await LocalStorage.clearAuthToken();
       await LocalStorage.clearUser();
       Get.offAllNamed(Routes.loginScreen);
-      Get.snackbar(
+      AppUtils.showAppSnackbar(
         "Success",
         "Account deleted successfully",
         snackPosition: SnackPosition.BOTTOM,
+        type: AppSnackType.success,
       );
     } else {
       AppDialogs.showActionDialog(

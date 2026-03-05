@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:bizly/utils/app_colors.dart';
 
@@ -11,12 +12,17 @@ class CustomTextField extends StatefulWidget {
   final TextInputAction? textInputAction;
   final TextInputType? keyboardType;
   final ValueChanged<String>? onFieldSubmitted;
- final double? verticalPadding;
- final int maxLine;
+  final double? verticalPadding;
+  final int maxLine;
   final bool enabled;
+  final bool readOnly;
+  final VoidCallback? onTap;
+  final Widget? suffixIcon;
+  final GlobalKey<FormFieldState<String>>? fieldKey;
+  final List<TextInputFormatter>? inputFormatters;
   const CustomTextField({
     super.key,
-    this.maxLine=1,
+    this.maxLine = 1,
     this.verticalPadding,
     required this.hintText,
     this.isPassword = false,
@@ -27,6 +33,11 @@ class CustomTextField extends StatefulWidget {
     this.keyboardType,
     this.onFieldSubmitted,
     this.enabled = true,
+    this.readOnly = false,
+    this.onTap,
+    this.suffixIcon,
+    this.fieldKey,
+    this.inputFormatters,
   });
 
   @override
@@ -39,14 +50,18 @@ class _CustomTextFieldState extends State<CustomTextField> {
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      key: widget.fieldKey,
       maxLines: widget.maxLine,
       controller: widget.controller,
       enabled: widget.enabled,
+      readOnly: widget.readOnly,
       validator: widget.validator,
       focusNode: widget.focusNode,
       textInputAction: widget.textInputAction,
       keyboardType: widget.keyboardType,
       onFieldSubmitted: widget.onFieldSubmitted,
+      onTap: widget.onTap,
+      inputFormatters: widget.inputFormatters,
       // onEditingComplete: () {
       //   if (widget.textInputAction == TextInputAction.next) {
       //     FocusScope.of(context).nextFocus();
@@ -62,7 +77,10 @@ class _CustomTextFieldState extends State<CustomTextField> {
 // focusColor: AppColors.primaryDense,
         filled: true,
         isDense: true,
-        contentPadding:  EdgeInsets.symmetric(horizontal: 20, vertical:widget.verticalPadding?? 18),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: widget.verticalPadding ?? 18,
+        ),
         border: InputBorder.none, // Border remove kar diya style ke liye
         labelStyle: TextStyle(color: Colors.grey.shade700, fontSize: 16),
         errorStyle: const TextStyle(fontSize: 12),
@@ -104,17 +122,19 @@ class _CustomTextFieldState extends State<CustomTextField> {
         // Password field ke liye eye icon
         suffixIcon: widget.isPassword
             ? IconButton(
-          icon: Icon(
-            _obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-            color:  AppColors.primary.withOpacity(0.5), // Image wala icon color
-          ),
-          onPressed: () {
-            setState(() {
-              _obscureText = !_obscureText;
-            });
-          },
-        )
-            : null,
+                icon: Icon(
+                  _obscureText
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                  color: AppColors.primary.withOpacity(0.5),
+                ),
+                onPressed: () {
+                  setState(() {
+                    _obscureText = !_obscureText;
+                  });
+                },
+              )
+            : widget.suffixIcon,
       ),
     );
   }

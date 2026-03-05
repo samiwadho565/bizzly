@@ -12,7 +12,44 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:bizly/components/common/custom_tab_bar.dart';
 import 'app_colors.dart';
 
+enum AppSnackType { info, success, error, warning }
+
 class AppUtils {
+  static void showAppSnackbar(
+    String title,
+    String message, {
+    SnackPosition snackPosition = SnackPosition.TOP,
+    AppSnackType type = AppSnackType.info,
+    Duration duration = const Duration(seconds: 3),
+    Color? backgroundColor,
+    Color textColor = Colors.white,
+  }) {
+    Color resolvedBackground = backgroundColor ?? AppColors.primary.withAlpha(220);
+    if (backgroundColor == null) {
+      if (type == AppSnackType.success) {
+        resolvedBackground = AppColors.primary.withAlpha(220);
+      } else if (type == AppSnackType.error) {
+        resolvedBackground = Colors.red.shade600;
+      } else if (type == AppSnackType.warning) {
+        resolvedBackground = Colors.orange.shade700;
+      }
+    }
+
+    if (Get.isSnackbarOpen) {
+      Get.closeCurrentSnackbar();
+    }
+
+    Get.snackbar(
+      title,
+      message,
+      snackPosition: snackPosition,
+      backgroundColor: resolvedBackground,
+      colorText: textColor,
+      duration: duration,
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      borderRadius: 12,
+    );
+  }
 
   /// 🔹 Reusable Date Picker
   static Future<DateTime?> pickDate({

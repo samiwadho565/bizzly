@@ -473,16 +473,18 @@ class CreateTaskScreen extends GetView<CreateTaskController> {
       final String targetPath =
           '${dir.path}/task_local_${DateTime.now().millisecondsSinceEpoch}.$ext';
       await source.copy(targetPath);
-      Get.snackbar(
+      AppUtils.showAppSnackbar(
         "Downloaded",
         "Saved to $targetPath",
         snackPosition: SnackPosition.BOTTOM,
+        type: AppSnackType.success,
       );
     } catch (_) {
-      Get.snackbar(
+      AppUtils.showAppSnackbar(
         "Error",
         "Unable to save image",
         snackPosition: SnackPosition.BOTTOM,
+        type: AppSnackType.error,
       );
     }
   }
@@ -532,16 +534,18 @@ class CreateTaskScreen extends GetView<CreateTaskController> {
       final String filePath =
           '${dir.path}/task_image_${DateTime.now().millisecondsSinceEpoch}.$ext';
       await Dio().download(imageUrl, filePath);
-      Get.snackbar(
+      AppUtils.showAppSnackbar(
         "Downloaded",
         "Saved to $filePath",
         snackPosition: SnackPosition.BOTTOM,
+        type: AppSnackType.success,
       );
     } catch (_) {
-      Get.snackbar(
+      AppUtils.showAppSnackbar(
         "Error",
         "Unable to download image",
         snackPosition: SnackPosition.BOTTOM,
+        type: AppSnackType.error,
       );
     }
   }

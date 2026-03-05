@@ -8,6 +8,7 @@ import 'package:bizly/modules/company_assets/models/assets_model.dart';
 import 'package:bizly/modules/team/models/employee_model.dart';
 import 'package:bizly/services/api_service.dart';
 import 'package:bizly/utils/app_dialouge.dart';
+import 'package:bizly/utils/app_utils.dart';
 import 'package:bizly/utils/date_formats.dart';
 
 class CompanyAssetsController extends GetxController {
@@ -315,10 +316,11 @@ class CompanyAssetsController extends GetxController {
 
     assets.removeWhere((a) => a.id == asset.id);
     filtered.removeWhere((a) => a.id == asset.id);
-    Get.snackbar(
+    AppUtils.showAppSnackbar(
       "Success",
       "Asset deleted successfully",
       snackPosition: SnackPosition.BOTTOM,
+      type: AppSnackType.success,
     );
   }
 
