@@ -6,37 +6,11 @@ import 'package:bizly/components/common/custom_button.dart';
 import 'package:bizly/components/common/custom_drop_down.dart';
 import 'package:bizly/components/common/custom_text_field.dart';
 import 'package:bizly/modules/team/controllers/team_controller.dart';
-import 'package:bizly/modules/team/models/employee_model.dart';
 import 'package:bizly/utils/app_colors.dart';
-import 'package:bizly/utils/form_validations.dart';
 
-class AddEmployeeScreen extends StatefulWidget {
-  const AddEmployeeScreen({super.key});
-
-  @override
-  State<AddEmployeeScreen> createState() => _AddEmployeeScreenState();
-}
-
-class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
-  late final TeamController controller;
-  final FocusNode _nameFocus = FocusNode();
-  final FocusNode _emailFocus = FocusNode();
-  final FocusNode _phoneFocus = FocusNode();
-  final FocusNode _addressFocus = FocusNode();
-  final FocusNode _roleFocus = FocusNode();
-  final FocusNode _salaryFocus = FocusNode();
-  final FocusNode _notesFocus = FocusNode();
-
-  @override
-  void initState() {
-    super.initState();
-    controller = Get.find<TeamController>();
-    final dynamic args = Get.arguments;
-    if (args is EmployeeModel) {
-      controller.loadForEdit(args);
-    } else {
-      controller.resetCreateForm();
-    }
+class AddEmployeeScreen extends GetView<TeamController> {
+  AddEmployeeScreen({super.key}) {
+    controller.prepareCreateForm(Get.arguments);
   }
 
   @override
@@ -79,89 +53,127 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 18),
+                      const Text(
+                        "Required Details",
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        "Full Name",
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       CustomTextField(
-                        hintText: "Full Name",
+                        fieldKey: controller.nameFieldKey,
+                        hintText: "Enter full name",
                         controller: controller.nameController,
-                        focusNode: _nameFocus,
+                        inputFormatters: controller.employeeNameInputFormatters,
                         textInputAction: TextInputAction.next,
-                        onFieldSubmitted: (_) =>
-                            FocusScope.of(context).requestFocus(_emailFocus),
-                        validator: (v) => FormValidations.validateRequiredMin3(
-                          v ?? '',
-                          fieldName: "Full Name",
-                        ),
+                        validator: controller.employeeNameValidator,
                         verticalPadding: 15,
                       ),
                       const SizedBox(height: 12),
+                      const Text(
+                        "Email Address",
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       CustomTextField(
-                        hintText: "Email",
+                        fieldKey: controller.emailFieldKey,
+                        hintText: "Enter email address",
                         controller: controller.emailController,
-                        focusNode: _emailFocus,
+                        inputFormatters: controller.employeeEmailInputFormatters,
                         textInputAction: TextInputAction.next,
-                        onFieldSubmitted: (_) =>
-                            FocusScope.of(context).requestFocus(_phoneFocus),
                         keyboardType: TextInputType.emailAddress,
-                        validator: (v) => FormValidations.validateEmail(v ?? ''),
+                        validator: controller.employeeEmailValidator,
                         verticalPadding: 15,
                       ),
                       const SizedBox(height: 12),
+                      const Text(
+                        "Phone Number",
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       CustomTextField(
-                        hintText: "Phone Number",
+                        fieldKey: controller.phoneFieldKey,
+                        hintText: "Enter phone number",
                         controller: controller.phoneController,
-                        focusNode: _phoneFocus,
+                        inputFormatters: controller.employeePhoneInputFormatters,
                         textInputAction: TextInputAction.next,
-                        onFieldSubmitted: (_) =>
-                            FocusScope.of(context).requestFocus(_addressFocus),
                         keyboardType: TextInputType.phone,
-                        validator: (v) => FormValidations.validateRequired(
-                          v ?? '',
-                          fieldName: "Phone Number",
-                        ),
+                        validator: controller.employeePhoneValidator,
                         verticalPadding: 15,
                       ),
                       const SizedBox(height: 12),
+                      const Text(
+                        "Address",
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       CustomTextField(
-                        hintText: "Address",
+                        fieldKey: controller.addressFieldKey,
+                        hintText: "Enter address",
                         controller: controller.addressController,
-                        focusNode: _addressFocus,
+                        inputFormatters: controller.employeeAddressInputFormatters,
                         textInputAction: TextInputAction.next,
-                        onFieldSubmitted: (_) =>
-                            FocusScope.of(context).requestFocus(_roleFocus),
-                        validator: (v) => FormValidations.validateRequired(
-                          v ?? '',
-                          fieldName: "Address",
-                        ),
+                        validator: controller.employeeAddressValidator,
                         verticalPadding: 15,
                       ),
                       const SizedBox(height: 12),
+                      const Text(
+                        "Role / Designation",
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       CustomTextField(
-                        hintText: "Role / Designation",
+                        fieldKey: controller.roleFieldKey,
+                        hintText: "Enter role / designation",
                         controller: controller.roleController,
-                        focusNode: _roleFocus,
+                        inputFormatters: controller.employeeRoleInputFormatters,
                         textInputAction: TextInputAction.next,
-                        onFieldSubmitted: (_) =>
-                            FocusScope.of(context).requestFocus(_salaryFocus),
-                        validator: (v) => FormValidations.validateRequired(
-                          v ?? '',
-                          fieldName: "Role",
-                        ),
+                        validator: controller.employeeRoleValidator,
                         verticalPadding: 15,
                       ),
                       const SizedBox(height: 12),
+                      const Text(
+                        "Salary",
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       CustomTextField(
-                        hintText: "Salary",
+                        fieldKey: controller.salaryFieldKey,
+                        hintText: "Enter salary",
                         controller: controller.salaryController,
-                        focusNode: _salaryFocus,
+                        inputFormatters: controller.employeeSalaryInputFormatters,
                         textInputAction: TextInputAction.next,
-                        onFieldSubmitted: (_) =>
-                            FocusScope.of(context).requestFocus(_notesFocus),
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
-                        validator: (v) => FormValidations.validateRequiredNumber(
-                          v ?? '',
-                          fieldName: "Salary",
-                        ),
+                        validator: controller.employeeSalaryValidator,
                         verticalPadding: 15,
                       ),
                       const SizedBox(height: 12),
@@ -185,16 +197,30 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        "Optional Details",
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
                       const SizedBox(height: 12),
+                      const Text(
+                        "Notes",
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       CustomTextField(
-                        hintText: "Notes (optional)",
+                        fieldKey: controller.notesFieldKey,
+                        hintText: "Add notes (optional)",
                         controller: controller.notesController,
-                        focusNode: _notesFocus,
+                        inputFormatters: controller.employeeNotesInputFormatters,
                         textInputAction: TextInputAction.done,
-                        onFieldSubmitted: (_) =>
-                            FocusManager.instance.primaryFocus?.unfocus(),
                         verticalPadding: 15,
                         maxLine: 3,
+                        validator: controller.employeeNotesValidator,
                       ),
                       const SizedBox(height: 25),
                       Obx(
@@ -205,13 +231,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                           isLoading: controller.isSubmitting.value,
                           onPressed: controller.isSubmitting.value
                               ? () {}
-                              : () async {
-                                  final EmployeeModel? saved =
-                                      await controller.submitEmployee();
-                                  if (saved == null) return;
-                                  controller.resetCreateForm();
-                                  Get.back(result: saved);
-                                },
+                              : controller.submitEmployeeAndClose,
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -224,17 +244,5 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _nameFocus.dispose();
-    _emailFocus.dispose();
-    _phoneFocus.dispose();
-    _addressFocus.dispose();
-    _roleFocus.dispose();
-    _salaryFocus.dispose();
-    _notesFocus.dispose();
-    super.dispose();
   }
 }

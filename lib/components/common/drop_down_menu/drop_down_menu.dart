@@ -70,6 +70,7 @@ Widget addDropdownButton({
                 route,
                 arguments: <String, dynamic>{
                   'businessId': businessId,
+                  'businessName': business?.businessName,
                   'lockBusiness': true,
                 },
               );

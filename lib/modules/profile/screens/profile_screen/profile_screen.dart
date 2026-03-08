@@ -81,16 +81,16 @@ class ProfileScreen extends GetView<ProfileController> {
                                 height: 80,
                                 fit: BoxFit.cover,
                                 placeholder: (_, __) => const Image(
-                                  image: AssetImage(AppImages.bizzlyLogo),
+                                  image: AssetImage(AppImages.profilePlaceholder),
                                   fit: BoxFit.cover,
                                 ),
                                 errorWidget: (_, __, ___) => const Image(
-                                  image: AssetImage(AppImages.bizzlyLogo),
+                                  image: AssetImage(AppImages.profilePlaceholder),
                                   fit: BoxFit.cover,
                                 ),
                               )
                             : const Image(
-                                image: AssetImage(AppImages.bizzlyLogo),
+                                image: AssetImage(AppImages.profilePlaceholder),
                                 fit: BoxFit.cover,
                               )),
                   ),

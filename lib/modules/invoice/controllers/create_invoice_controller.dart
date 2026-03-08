@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:bizly/utils/date_formats.dart';
 import 'package:bizly/app/constants/app_urls.dart';
@@ -12,11 +13,21 @@ import 'package:bizly/modules/business/models/business_model.dart';
 import 'package:bizly/modules/invoice/controllers/invoice_screen_controller.dart';
 import 'package:bizly/modules/invoice/models/invoice_item_model.dart';
 import 'package:bizly/modules/invoice/models/invoice_model.dart';
+import 'package:bizly/utils/app_utils.dart';
+import 'package:bizly/utils/form_validations.dart';
 
 class CreateInvoiceController extends GetxController {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  final GlobalKey<FormFieldState<String>> partialPaidFieldKey =
+      GlobalKey<FormFieldState<String>>();
+  final GlobalKey<FormFieldState<String>> notesFieldKey =
+      GlobalKey<FormFieldState<String>>();
+  final GlobalKey customerFieldKey = GlobalKey();
+  final GlobalKey invoiceDateFieldKey = GlobalKey();
+  final GlobalKey statusFieldKey = GlobalKey();
+  final GlobalKey businessFieldKey = GlobalKey();
+  final GlobalKey paymentMethodFieldKey = GlobalKey();
 
-  final TextEditingController invoiceNumberController = TextEditingController();
   final TextEditingController notesController = TextEditingController();
   final TextEditingController partialPaidAmountController = TextEditingController();
   final Rxn<DateTime> invoiceDate = Rxn<DateTime>();
@@ -30,28 +41,126 @@ class CreateInvoiceController extends GetxController {
   final RxnInt selectedCustomerId = RxnInt();
   final RxnInt selectedBusinessId = RxnInt();
   final RxnInt selectedPaymentMethodId = RxnInt();
+  final RxBool isCustomerLocked = false.obs;
+  final RxString lockedCustomerName = ''.obs;
   final RxBool isBusinessLocked = false.obs;
+  final RxString lockedBusinessName = ''.obs;
+  final Rxn<BusinessModel> selectedBusinessDetails = Rxn<BusinessModel>();
 
   final RxBool isLoading = false.obs;
   final RxBool isSubmitting = false.obs;
+  final RxBool showSelectionErrors = false.obs;
   final RxnInt editingInvoiceId = RxnInt();
   final Rxn<InvoiceModel> editingInvoice = Rxn<InvoiceModel>();
 
   final RxList<InvoiceItemModel> items = <InvoiceItemModel>[].obs;
 
+  static const int invoiceNotesMax = 300;
+  static const int partialPaidAmountMax = 15;
+  static const int itemNameMax = 80;
+  static const int itemQtyMax = 7;
+  static const int itemUnitPriceMax = 15;
+
   bool get isPaidStatus => status.value == 'paid';
   bool get isPartialPaidStatus => status.value == 'partialy-paid';
   double get invoiceItemsTotal => _calculateItemsTotal(items);
+  double get invoiceSubtotal => invoiceItemsTotal;
+  double get invoiceTaxPercent {
+    final double? fromDetail =
+        _toDouble(selectedBusinessDetails.value?.invoiceTaxPercentage);
+    if (fromDetail != null) return fromDetail;
+    final int? id = selectedBusinessId.value;
+    if (id == null) return 0;
+    for (final BusinessModel business in businesses) {
+      if (business.id == id) {
+        return _toDouble(business.invoiceTaxPercentage) ?? 0;
+      }
+    }
+    return 0;
+  }
+  double get invoiceTaxAmount {
+    if (!taxEnabled.value) return 0;
+    if (invoiceTaxPercent <= 0) return 0;
+    return (invoiceSubtotal * invoiceTaxPercent) / 100;
+  }
+  double get invoiceGrandTotal => invoiceSubtotal + invoiceTaxAmount;
+  String get invoiceCurrencyCode {
+    final String fromDetails =
+        (selectedBusinessDetails.value?.currency ?? '').trim();
+    if (fromDetails.isNotEmpty) return fromDetails;
+    final int? id = selectedBusinessId.value;
+    if (id != null) {
+      for (final BusinessModel business in businesses) {
+        if (business.id == id) {
+          final String code = business.currency.trim();
+          if (code.isNotEmpty) return code;
+        }
+      }
+    }
+    return 'PKR';
+  }
+
+  List<TextInputFormatter> get notesInputFormatters => <TextInputFormatter>[
+        LengthLimitingTextInputFormatter(invoiceNotesMax),
+      ];
+
+  List<TextInputFormatter> get partialPaidInputFormatters =>
+      <TextInputFormatter>[
+        FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+        LengthLimitingTextInputFormatter(partialPaidAmountMax),
+      ];
+
+  List<TextInputFormatter> get itemNameInputFormatters => <TextInputFormatter>[
+        LengthLimitingTextInputFormatter(itemNameMax),
+      ];
+
+  List<TextInputFormatter> get itemQtyInputFormatters => <TextInputFormatter>[
+        FilteringTextInputFormatter.digitsOnly,
+        LengthLimitingTextInputFormatter(itemQtyMax),
+      ];
+
+  List<TextInputFormatter> get itemUnitPriceInputFormatters =>
+      <TextInputFormatter>[
+        FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+        LengthLimitingTextInputFormatter(itemUnitPriceMax),
+      ];
+
+  FormFieldValidator<String> get notesValidator => (String? value) {
+        return FormValidations.validateCommonNotes(
+          value ?? '',
+          fieldName: "Notes",
+          maxLength: invoiceNotesMax,
+        );
+      };
+
+  FormFieldValidator<String> get partialPaidAmountValidator => (String? value) {
+        if (!isPartialPaidStatus) return null;
+        final String? base = FormValidations.validateCommonAmount(
+          value ?? '',
+          fieldName: "Partial Paid Amount",
+          maxChars: partialPaidAmountMax,
+          required: true,
+          allowZero: false,
+        );
+        if (base != null) return base;
+        final num? entered = num.tryParse((value ?? '').trim());
+        final double total = invoiceGrandTotal;
+        if (entered != null && entered >= total) {
+          return "Partial paid amount cannot be equal or exceed invoice total (${total.toStringAsFixed(2)})";
+        }
+        return null;
+      };
 
   @override
   void onInit() {
     super.onInit();
     final dynamic args = Get.arguments;
     if (args is InvoiceModel) {
+      isCustomerLocked.value = false;
       isBusinessLocked.value = false;
       loadForEdit(args);
     } else {
-      _applyBusinessSelectionFromArgs(args);
+      _applyPreselectedSelectionsFromArgs(args);
     }
     fetchDropdowns();
   }
@@ -63,11 +172,16 @@ class CreateInvoiceController extends GetxController {
   Future<void> fetchDropdowns() async {
     isLoading.value = true;
     try {
-      await Future.wait([
-        fetchCustomers(),
-        fetchBusinesses(),
+      final List<Future<void>> requests = <Future<void>>[
         fetchPaymentMethods(),
-      ]);
+      ];
+      if (!isBusinessLocked.value) {
+        requests.insert(0, fetchBusinesses());
+      }
+      if (!isCustomerLocked.value) {
+        requests.insert(0, fetchCustomers());
+      }
+      await Future.wait(requests);
     } finally {
       isLoading.value = false;
     }
@@ -109,6 +223,52 @@ class CreateInvoiceController extends GetxController {
             .toList(),
       );
     }
+  }
+
+  Future<void> _ensureSelectedBusinessDetails() async {
+    final int? id = selectedBusinessId.value;
+    if (id == null) {
+      selectedBusinessDetails.value = null;
+      return;
+    }
+    if (selectedBusinessDetails.value?.id == id) return;
+    final ApiResponse response = await ApiService().get(
+      '${AppUrls.getAllBusinesses}/$id',
+      isAuth: true,
+    );
+    if (!response.success || response.data is! Map) return;
+    final Map<String, dynamic> map =
+        Map<String, dynamic>.from(response.data as Map);
+    final Map<String, dynamic> payload =
+        map['data'] is Map ? Map<String, dynamic>.from(map['data'] as Map) : map;
+    selectedBusinessDetails.value = BusinessModel.fromJson(payload);
+  }
+
+  Future<void> onBusinessChanged(int? businessId) async {
+    selectedBusinessId.value = businessId;
+    if (businessId == null) {
+      selectedBusinessDetails.value = null;
+      taxEnabled.value = false;
+      return;
+    }
+    await _ensureSelectedBusinessDetails();
+  }
+
+  Future<void> onTaxToggle(bool enabled, {BuildContext? context}) async {
+    if (!enabled) {
+      taxEnabled.value = false;
+      return;
+    }
+    if (selectedBusinessId.value == null) {
+      AppUtils.showTopToast(
+        "Please select business first",
+        context: context,
+        atBottom: true,
+      );
+      return;
+    }
+    await _ensureSelectedBusinessDetails();
+    taxEnabled.value = true;
   }
 
   Future<void> fetchPaymentMethods() async {
@@ -158,7 +318,7 @@ class CreateInvoiceController extends GetxController {
       return;
     }
 
-    final double totalAmount = invoiceItemsTotal;
+    final double totalAmount = invoiceGrandTotal;
     if (!isEdit && isPartialPaidStatus) {
       final double? partialAmount = _toDouble(partialPaidAmountController.text);
       if (partialAmount == null || partialAmount <= 0) {
@@ -187,7 +347,6 @@ class CreateInvoiceController extends GetxController {
       customerId: selectedCustomerId.value,
       businessId: selectedBusinessId.value,
       paymentMethodId: selectedPaymentMethodId.value,
-      invoiceNumber: invoiceNumberController.text.trim(),
       invoiceDate: DateFormats.yyyyMmDd(invoiceDate.value!),
       status: status.value,
       notes: notesController.text.trim(),
@@ -218,7 +377,7 @@ class CreateInvoiceController extends GetxController {
 
       if (!isEdit && (isPaidStatus || isPartialPaidStatus)) {
         final double? paymentAmount = isPaidStatus
-            ? _toDouble(updatedInvoice.totalAmount) ?? totalAmount
+            ? _toDouble(updatedInvoice.totalAmount) ?? invoiceGrandTotal
             : _toDouble(partialPaidAmountController.text.trim());
         if (createdInvoiceId != null && paymentAmount != null && paymentAmount > 0) {
           final ApiResponse paymentResponse = await _createInvoicePayment(
@@ -299,6 +458,101 @@ class CreateInvoiceController extends GetxController {
     }
   }
 
+  Future<void> submitInvoiceFromForm() async {
+    if (isSubmitting.value) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+    showSelectionErrors.value = true;
+    final bool formOk = formKey.currentState?.validate() ?? false;
+    if (!formOk) {
+      await Future<void>.delayed(Duration.zero);
+      await _scrollToFirstTextError();
+      return;
+    }
+    if (!_hasRequiredSelections()) {
+      await Future<void>.delayed(Duration.zero);
+      await _scrollToFirstSelectionError();
+      return;
+    }
+    await createOrUpdateInvoice();
+  }
+
+  bool _hasRequiredSelections() {
+    return selectedCustomerId.value != null &&
+        selectedBusinessId.value != null &&
+        selectedPaymentMethodId.value != null &&
+        invoiceDate.value != null;
+  }
+
+  String? get customerSelectionError {
+    if (!showSelectionErrors.value || selectedCustomerId.value != null) return null;
+    return "Customer is required";
+  }
+
+  String? get invoiceDateSelectionError {
+    if (!showSelectionErrors.value || invoiceDate.value != null) return null;
+    return "Invoice Date is required";
+  }
+
+  String? get statusSelectionError {
+    if (!showSelectionErrors.value || status.value.trim().isNotEmpty) return null;
+    return "Status is required";
+  }
+
+  String? get businessSelectionError {
+    if (!showSelectionErrors.value || selectedBusinessId.value != null) return null;
+    return "Business is required";
+  }
+
+  String? get paymentMethodSelectionError {
+    if (!showSelectionErrors.value || selectedPaymentMethodId.value != null) return null;
+    return "Payment Method is required";
+  }
+
+  Future<void> _scrollToFirstTextError() async {
+    final List<GlobalKey<FormFieldState<String>>> keysInOrder =
+        <GlobalKey<FormFieldState<String>>>[
+      partialPaidFieldKey,
+      notesFieldKey,
+    ];
+
+    for (final GlobalKey<FormFieldState<String>> key in keysInOrder) {
+      final FormFieldState<String>? state = key.currentState;
+      final BuildContext? context = key.currentContext;
+      if (state?.hasError == true && context != null) {
+        await Scrollable.ensureVisible(
+          context,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          alignment: 0.15,
+        );
+        return;
+      }
+    }
+  }
+
+  Future<void> _scrollToFirstSelectionError() async {
+    final List<({bool invalid, GlobalKey key})> checks = <({bool invalid, GlobalKey key})>[
+      (invalid: selectedCustomerId.value == null, key: customerFieldKey),
+      (invalid: invoiceDate.value == null, key: invoiceDateFieldKey),
+      (invalid: status.value.trim().isEmpty, key: statusFieldKey),
+      (invalid: selectedBusinessId.value == null, key: businessFieldKey),
+      (invalid: selectedPaymentMethodId.value == null, key: paymentMethodFieldKey),
+    ];
+
+    for (final ({bool invalid, GlobalKey key}) check in checks) {
+      if (!check.invalid) continue;
+      final BuildContext? context = check.key.currentContext;
+      if (context == null) continue;
+      await Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        alignment: 0.15,
+      );
+      return;
+    }
+  }
+
   Future<InvoiceModel?> _fetchInvoiceById(int id) async {
     final ApiResponse response = await ApiService().get(
       '${AppUrls.createInvoice}/$id',
@@ -313,48 +567,88 @@ class CreateInvoiceController extends GetxController {
   }
 
   void _resetFormForNewInvoice() {
+    final int? lockedCustomerId =
+        isCustomerLocked.value ? selectedCustomerId.value : null;
     final int? lockedBusinessId =
         isBusinessLocked.value ? selectedBusinessId.value : null;
     editingInvoiceId.value = null;
-    invoiceNumberController.clear();
     notesController.clear();
     invoiceDate.value = null;
     partialPaidAmountController.clear();
     status.value = 'unpaid';
     taxEnabled.value = false;
-    selectedCustomerId.value = null;
+    selectedCustomerId.value = lockedCustomerId;
     selectedBusinessId.value = lockedBusinessId;
     selectedPaymentMethodId.value = null;
     items.clear();
+    showSelectionErrors.value = false;
+    selectedBusinessDetails.value = null;
   }
 
-  void _applyBusinessSelectionFromArgs(dynamic args) {
+  void _applyPreselectedSelectionsFromArgs(dynamic args) {
+    int? customerId;
+    String? customerName;
+    bool lockCustomer = true;
     int? businessId;
+    String? businessName;
     bool lockBusiness = true;
 
-    if (args is BusinessModel) {
+    if (args is CustomerModel) {
+      customerId = args.id;
+      customerName = args.customerName;
+    } else if (args is BusinessModel) {
       businessId = args.id;
+      businessName = args.businessName;
     } else if (args is Map) {
       final Map<String, dynamic> map = Map<String, dynamic>.from(args as Map);
+      customerId = _toInt(map['customerId'] ?? map['customer_id']);
+      customerName = map['customerName']?.toString();
+      if (customerId == null && map['customer'] is CustomerModel) {
+        final CustomerModel customer = map['customer'] as CustomerModel;
+        customerId = customer.id;
+        customerName ??= customer.customerName;
+      }
+      if (map['lockCustomer'] is bool) {
+        lockCustomer = map['lockCustomer'] as bool;
+      }
       businessId = _toInt(map['businessId'] ?? map['business_id']);
+      businessName = map['businessName']?.toString();
       if (businessId == null && map['business'] is BusinessModel) {
-        businessId = (map['business'] as BusinessModel).id;
+        final BusinessModel business = map['business'] as BusinessModel;
+        businessId = business.id;
+        businessName ??= business.businessName;
       }
       if (map['lockBusiness'] is bool) {
         lockBusiness = map['lockBusiness'] as bool;
       }
     }
 
+    if (customerName != null && customerName.trim().isNotEmpty) {
+      lockedCustomerName.value = customerName.trim();
+    }
+    if (customerId != null) {
+      selectedCustomerId.value = customerId;
+      isCustomerLocked.value = lockCustomer;
+      if (lockedCustomerName.value.isEmpty) {
+        lockedCustomerName.value = customerName ?? '';
+      }
+    }
     if (businessId != null) {
       selectedBusinessId.value = businessId;
       isBusinessLocked.value = lockBusiness;
+      lockedBusinessName.value = (businessName ?? '').trim();
+      if (lockedBusinessName.value.isEmpty) {
+        lockedBusinessName.value = _businessNameById(businessId) ?? '';
+      }
+      _ensureSelectedBusinessDetails();
+    } else if (businessName != null && businessName.trim().isNotEmpty) {
+      lockedBusinessName.value = businessName.trim();
     }
   }
 
   void loadForEdit(InvoiceModel model) {
     editingInvoice.value = model;
     editingInvoiceId.value = model.id;
-    invoiceNumberController.text = model.invoiceNumber ?? '';
     notesController.text = model.notes ?? '';
     status.value = model.status ?? 'unpaid';
     if (status.value == 'pending') {
@@ -372,6 +666,8 @@ class CreateInvoiceController extends GetxController {
     if (model.items.isNotEmpty) {
       items.addAll(model.items);
     }
+    _ensureSelectedBusinessDetails();
+    showSelectionErrors.value = false;
   }
 
   InvoiceModel _buildUpdatedInvoice({
@@ -399,7 +695,13 @@ class CreateInvoiceController extends GetxController {
             ? apiInvoice!.items
             : requestModel.items;
 
-    final double calculatedTotal = _calculateItemsTotal(resolvedItems);
+    final double calculatedSubtotal = _calculateItemsTotal(resolvedItems);
+    final bool resolvedTaxEnabled =
+        apiInvoice?.taxEnabled ?? requestModel.taxEnabled ?? previous?.taxEnabled ?? false;
+    final double taxPercent = invoiceTaxPercent;
+    final double calculatedTax =
+        resolvedTaxEnabled ? (calculatedSubtotal * taxPercent) / 100 : 0;
+    final double calculatedTotal = calculatedSubtotal + calculatedTax;
     final dynamic totalAmount =
         apiInvoice?.totalAmount ?? previous?.totalAmount ?? calculatedTotal;
     final dynamic paidAmount = apiInvoice?.paidAmount ?? previous?.paidAmount ?? 0;
@@ -425,10 +727,10 @@ class CreateInvoiceController extends GetxController {
           apiInvoice?.invoiceDate ?? requestModel.invoiceDate ?? previous?.invoiceDate,
       status: apiInvoice?.status ?? requestModel.status ?? previous?.status,
       notes: apiInvoice?.notes ?? requestModel.notes ?? previous?.notes,
-      taxEnabled:
-          apiInvoice?.taxEnabled ?? requestModel.taxEnabled ?? previous?.taxEnabled ?? false,
-      subtotalAmount: apiInvoice?.subtotalAmount ?? previous?.subtotalAmount ?? calculatedTotal,
-      taxAmount: apiInvoice?.taxAmount ?? previous?.taxAmount ?? 0,
+      taxEnabled: resolvedTaxEnabled,
+      subtotalAmount:
+          apiInvoice?.subtotalAmount ?? previous?.subtotalAmount ?? calculatedSubtotal,
+      taxAmount: apiInvoice?.taxAmount ?? previous?.taxAmount ?? calculatedTax,
       totalAmount: totalAmount,
       paidAmount: paidAmount,
       remainingAmount: remainingAmount,
@@ -516,7 +818,6 @@ class CreateInvoiceController extends GetxController {
 
   @override
   void onClose() {
-    invoiceNumberController.dispose();
     notesController.dispose();
     partialPaidAmountController.dispose();
     super.onClose();

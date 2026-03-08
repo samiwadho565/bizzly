@@ -4,12 +4,9 @@ import 'package:get/get.dart';
 import 'package:bizly/components/common/custom_app_bar_2.dart';
 import 'package:bizly/components/common/custom_search_field.dart';
 import 'package:bizly/components/common/loader/loader.dart';
-import 'package:bizly/modules/customers/models/customer_model.dart';
-import 'package:bizly/modules/customers/screens/customers_screen/customer_detail_screen.dart';
 import 'package:bizly/modules/team/controllers/team_controller.dart';
 import 'package:bizly/modules/team/models/employee_model.dart';
 import 'package:bizly/utils/app_colors.dart';
-import 'package:bizly/utils/app_dialouge.dart';
 import 'create_team_member.dart';
 import 'team_detail_screen.dart';
 
@@ -83,7 +80,7 @@ class TeamEmployeesScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
         onPressed: () async {
-          final dynamic result = await Get.to(() => const AddEmployeeScreen());
+          final dynamic result = await Get.to(() =>  AddEmployeeScreen());
           if (result is EmployeeModel) {
             controller.fetchEmployees();
           }
@@ -96,19 +93,8 @@ class TeamEmployeesScreen extends StatelessWidget {
   Widget _employeeCard(EmployeeModel employee) {
     final bool isActive = employee.status.toLowerCase() == "active";
     return GestureDetector(
-      onTap: () async {
-        if (employee.userId != null) {
-          AppDialogs.showLoading(message: "Loading customer...");
-          final CustomerModel? customer = await controller.fetchCustomerByUserId(
-            employee.userId!,
-          );
-          AppDialogs.closeDialog();
-          if (customer != null) {
-            await Get.to(() => CustomerDetailScreen(customer: customer));
-            return;
-          }
-        }
-        await Get.to(() => EmployeeDetailScreen(employee: employee));
+      onTap: () {
+        Get.to(() => EmployeeDetailScreen(employee: employee));
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 14),

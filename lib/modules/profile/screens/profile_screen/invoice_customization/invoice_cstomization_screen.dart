@@ -2,9 +2,11 @@ import 'dart:io';
 
 import 'package:bizly/components/common/custom_app_bar_2.dart';
 import 'package:bizly/components/common/custom_button.dart';
+import 'package:bizly/components/common/custom_drop_down.dart';
 import 'package:bizly/modules/profile/controllers/invoice_customization_controller.dart';
 import 'package:bizly/utils/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import 'invoice_preview_screen.dart';
@@ -13,6 +15,28 @@ class InvoiceCustomizationScreen extends StatelessWidget {
   InvoiceCustomizationScreen({super.key});
 
   final controller = Get.find<InvoiceCustomizationController>();
+  final List<Map<String, String>> _currencyOptions = const <Map<String, String>>[
+    {'country': 'Pakistan', 'code': 'PKR'},
+    {'country': 'United States', 'code': 'USD'},
+    {'country': 'United Kingdom', 'code': 'GBP'},
+    {'country': 'United Arab Emirates', 'code': 'AED'},
+    {'country': 'Saudi Arabia', 'code': 'SAR'},
+    {'country': 'India', 'code': 'INR'},
+    {'country': 'Bangladesh', 'code': 'BDT'},
+    {'country': 'Sri Lanka', 'code': 'LKR'},
+    {'country': 'China', 'code': 'CNY'},
+    {'country': 'Japan', 'code': 'JPY'},
+    {'country': 'Singapore', 'code': 'SGD'},
+    {'country': 'Malaysia', 'code': 'MYR'},
+    {'country': 'Australia', 'code': 'AUD'},
+    {'country': 'Canada', 'code': 'CAD'},
+    {'country': 'Eurozone', 'code': 'EUR'},
+    {'country': 'South Africa', 'code': 'ZAR'},
+    {'country': 'Turkey', 'code': 'TRY'},
+    {'country': 'Qatar', 'code': 'QAR'},
+    {'country': 'Kuwait', 'code': 'KWD'},
+    {'country': 'Oman', 'code': 'OMR'},
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -100,8 +124,22 @@ class InvoiceCustomizationScreen extends StatelessWidget {
               title: "Currency Settings",
               children: [
                 //Obx(() => _infoRow("Columns", controller.columns.value, onTap: () => controller.editField("Columns", controller.columns))),
-                Obx(() => _infoRow("Currency", controller.currency.value, onTap: () => controller.editField("Currency", controller.currency))),
-                Obx(() => _infoRow("Decimal Precision", controller.precision.value, onTap: () => controller.editField("Precision", controller.precision))),
+                Obx(() => _currencyDropdownRow(controller.currency.value)),
+                Obx(
+                  () => _infoRow(
+                    "Decimal Precision",
+                    controller.precision.value,
+                    onTap: () => controller.editField(
+                      "Precision",
+                      controller.precision,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: <TextInputFormatter>[
+                        FilteringTextInputFormatter.digitsOnly,
+                      ],
+                      sanitizeNumericInput: true,
+                    ),
+                  ),
+                ),
               ],
             ),
 
@@ -111,8 +149,41 @@ class InvoiceCustomizationScreen extends StatelessWidget {
             _buildSectionCard(
               title: "Payment Terms",
               children: [
-                Obx(() => _infoRow("Due Date", controller.dueDate.value, onTap: () => controller.editField("Due Date", controller.dueDate))),
-                Obx(() => _infoRow("Late Fee", controller.lateFee.value, onTap: () => controller.editField("Late Fee", controller.lateFee))),
+                Obx(
+                  () => _infoRow(
+                    "Due Date",
+                    controller.dueDate.value,
+                    onTap: () => controller.editField(
+                      "Due Date",
+                      controller.dueDate,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: <TextInputFormatter>[
+                        FilteringTextInputFormatter.digitsOnly,
+                      ],
+                      sanitizeNumericInput: true,
+                      onSaveTransform: (String value) {
+                        final int? days = int.tryParse(value.trim());
+                        if (days == null) return value.trim();
+                        return '$days ${days == 1 ? 'day' : 'days'}';
+                      },
+                    ),
+                  ),
+                ),
+                Obx(
+                  () => _infoRow(
+                    "Late Fee",
+                    controller.lateFee.value,
+                    onTap: () => controller.editField(
+                      "Late Fee",
+                      controller.lateFee,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: <TextInputFormatter>[
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                      ],
+                      sanitizeNumericInput: true,
+                    ),
+                  ),
+                ),
               ],
             ),
 
@@ -233,6 +304,7 @@ class InvoiceCustomizationScreen extends StatelessWidget {
           controller.limitedText(controller.terms.value, 120),
       additionalNotes:
           controller.limitedText(controller.additionalNotes.value, 100),
+      thankYouMessage: controller.thankYouMsg.value.trim(),
     ));
   }
 
@@ -325,5 +397,52 @@ class InvoiceCustomizationScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _currencyDropdownRow(String selectedCode) {
+    final List<String> currencyItems = _currencyOptions
+        .map((Map<String, String> item) => '${item['country']} (${item['code']})')
+        .toList();
+    final String? selectedLabel = _currencyLabelForCode(selectedCode);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Currency", style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+          const SizedBox(height: 6),
+          CustomSearchDropdown(
+            hintText: "Select currency",
+            items: currencyItems,
+            selectedItem: selectedLabel,
+            displayValue: selectedCode.trim().isNotEmpty ? selectedCode : null,
+            enableSearch: true,
+            height: 44,
+            onChanged: (String? value) {
+              if (value == null || value.trim().isEmpty) return;
+              controller.currency.value = _currencyCodeFromLabel(value);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _currencyCodeFromLabel(String label) {
+    final RegExpMatch? match = RegExp(r'\(([^)]+)\)$').firstMatch(label);
+    if (match == null) return label.trim();
+    return (match.group(1) ?? label).trim();
+  }
+
+  String? _currencyLabelForCode(String code) {
+    final String normalized = code.trim().toUpperCase();
+    if (normalized.isEmpty) return null;
+    for (final Map<String, String> option in _currencyOptions) {
+      if ((option['code'] ?? '').toUpperCase() == normalized) {
+        return '${option['country']} (${option['code']})';
+      }
+    }
+    return null;
   }
 }

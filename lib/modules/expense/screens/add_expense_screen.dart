@@ -1,4 +1,5 @@
 import 'package:bizly/modules/expense/controllers/expense_screen_controller.dart';
+import 'package:bizly/assets/images.dart';
 import 'package:bizly/utils/app_colors.dart';
 import 'package:bizly/components/common/custom_button.dart';
 import 'package:bizly/components/common/custom_text_field.dart';
@@ -8,10 +9,11 @@ import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:bizly/routes/routes.dart';
 import 'package:bizly/utils/app_utils.dart';
-import 'package:bizly/utils/form_validations.dart';
 import 'package:bizly/components/common/custom_app_bar_2.dart';
 import 'package:bizly/components/common/custom_drop_down.dart';
 import 'package:bizly/components/common/loader/loader.dart';
+
+import '../../../utils/form_validations.dart';
 
 class AddExpenseScreen extends GetView<AddExpenseScreenController>{
   AddExpenseScreen({super.key});
@@ -64,57 +66,112 @@ class AddExpenseScreen extends GetView<AddExpenseScreenController>{
                   // --- Required Fields ---
                   Text("Required Details", style: sectionTitleStyle),
                   const SizedBox(height: 15),
-                  _buildCategoryDropdown(context),
+                  const Text(
+                    "Category",
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    key: controller.categoryFieldKey,
+                    child: _buildCategoryDropdown(context),
+                  ),
                   const SizedBox(height: 12),
 
+                  const Text(
+                    "Title",
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   CustomTextField(
+                    fieldKey: controller.titleFieldKey,
                     controller: controller.titleController,
                     hintText: "Title",
-                    validator: (value) =>
-                        FormValidations.validateRequired(value ?? '', fieldName: "Title"),
+                    inputFormatters: controller.expenseTitleInputFormatters,
+                    validator: controller.titleValidator,
                     textInputAction: TextInputAction.next,
                     onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
                     verticalPadding: 15,
                   ),
                   const SizedBox(height: 12),
 
+                  const Text(
+                    "Amount",
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   CustomTextField(
+                    fieldKey: controller.amountFieldKey,
                     controller: controller.amountController,
                     hintText: "Amount",
+                    inputFormatters: controller.expenseAmountInputFormatters,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    validator: (value) => FormValidations.validateRequiredNumber(
-                      value ?? '',
-                      fieldName: "Amount",
-                    ),
+                    validator: controller.amountValidator,
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
                     verticalPadding: 15,
                   ),
                   const SizedBox(height: 12),
 
-                  _buildSelectionRow(
-                    hintText: "Expense Type",
-                    items: const ["Business", "Personal"],
-                    selectedItem: controller.hasSelectedExpenseType.value
-                        ? _displayExpenseType(controller.expenseType.value)
-                        : null,
-                    displayValue: controller.hasSelectedExpenseType.value
-                        ? _displayExpenseType(controller.expenseType.value)
-                        : '',
-                    onChanged: (value) {
-                      if (value != null) {
-                        controller.expenseType.value = value.toLowerCase();
-                        controller.hasSelectedExpenseType.value = true;
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 12),
+                  // const Text(
+                  //   "Expense Type",
+                  //   style: TextStyle(
+                  //     fontSize: 13,
+                  //     fontWeight: FontWeight.bold,
+                  //     color: Colors.black,
+                  //   ),
+                  // ),
+                  // const SizedBox(height: 8),
+                  // Container(
+                  //   key: controller.expenseTypeFieldKey,
+                  //   child: IgnorePointer(
+                  //     ignoring: true,
+                  //     child: Opacity(
+                  //       opacity: 0.75,
+                  //       child: _buildSelectionRow(
+                  //         hintText: "Expense Type",
+                  //         items: const ["Business", "Personal"],
+                  //         selectedItem: _displayExpenseType(
+                  //           AddExpenseScreenController.forcedExpenseType,
+                  //         ),
+                  //         displayValue: _displayExpenseType(
+                  //           AddExpenseScreenController.forcedExpenseType,
+                  //         ),
+                  //         showDropdownIcon: false,
+                  //         onChanged: (_) {},
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
+                  //const SizedBox(height: 12),
 
+                  const Text(
+                    "Expense Date & Payment Method",
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       Expanded(
-                        child: Obx(
-                          () => GestureDetector(
+                        child: Container(
+                          key: controller.expenseDateFieldKey,
+                          child: Obx(
+                            () => GestureDetector(
                             onTap: () async {
                               FocusScope.of(context).unfocus();
                               final date = await AppUtils.pickDate();
@@ -148,21 +205,43 @@ class AddExpenseScreen extends GetView<AddExpenseScreenController>{
                                     ),
                                   ),
                                   const SizedBox(width: 5),
-                                  const Icon(Icons.calendar_month_outlined, color: Colors.grey),
+                                  Image.asset(
+                                    AppImages.calendar,
+                                    width: 15,
+                                    height: 15,
+                                  ),
                                 ],
                               ),
                             ),
                           ),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 20),
-                      Expanded(child: _buildPaymentMethodDropdown()),
+                      Expanded(
+                        child: Container(
+                          key: controller.paymentMethodFieldKey,
+                          child: _buildPaymentMethodDropdown(),
+                        ),
+                      ),
                       // --- Main Fields ---
                     ],
                   ),
                   const SizedBox(height: 12),
 
-                  _buildBusinessDropdown(),
+                  const Text(
+                    "Business",
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    key: controller.businessFieldKey,
+                    child: _buildBusinessDropdown(),
+                  ),
 
                   const SizedBox(height: 20),
 
@@ -170,33 +249,84 @@ class AddExpenseScreen extends GetView<AddExpenseScreenController>{
                   Text("Optional Details", style: sectionTitleStyle),
                   const SizedBox(height: 15),
 
+                  const Text(
+                    "Customer",
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   _buildCustomerDropdown(),
                   const SizedBox(height: 12),
 
+                  const Text(
+                    "Vendor",
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   _buildVendorDropdown(),
                   const SizedBox(height: 12),
 
+                  const Text(
+                    "Project Name",
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   CustomTextField(
+                    fieldKey: controller.projectNameFieldKey,
                     controller: controller.projectNameController,
                     hintText: "Project Name",
+                    inputFormatters: controller.expenseProjectNameInputFormatters,
                     textInputAction: TextInputAction.next,
                     onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
                     verticalPadding: 15,
                   ),
                   const SizedBox(height: 12),
 
+                  const Text(
+                    "Reference Number",
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   CustomTextField(
+                    fieldKey: controller.referenceNumberFieldKey,
                     controller: controller.referenceNumberController,
                     hintText: "Reference Number",
+                    inputFormatters: controller.expenseReferenceInputFormatters,
                     textInputAction: TextInputAction.next,
                     onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
                     verticalPadding: 15,
                   ),
                   const SizedBox(height: 12),
 
+                  const Text(
+                    "Tax Amount",
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   CustomTextField(
+                    fieldKey: controller.taxAmountFieldKey,
                     controller: controller.taxAmountController,
                     hintText: "Tax Amount",
+                    inputFormatters: controller.expenseTaxAmountInputFormatters,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     textInputAction: TextInputAction.next,
                     onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
@@ -204,8 +334,19 @@ class AddExpenseScreen extends GetView<AddExpenseScreenController>{
                   ),
                   const SizedBox(height: 12),
 
+                  const Text(
+                    "Notes",
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   CustomTextField(
+                      fieldKey: controller.notesFieldKey,
                       controller: controller.notesController,
+                      inputFormatters: controller.expenseNotesInputFormatters,
                       maxLine: 4,
                       hintText: "Notes",
                       textInputAction: TextInputAction.done,
@@ -217,8 +358,10 @@ class AddExpenseScreen extends GetView<AddExpenseScreenController>{
                   _buildUploadRow(),
                   const SizedBox(height: 12),
 
-                  // Repeat Monthly Switch
-                  _buildSwitchRow(),
+                  // Repeat Monthly Switch (temporarily disabled; keep for later use)
+                  // _buildSwitchRow(),
+                  // const SizedBox(height: 12),
+
                   const SizedBox(height: 30),
 
                   // Add Expense Button
@@ -227,9 +370,7 @@ class AddExpenseScreen extends GetView<AddExpenseScreenController>{
                     isLoading: controller.isSubmitting.value,
                     onPressed: controller.isSubmitting.value
                         ? () {}
-                        : () {
-                            controller.createExpense();
-                          },
+                        : controller.submitExpenseFromForm,
                   ),
                   const SizedBox(height: 20),
                       ],
@@ -266,6 +407,7 @@ class AddExpenseScreen extends GetView<AddExpenseScreenController>{
     required List<String> items,
     String? selectedItem,
     String? displayValue,
+    bool showDropdownIcon = true,
     required ValueChanged<String?> onChanged,
   }) {
     return CustomSearchDropdown(
@@ -280,6 +422,7 @@ class AddExpenseScreen extends GetView<AddExpenseScreenController>{
       items: items,
       selectedItem: selectedItem,
       displayValue: displayValue,
+      showDropdownIcon: showDropdownIcon,
       onChanged: (value) {
         FocusScope.of(Get.context!).unfocus();
         onChanged(value);
@@ -373,7 +516,7 @@ class AddExpenseScreen extends GetView<AddExpenseScreenController>{
                   controller: nameController,
                   hintText: "Category Name",
                   validator: (v) =>
-                      FormValidations.validateRequiredMin3(v ?? '', fieldName: "Category"),
+                        FormValidations.validateRequiredMin3(v ?? '', fieldName: "Category"),
                   textInputAction: TextInputAction.done,
                   onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
                   verticalPadding: 15,
@@ -456,6 +599,11 @@ class AddExpenseScreen extends GetView<AddExpenseScreenController>{
           }
         }
       }
+      if ((selectedName == null || selectedName.isEmpty) &&
+          controller.isBusinessLocked.value &&
+          controller.lockedBusinessName.value.isNotEmpty) {
+        selectedName = controller.lockedBusinessName.value;
+      }
       return IgnorePointer(
         ignoring: controller.isBusinessLocked.value,
         child: Opacity(
@@ -464,6 +612,12 @@ class AddExpenseScreen extends GetView<AddExpenseScreenController>{
             hintText: "Business",
             items: items,
             selectedItem: selectedName,
+            displayValue: controller.isBusinessLocked.value
+                ? (controller.lockedBusinessName.value.isNotEmpty
+                    ? controller.lockedBusinessName.value
+                    : selectedName)
+                : selectedName,
+            showDropdownIcon: !controller.isBusinessLocked.value,
             onChanged: (value) {
               int? id;
               for (final item in controller.businesses) {
@@ -530,20 +684,37 @@ class AddExpenseScreen extends GetView<AddExpenseScreenController>{
           }
         }
       }
-      return _buildSelectionRow(
-        hintText: "Vendor",
-        items: items,
-        selectedItem: selectedName,
-        onChanged: (value) {
-          int? id;
-          for (final item in controller.vendors) {
-            if (item.vendorName == value) {
-              id = item.id;
-              break;
-            }
-          }
-          controller.selectedVendorId.value = id;
-        },
+      if ((selectedName == null || selectedName.isEmpty) &&
+          controller.isVendorLocked.value &&
+          controller.lockedVendorName.value.isNotEmpty) {
+        selectedName = controller.lockedVendorName.value;
+      }
+      return IgnorePointer(
+        ignoring: controller.isVendorLocked.value,
+        child: Opacity(
+          opacity: controller.isVendorLocked.value ? 0.75 : 1,
+          child: _buildSelectionRow(
+            hintText: "Vendor",
+            items: items,
+            selectedItem: selectedName,
+            displayValue: controller.isVendorLocked.value
+                ? (controller.lockedVendorName.value.isNotEmpty
+                    ? controller.lockedVendorName.value
+                    : selectedName)
+                : selectedName,
+            showDropdownIcon: !controller.isVendorLocked.value,
+            onChanged: (value) {
+              int? id;
+              for (final item in controller.vendors) {
+                if (item.vendorName == value) {
+                  id = item.id;
+                  break;
+                }
+              }
+              controller.selectedVendorId.value = id;
+            },
+          ),
+        ),
       );
     });
   }

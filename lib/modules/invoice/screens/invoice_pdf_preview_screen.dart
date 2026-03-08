@@ -11,17 +11,19 @@ class InvoicePdfPreviewScreen extends StatelessWidget {
     super.key,
     required this.bytes,
     required this.filePath,
+    this.title = 'Invoice PDF Preview',
   });
 
   final Uint8List bytes;
   final String filePath;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const CustomAppBar2(
-        title: 'Invoice PDF Preview',
+      appBar: CustomAppBar2(
+        title: title,
         backgroundColor: AppColors.primaryDense,
         textColor: Colors.white,
       ),

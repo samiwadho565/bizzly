@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:bizly/app/constants/app_urls.dart';
 import 'package:bizly/assets/images.dart';
@@ -111,8 +112,15 @@ class InvoiceCustomizationController extends GetxController {
     String title,
     RxString observableValue, {
     int? maxLength,
+    TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
+    bool sanitizeNumericInput = false,
+    String Function(String value)? onSaveTransform,
   }) {
-    TextEditingController textController = TextEditingController(text: observableValue.value);
+    final String initialValue = sanitizeNumericInput
+        ? _extractLeadingNumber(observableValue.value)
+        : observableValue.value;
+    TextEditingController textController = TextEditingController(text: initialValue);
 
     Get.bottomSheet(
       isScrollControlled: true,
@@ -135,6 +143,8 @@ class InvoiceCustomizationController extends GetxController {
               controller: textController,
               autofocus: true,
               maxLength: maxLength,
+              keyboardType: keyboardType,
+              inputFormatters: inputFormatters,
               maxLines: maxLength == null ? 1 : 3,
               decoration: InputDecoration(
                 filled: true,
@@ -148,7 +158,13 @@ class InvoiceCustomizationController extends GetxController {
               height: 50,
               child: CustomButton(text: "Save", onPressed: (){
                 Get.back();
-                final String value = textController.text.trim();
+                String value = textController.text.trim();
+                if (maxLength != null && value.length > maxLength) {
+                  value = value.substring(0, maxLength);
+                }
+                if (onSaveTransform != null) {
+                  value = onSaveTransform(value);
+                }
                 if (maxLength != null && value.length > maxLength) {
                   observableValue.value = value.substring(0, maxLength);
                   return;
@@ -290,7 +306,8 @@ class InvoiceCustomizationController extends GetxController {
     );
     precision.value =
         (model.invoiceCurrencyDecimalPosition ?? 2).toString();
-    dueDate.value = '${model.invoiceDueDateDays ?? 15} days';
+    final int dueDays = model.invoiceDueDateDays ?? 15;
+    dueDate.value = '$dueDays ${dueDays == 1 ? 'day' : 'days'}';
     lateFee.value = model.invoiceLateFee == null
         ? '0'
         : _cleanNumber(model.invoiceLateFee!);

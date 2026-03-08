@@ -1,12 +1,16 @@
-import 'package:bizly/components/common/custom_app_bar_2.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:bizly/modules/invoice/controllers/invoice_detail_controller.dart';
-import 'package:bizly/utils/app_colors.dart';
+
+import 'package:bizly/assets/images.dart';
+import 'package:bizly/components/common/custom_app_bar_2.dart';
 import 'package:bizly/components/common/custom_button.dart';
-import 'package:bizly/routes/routes.dart';
-import 'package:bizly/modules/invoice/models/invoice_model.dart';
+import 'package:bizly/components/common/loader/loader.dart';
+import 'package:bizly/components/invoice/invoice_document_card.dart';
+import 'package:bizly/modules/invoice/controllers/invoice_detail_controller.dart';
 import 'package:bizly/modules/invoice/controllers/invoice_screen_controller.dart';
+import 'package:bizly/modules/invoice/models/invoice_model.dart';
+import 'package:bizly/routes/routes.dart';
+import 'package:bizly/utils/app_colors.dart';
 
 class InvoiceDetailScreen extends GetView<InvoiceDetailController> {
   const InvoiceDetailScreen({super.key});
@@ -17,312 +21,204 @@ class InvoiceDetailScreen extends GetView<InvoiceDetailController> {
       appBar: CustomAppBar2(title: "Invoice Detail"),
       backgroundColor: AppColors.background,
       body: Obx(
-            () => SafeArea(
-              child:  Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: const BorderRadius.only(
-                    topRight: Radius.circular(40),
-                    topLeft: Radius.circular(40),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.2),
-                      blurRadius: 5,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+        () {
+          if (controller.isViewLoading.value && controller.model.value == null) {
+            return const Center(child: FinancePulseLoader());
+          }
+          final InvoiceModel? invoice = controller.model.value;
+          if (invoice == null) {
+            return const Center(
+              child: Text(
+                'Invoice not available',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            );
+          }
+
+          return SafeArea(
+            child: Container(
+              margin: const EdgeInsets.only(top: 10),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(40),
+                  topLeft: Radius.circular(40),
                 ),
-
-                child: Column(
-                          children: [
-                            SizedBox(height: 20,),
-                /// 🔹 Gradient Header
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                    controller.model.value?.customerName ?? '-',
-                                      style: const TextStyle(
-                                        // color: Colors.white,
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  Container(
-                                    padding:
-                                    const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: controller.getStatusColor(),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Text(
-                                      controller.model.value?.status ?? '-',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(height: 10,),
-                /// 🔹 Scrollable Content
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.only(left: 20,right: 20,bottom: 100),
-                    physics: const BouncingScrollPhysics(),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              ),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+                      child: _invoicePreview(invoice),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    child: Obx(
+                      () => CustomButton(
+                        text: "Download PDF",
+                        isLoading: controller.isDownloadingPdf.value,
+                        onPressed: controller.isDownloadingPdf.value
+                            ? () {}
+                            : controller.downloadPdf,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                    child: Row(
                       children: [
-                        const SizedBox(height: 10),
-
-                        _buildInfoCard(
-                          icon: Icons.receipt_long,
-                          title: "Invoice Number",
-                          value: controller.model.value?.invoiceNumber ?? '',
-                        ),
-                        if ((controller.model.value?.invoiceDate ?? '').isNotEmpty)
-                          _buildInfoCard(
-                            icon: Icons.calendar_today,
-                            title: "Invoice Date",
-                            value: controller.model.value?.invoiceDate ?? '',
+                        Expanded(
+                          child: _actionIconButton(
+                            icon: Icons.edit_outlined,
+                            label: 'Edit',
+                            onTap: () async {
+                              final dynamic result = await Get.toNamed(
+                                Routes.createInvoiceScreen,
+                                arguments: controller.model.value,
+                              );
+                              if (result is InvoiceModel) {
+                                controller.model.value = result;
+                              } else {
+                                await controller.refreshInvoice();
+                              }
+                              if (Get.isRegistered<InvoiceScreenController>()) {
+                                Get.find<InvoiceScreenController>().fetchInvoices();
+                              }
+                            },
                           ),
-                        _buildInfoCard(
-                          icon: Icons.business,
-                          title: "Business Name",
-                          value: controller.model.value?.businessName ?? '',
                         ),
-                        if (controller.model.value != null)
-                          _buildItems(controller.model.value!),
-                        _buildInfoCard(
-                          icon: Icons.attach_money,
-                          title: "Subtotal",
-                          value: controller.model.value?.subtotalAmount?.toString() ?? '',
-                          valueColor: AppColors.primary,
-                          valueFontSize: 18,
-                          valueFontWeight: FontWeight.bold,
-                        ),
-                        _buildInfoCard(
-                          icon: Icons.receipt,
-                          title: "Tax",
-                          value:
-                              '${controller.model.value?.taxEnabled == true ? "Enabled" : "Disabled"} (${controller.model.value?.taxAmount?.toString() ?? "0"})',
-                        ),
-                        _buildInfoCard(
-                          icon: Icons.attach_money,
-                          title: "Total Amount",
-                          value: controller.model.value?.totalAmount?.toString() ?? '',
-                          valueColor: AppColors.primary,
-                          valueFontSize: 18,
-                          valueFontWeight: FontWeight.bold,
-                        ),
-
-                        if ((controller.model.value?.notes ?? '').isNotEmpty)
-                          _buildInfoCard(
-                            icon: Icons.note,
-                            title: "Notes",
-                            value: controller.model.value?.notes ?? '',
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _actionIconButton(
+                            icon: Icons.history,
+                            label: 'History',
+                            onTap: () async {
+                              final dynamic result = await Get.toNamed(
+                                Routes.invoicePaymentsScreen,
+                                arguments: controller.model.value,
+                              );
+                              if (result is InvoiceModel) {
+                                controller.model.value = result;
+                              } else {
+                                await controller.refreshInvoice();
+                              }
+                              if (Get.isRegistered<InvoiceScreenController>()) {
+                                Get.find<InvoiceScreenController>().fetchInvoices();
+                              }
+                            },
                           ),
-                        if ((controller.model.value?.paymentMethodName ?? '').isNotEmpty)
-                          _buildInfoCard(
-                            icon: Icons.payment,
-                            title: "Payment Method",
-                            value: controller.model.value?.paymentMethodName ?? '',
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _actionIconButton(
+                            icon: Icons.delete_outline,
+                            label: 'Delete',
+                            iconColor: Colors.red,
+                            onTap: controller.confirmDelete,
                           ),
-
-                        const SizedBox(height: 20),
+                        ),
                       ],
                     ),
                   ),
-                ),
-
-                /// 🔹 Action Buttons
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  child: Obx(
-                    () => CustomButton(
-                      text: "Download PDF",
-                      isLoading: controller.isDownloadingPdf.value,
-                      onPressed: controller.isDownloadingPdf.value
-                          ? () {}
-                          : controller.downloadPdf,
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _actionIconButton(
-                          icon: Icons.edit_outlined,
-                          label: 'Edit',
-                          onTap: () async {
-                            final dynamic result = await Get.toNamed(
-                              Routes.createInvoiceScreen,
-                              arguments: controller.model.value,
-                            );
-                            if (result is InvoiceModel) {
-                              controller.model.value = result;
-                            }
-                            if (Get.isRegistered<InvoiceScreenController>()) {
-                              Get.find<InvoiceScreenController>().fetchInvoices();
-                            }
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _actionIconButton(
-                          icon: Icons.history,
-                          label: 'History',
-                          onTap: () async {
-                            final dynamic result = await Get.toNamed(
-                              Routes.invoicePaymentsScreen,
-                              arguments: controller.model.value,
-                            );
-                            if (result is InvoiceModel) {
-                              controller.model.value = result;
-                            } else {
-                              await controller.refreshInvoice();
-                            }
-                            if (Get.isRegistered<InvoiceScreenController>()) {
-                              Get.find<InvoiceScreenController>().fetchInvoices();
-                            }
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _actionIconButton(
-                          icon: Icons.delete_outline,
-                          label: 'Delete',
-                          iconColor: Colors.red,
-                          onTap: controller.confirmDelete,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                          ],
-                        ),
+                ],
               ),
             ),
+          );
+        },
       ),
     );
   }
 
-  /// 🔹 Info Card Builder
-  Widget _buildInfoCard({
-    required IconData icon,
-    required String title,
-    required String value,
-    Color valueColor = Colors.black87,
-    double valueFontSize = 14,
-    FontWeight valueFontWeight = FontWeight.w500,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.15),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+  Widget _invoicePreview(InvoiceModel invoice) {
+    final String status = (invoice.status ?? '').trim();
+    final List<InvoiceDocumentLineItem> lineItems = invoice.items
+        .map(
+          (item) => InvoiceDocumentLineItem(
+            name: item.itemName,
+            qty: '${item.qty ?? 0}',
+            unitPrice: controller.money(item.unitPrice),
+            total: controller.money(item.totalAmount ?? _fallbackTotal(item)),
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: AppColors.primary, size: 28),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey,
-                    )),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: valueFontSize,
-                    fontWeight: valueFontWeight,
-                    color: valueColor,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        )
+        .toList();
+
+    return InvoiceDocumentCard(
+      leadingLogo: _buildBusinessLogo(),
+      businessName: controller.displayBusinessName(),
+      businessAddress: controller.displayBusinessAddress(),
+      businessContact: controller.displayBusinessContact(),
+      businessTaxId: controller.displayBusinessTaxId(),
+      status: status,
+      statusTextColor: controller.getStatusColor(),
+      statusBackgroundColor: controller.getStatusBackgroundColor(),
+      invoiceNumber: invoice.invoiceNumber ?? '-',
+      invoiceDate: invoice.invoiceDate ?? '',
+      billToName: invoice.customerName ?? '-',
+      billToEmail: controller.showCustomerEmail ? (invoice.customerEmail ?? '') : '',
+      billToPhone: controller.showCustomerPhone ? (invoice.customerPhone ?? '') : '',
+      items: lineItems,
+      metaEntries: <MapEntry<String, String>>[
+        if (controller.paymentTermsText().isNotEmpty)
+          MapEntry<String, String>('Payment Terms', controller.paymentTermsText()),
+        if (controller.paymentMethodText().isNotEmpty)
+          MapEntry<String, String>('Payment Method', controller.paymentMethodText()),
+      ],
+      subtotalText: controller.subtotalText(),
+      taxText: controller.taxText(),
+      showTax: invoice.taxEnabled == true,
+      totalText: controller.totalText(),
+      invoiceNotes: controller.invoiceNotesText(),
+      lateFeeText: controller.lateFeeText(),
+      terms: controller.termsText(),
+      additionalNotes: controller.additionalNotesText(),
+      thankYou: controller.thankYouMessageText(),
     );
   }
 
-  Widget _buildItems(InvoiceModel model) {
-    if (model.items.isEmpty) {
-      return const SizedBox.shrink();
+  Widget _buildBusinessLogo() {
+    final String invoiceLogo = (controller.business.value?.invoiceLogoUrl ?? '').trim();
+    final String businessLogo = (controller.business.value?.businessImageUrl ?? '').trim();
+
+    if (invoiceLogo.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.network(
+          invoiceLogo,
+          width: 35,
+          height: 35,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _fallbackLogo(businessLogo),
+        ),
+      );
     }
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.15),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            "Items",
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey,
-            ),
-          ),
-          const SizedBox(height: 8),
-          for (final item in model.items) ...[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    item.itemName,
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                ),
-                Text(
-                  'Qty: ${item.qty ?? 0}  |  Unit: ${item.unitPrice ?? 0}  |  Total: ${item.totalAmount ?? _fallbackTotal(item)}',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-          ],
-        ],
-      ),
+
+    return _fallbackLogo(businessLogo);
+  }
+
+  Widget _fallbackLogo(String businessLogo) {
+    if (businessLogo.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.network(
+          businessLogo,
+          width: 35,
+          height: 35,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _appLogo(),
+        ),
+      );
+    }
+    return _appLogo();
+  }
+
+  Widget _appLogo() {
+    return Image.asset(
+      AppImages.bizzlyLogo,
+      width: 35,
+      height: 35,
+      fit: BoxFit.contain,
     );
   }
 
@@ -357,9 +253,9 @@ class InvoiceDetailScreen extends GetView<InvoiceDetailController> {
             Text(
               label,
               style: TextStyle(
+                color: iconColor,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: iconColor,
               ),
             ),
           ],
@@ -369,9 +265,12 @@ class InvoiceDetailScreen extends GetView<InvoiceDetailController> {
   }
 
   dynamic _fallbackTotal(dynamic item) {
-    final num? qty = num.tryParse((item.qty ?? '').toString());
-    final num? unit = num.tryParse((item.unitPrice ?? '').toString());
-    if (qty != null && unit != null) return qty * unit;
-    return 0;
+    final num qty = (item.qty ?? 0) is num
+        ? (item.qty ?? 0) as num
+        : num.tryParse('${item.qty ?? 0}') ?? 0;
+    final num price = (item.unitPrice ?? 0) is num
+        ? (item.unitPrice ?? 0) as num
+        : num.tryParse('${item.unitPrice ?? 0}') ?? 0;
+    return qty * price;
   }
 }

@@ -5,6 +5,7 @@ import 'package:bizly/components/common/custom_app_bar_2.dart';
 import 'package:bizly/components/common/custom_search_field.dart';
 import 'package:bizly/modules/company_assets/controllers/company_assets_controller.dart';
 import 'package:bizly/modules/company_assets/models/assets_model.dart';
+import 'package:bizly/assets/images.dart';
 import 'package:bizly/routes/routes.dart';
 import 'package:bizly/utils/app_colors.dart';
 import 'package:bizly/utils/app_dialouge.dart';
@@ -234,12 +235,20 @@ class CompanyAssetsScreen extends GetView<CompanyAssetsController> {
           return;
         }
         if (value == 'Delete') {
-          AppDialogs.showConfirmation(
-            title: "Delete Asset",
+          AppDialogs.showActionDialog(
+            iconPath: AppImages.dialogTrash,
+            title: "Delete Asset!",
             message: "Are you sure you want to delete ${asset.assetName}?",
-            onYes: () async {
-              await controller.deleteAsset(asset);
-            },
+            actions: [
+              AppDialogAction(
+                label: "Delete Asset",
+                textColor: Colors.red,
+                onPressed: () async {
+                  await controller.deleteAsset(asset);
+                },
+              ),
+              AppDialogAction(label: "Cancel"),
+            ],
           );
         }
       },

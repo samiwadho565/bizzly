@@ -18,6 +18,7 @@ class CustomTextField extends StatefulWidget {
   final bool readOnly;
   final VoidCallback? onTap;
   final Widget? suffixIcon;
+  final BoxConstraints? suffixIconConstraints;
   final GlobalKey<FormFieldState<String>>? fieldKey;
   final List<TextInputFormatter>? inputFormatters;
   const CustomTextField({
@@ -36,6 +37,7 @@ class CustomTextField extends StatefulWidget {
     this.readOnly = false,
     this.onTap,
     this.suffixIcon,
+    this.suffixIconConstraints,
     this.fieldKey,
     this.inputFormatters,
   });
@@ -135,6 +137,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                 },
               )
             : widget.suffixIcon,
+        suffixIconConstraints: widget.suffixIconConstraints,
       ),
     );
   }

@@ -15,6 +15,8 @@ import 'app_colors.dart';
 enum AppSnackType { info, success, error, warning }
 
 class AppUtils {
+  static OverlayEntry? _topToastEntry;
+
   static void showAppSnackbar(
     String title,
     String message, {
@@ -49,6 +51,71 @@ class AppUtils {
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       borderRadius: 12,
     );
+  }
+
+  static void showTopToast(
+    String message, {
+    BuildContext? context,
+    bool atBottom = false,
+    Duration duration = const Duration(seconds: 2),
+  }) {
+    final BuildContext? resolvedContext =
+        context ?? Get.overlayContext ?? Get.context;
+    if (resolvedContext == null) return;
+    final OverlayState? overlay =
+        Overlay.maybeOf(resolvedContext, rootOverlay: true);
+    if (overlay == null) return;
+
+    _topToastEntry?.remove();
+    _topToastEntry = null;
+
+    final OverlayEntry entry = OverlayEntry(
+      builder: (BuildContext ctx) {
+        final double topInset = MediaQuery.of(ctx).padding.top;
+        final double bottomInset = MediaQuery.of(ctx).padding.bottom;
+        return Positioned(
+          top: atBottom ? null : topInset + 10,
+          bottom: atBottom ? bottomInset + 14 : null,
+          left: 16,
+          right: 16,
+          child: IgnorePointer(
+            child: Material(
+              color: Colors.transparent,
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.85),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    _topToastEntry = entry;
+    overlay.insert(entry);
+
+    Future<void>.delayed(duration, () {
+      if (_topToastEntry == entry) {
+        entry.remove();
+        _topToastEntry = null;
+      }
+    });
   }
 
   /// 🔹 Reusable Date Picker

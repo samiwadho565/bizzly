@@ -39,11 +39,17 @@ class MainScreen extends GetView<MainScreenController> {
           openDrawer: () => controller.scaffoldKey.currentState?.openDrawer(),
         );
       case 1:
-        return ExpenseScreen();
+        return ExpenseScreen(
+          openDrawer: () => controller.scaffoldKey.currentState?.openDrawer(),
+        );
       case 2:
-        return InvoiceScreen();
+        return InvoiceScreen(
+          openDrawer: () => controller.scaffoldKey.currentState?.openDrawer(),
+        );
       case 3:
-        return TasksScreen();
+        return TasksScreen(
+          openDrawer: () => controller.scaffoldKey.currentState?.openDrawer(),
+        );
       default:
         return const ProfileScreen();
     }

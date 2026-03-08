@@ -7,6 +7,7 @@ import 'package:bizly/modules/team/controllers/team_controller.dart';
 import 'package:bizly/modules/team/models/employee_model.dart';
 import 'package:bizly/utils/app_colors.dart';
 import 'package:bizly/utils/app_dialouge.dart';
+import '../../../../assets/images.dart';
 import 'create_team_member.dart';
 
 class EmployeeDetailScreen extends GetView<TeamController> {
@@ -164,7 +165,7 @@ class EmployeeDetailScreen extends GetView<TeamController> {
                             text: "Edit Employee",
                             onPressed: () async {
                               final dynamic result = await Get.to(
-                                () => const AddEmployeeScreen(),
+                                () =>  AddEmployeeScreen(),
                                 arguments: employee,
                               );
                               if (result is EmployeeModel) {
@@ -182,14 +183,22 @@ class EmployeeDetailScreen extends GetView<TeamController> {
                             textColor: Colors.red,
                             borderColor: Colors.red,
                             onPressed: () {
-                              AppDialogs.showConfirmation(
-                                title: "Delete Employee",
+                              AppDialogs.showActionDialog(
+                                iconPath: AppImages.dialogTrash,
+                                title: "Delete Employee!",
                                 message:
                                     "Are you sure you want to delete ${employee.fullName}?",
-                                onYes: () async {
-                                  await controller.deleteEmployee(employee);
-                                  Get.back();
-                                },
+                                actions: [
+                                  AppDialogAction(
+                                    label: "Delete Employee",
+                                    textColor: Colors.red,
+                                    onPressed: () async {
+                                      await controller.deleteEmployee(employee);
+                                      Get.back();
+                                    },
+                                  ),
+                                  AppDialogAction(label: "Cancel"),
+                                ],
                               );
                             },
                           ),

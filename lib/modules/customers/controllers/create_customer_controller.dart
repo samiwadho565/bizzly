@@ -40,7 +40,9 @@ class CreateCustomerController extends GetxController {
     final dynamic args = Get.arguments;
     if (args is CustomerModel) {
       loadForEdit(args);
+      return;
     }
+    _resetForm();
   }
 
   void loadForEdit(CustomerModel customer) {
@@ -55,6 +57,11 @@ class CreateCustomerController extends GetxController {
     websiteController.text = customer.website ?? '';
     socialController.text = customer.socialLink ?? '';
     notesController.text = customer.notes ?? '';
+  }
+
+  void clearFormAfterSuccess() {
+    _resetForm();
+    formKey.currentState?.reset();
   }
 
   Future<void> pickProfileImage() async {
@@ -141,6 +148,7 @@ class CreateCustomerController extends GetxController {
           );
 
     if (response.success) {
+      final bool creatingNewCustomer = !isEdit;
       final int? editedId = editingCustomer.value?.id;
       final CustomerModel? created = _resolveResultCustomer(response);
       CustomerModel? doneResult;
@@ -151,6 +159,10 @@ class CreateCustomerController extends GetxController {
         }
         final int? targetId = editedId ?? created?.id;
         doneResult = targetId == null ? null : await _fetchCustomerById(targetId);
+      }
+
+      if (creatingNewCustomer) {
+        clearFormAfterSuccess();
       }
 
       isLoading.value = false;
@@ -237,6 +249,21 @@ class CreateCustomerController extends GetxController {
       createdAt: current?.createdAt,
       updatedAt: DateTime.now().toString(),
     );
+  }
+
+  void _resetForm() {
+    editingCustomer.value = null;
+    nameController.clear();
+    phoneController.clear();
+    emailController.clear();
+    addressController.clear();
+    secondaryPhoneController.clear();
+    companyController.clear();
+    taxController.clear();
+    websiteController.clear();
+    socialController.clear();
+    notesController.clear();
+    profileImageFile.value = null;
   }
 
   @override

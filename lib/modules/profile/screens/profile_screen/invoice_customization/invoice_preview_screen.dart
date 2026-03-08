@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:bizly/assets/images.dart';
 import 'package:bizly/components/common/custom_app_bar_2.dart';
+import 'package:bizly/components/invoice/invoice_document_card.dart';
 import 'package:flutter/material.dart';
 
 import 'package:bizly/utils/app_colors.dart';
@@ -10,27 +11,28 @@ class InvoicePreviewScreen extends StatelessWidget {
   final String businessName;
   final String businessAddress;
   final String businessEmail;
-  final String? taxRegistrationNo; // New
+  final String? taxRegistrationNo;
   final File? invoiceLogoFile;
   final String? invoiceLogoUrl;
   final String? businessLogoUrl;
 
   final String invoiceNumber;
   final DateTime invoiceDate;
-  final String? dueDate; // New
+  final String? dueDate;
 
   final String clientName;
   final String clientEmail;
-  final String? clientPhone; // New
+  final String? clientPhone;
 
   final List<Map<String, dynamic>> items;
   final double totalAmount;
-  final String currency; // New
+  final String currency;
 
   final String? paymentTerms;
-  final String? lateFee; // New
+  final String? lateFee;
   final String? termsAndConditions;
   final String? additionalNotes;
+  final String? thankYouMessage;
 
   const InvoicePreviewScreen({
     super.key,
@@ -54,10 +56,27 @@ class InvoicePreviewScreen extends StatelessWidget {
     this.lateFee,
     this.termsAndConditions,
     this.additionalNotes,
+    this.thankYouMessage,
   });
 
   @override
   Widget build(BuildContext context) {
+    final List<InvoiceDocumentLineItem> lineItems = items
+        .map(
+          (Map<String, dynamic> item) => InvoiceDocumentLineItem(
+            name: '${item['name'] ?? '-'}',
+            qty: '${item['qty'] ?? 0}',
+            unitPrice: _money(_toNum(item['price'])),
+            total: _money(_toNum(item['total'])),
+          ),
+        )
+        .toList();
+
+    final num subtotal = items.fold<num>(
+      0,
+      (num sum, Map<String, dynamic> item) => sum + (_toNum(item['total']) ?? 0),
+    );
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: const CustomAppBar2(
@@ -67,175 +86,37 @@ class InvoicePreviewScreen extends StatelessWidget {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 30),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.2),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 🔹 Header with Logo & Business Name
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  _buildLogo(),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      businessName,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      // Text("INVOICE", style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.primaryDense)),
-                      Text("#$invoiceNumber", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                      _buildText("${invoiceDate.day}-${invoiceDate.month}-${invoiceDate.year}", size: 12),
-                   ],
-                  ),
-                ],
-              ),
-
-              // 🔹 Business Details & Invoice Metadata
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Left: Business Info
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 45), // Aligned with name
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildText(businessAddress, size: 11),
-                          _buildText(businessEmail, size: 11),
-                          if (taxRegistrationNo != null && taxRegistrationNo!.isNotEmpty)
-                            _buildText("Tax ID: $taxRegistrationNo", size: 11, color: Colors.grey.shade700),
-                        ],
-                      ),
-                    ),
-                  ),
-                  // Right: Invoice Info
-
-                ],
-              ),
-
-              const Divider(height: 40, thickness: 1),
-
-              // 🔹 Billing To Section
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text("BILL TO", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 1.2)),
-                      const SizedBox(height: 6),
-                      Text(clientName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                      if (clientEmail.trim().isNotEmpty)
-                        _buildText(clientEmail, size: 12),
-                      if (clientPhone != null) _buildText(clientPhone!, size: 12),
-                    ],
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 30),
-
-              // 🔹 Items Table
-              _buildItemsTable(),
-
-              const SizedBox(height: 30),
-
-              // 🔹 Payment Info & Summary
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Left: Terms & Notes
-                  Expanded(
-                    flex: 2,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                       Row(
-                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                         children: [
-
-                           if (paymentTerms != null && paymentTerms!.isNotEmpty) ...[
-                             Column(
-                               children: [
-                                 _sectionTitle("Payment Terms"),
-                                 _buildText(paymentTerms!, size: 11),
-                                 const SizedBox(height: 12),
-                               ],
-                             ),
-
-                           ],
-                           Container(
-                             padding: const EdgeInsets.all(12),
-                             decoration: BoxDecoration(
-                               // color: AppColors.primaryDense.withOpacity(0.05),
-                               borderRadius: BorderRadius.circular(12),
-                             ),
-                             child: Column(
-                               children: [
-                                 const Text("Total Amount", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
-                                 const SizedBox(height: 4),
-                                 Text(
-                                   "$currency $totalAmount",
-                                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primaryDense),
-                                 ),
-                               ],
-                             ),
-                           ),
-                         ],
-                       ),
-
-                        // if (dueDate != null && dueDate!.isNotEmpty)
-                        //   Text("Due: $dueDate", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.redAccent)),
-                        // if (dueDate != null && dueDate!.isNotEmpty)SizedBox(height: 5,),
-                        if (lateFee != null && lateFee!.isNotEmpty) ...[
-                          _sectionTitle("Late Fee Policy"),
-                          _buildText(lateFee!, size: 11, color: Colors.red.shade700),
-                          const SizedBox(height: 12),
-                        ],
-                        if (termsAndConditions != null &&
-                            termsAndConditions!.isNotEmpty) ...[
-                          _sectionTitle("Terms & Conditions"),
-                          _buildText(termsAndConditions!, size: 11),
-                          const SizedBox(height: 12),
-                        ],
-                        if (additionalNotes != null &&
-                            additionalNotes!.isNotEmpty) ...[
-                          _sectionTitle("Additional Notes"),
-                          _buildText(additionalNotes!, size: 11),
-                        ],
-                      ],
-                    ),
-                  ),
-                  // Right: Grand Total Box
-
-                ],
-              ),
-            ],
-          ),
+        child: InvoiceDocumentCard(
+          leadingLogo: _buildLogo(),
+          businessName: businessName,
+          businessAddress: businessAddress,
+          businessContact: businessEmail,
+          businessTaxId: (taxRegistrationNo ?? '').trim(),
+          status: 'PAID',
+          statusTextColor: const Color(0xFF1B5E20),
+          statusBackgroundColor: const Color(0xFFE8F5E9),
+          invoiceNumber: invoiceNumber,
+          invoiceDate: '${invoiceDate.day}-${invoiceDate.month}-${invoiceDate.year}',
+          billToName: clientName,
+          billToEmail: clientEmail,
+          billToPhone: (clientPhone ?? '').trim(),
+          items: lineItems,
+          metaEntries: <MapEntry<String, String>>[
+            if ((paymentTerms ?? '').trim().isNotEmpty)
+              MapEntry<String, String>('Payment Terms', paymentTerms!.trim()),
+          ],
+          subtotalText: _money(subtotal),
+          taxText: _money(0),
+          showTax: false,
+          totalText: _money(totalAmount),
+          lateFeeText: (lateFee ?? '').trim(),
+          terms: (termsAndConditions ?? '').trim(),
+          additionalNotes: (additionalNotes ?? '').trim(),
+          thankYou: (thankYouMessage ?? '').trim(),
         ),
       ),
     );
   }
-
-  // --- Helper Widgets ---
 
   Widget _buildLogo() {
     final File? localLogo = invoiceLogoFile;
@@ -295,64 +176,17 @@ class InvoicePreviewScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildText(String text, {double size = 12, Color? color}) {
-    return Text(
-      text,
-      style: TextStyle(fontSize: size, color: color ?? Colors.grey.shade600),
-    );
+  num? _toNum(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value;
+    return num.tryParse(value.toString());
   }
 
-  Widget _sectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black87),
-    );
+  String _money(num? amount) {
+    return '$currency ${_cleanNum(amount ?? 0)}';
   }
 
-  Widget _buildItemsTable() {
-    return Table(
-      columnWidths: const {
-        0: FlexColumnWidth(3),
-        1: IntrinsicColumnWidth(),
-        2: FlexColumnWidth(2),
-        3: FlexColumnWidth(2),
-      },
-      children: [
-        // Table Header
-        TableRow(
-          decoration: BoxDecoration(color: Colors.grey.shade100),
-          children: [
-            _tableCell("Item", isHeader: true),
-            _tableCell("Qty", isHeader: true),
-            _tableCell("Price", isHeader: true),
-            _tableCell("Total", isHeader: true, align: TextAlign.right),
-          ],
-        ),
-        // Table Items
-        ...items.map((item) => TableRow(
-          children: [
-            _tableCell(item['name'] ?? "-"),
-            _tableCell("${item['qty'] ?? 0}"),
-            _tableCell("${item['price'] ?? 0}"),
-            _tableCell("${item['total'] ?? 0}", align: TextAlign.right, isBold: true),
-          ],
-        )),
-      ],
-    );
-  }
-
-  Widget _tableCell(String text, {bool isHeader = false, bool isBold = false, TextAlign align = TextAlign.left}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-      child: Text(
-        text,
-        textAlign: align,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: isHeader || isBold ? FontWeight.bold : FontWeight.normal,
-          color: isHeader ? Colors.black87 : Colors.black54,
-        ),
-      ),
-    );
+  String _cleanNum(num value) {
+    return value % 1 == 0 ? value.toStringAsFixed(0) : value.toString();
   }
 }

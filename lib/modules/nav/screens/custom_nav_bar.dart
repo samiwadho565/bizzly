@@ -50,7 +50,7 @@ class CustomBottomNavBar extends StatelessWidget {
     return SafeArea(
       bottom: false,
       child: Padding(
-        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 18),
+        padding: const EdgeInsets.only(left: 16, right: 16),
         child: ClipRRect(
           borderRadius: borderRadius,
           child: BackdropFilter(

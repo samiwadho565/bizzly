@@ -254,6 +254,8 @@ class ExpenseDetailScreen extends GetView<ExpenseDetailController> {
                     ),
                   ),
 
+                if (controller.model.value?.notes != null) const SizedBox(height: 10),
+                
                 if (controller.model.value?.notes != null)
                   _buildInfoCard(
                     icon: Icons.note,
@@ -264,45 +266,48 @@ class ExpenseDetailScreen extends GetView<ExpenseDetailController> {
                 const SizedBox(height: 10),
 
                 // Repeat Monthly Switch
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(15),
-                    boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Row(
-                        children: [
-                          Icon(Icons.repeat, color: Colors.grey),
-                          SizedBox(width: 12),
-                          Text("Repeat Monthly", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-                        ],
-                      ),
-                      Switch(
-                        value: controller.model.value?.isRecurringMonthly == true,
-                        onChanged: (val) {}, // View only mode
-                        activeColor: AppColors.primary,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
+                // Container(
+                //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                //   decoration: BoxDecoration(
+                //     color: Colors.white,
+                //     borderRadius: BorderRadius.circular(15),
+                //     boxShadow: [
+                //       BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))
+                //     ],
+                //   ),
+                //   child: Row(
+                //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //     children: [
+                //       const Row(
+                //         children: [
+                //           Icon(Icons.repeat, color: Colors.grey),
+                //           SizedBox(width: 12),
+                //           Text("Repeat Monthly", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                //         ],
+                //       ),
+                //       Switch(
+                //         value: controller.model.value?.isRecurringMonthly == true,
+                //         onChanged: (val) {}, // View only mode
+                //         activeColor: AppColors.primary,
+                //       ),
+                //     ],
+                //   ),
+                // ),
+                //const SizedBox(height: 16),
                 if ((controller.model.value?.updatedAt ?? '').isNotEmpty)
                   _buildInfoCard(
                     icon: Icons.update,
                     title: "Updated At",
                     value: controller.formattedUpdatedAt(),
                   ),
-                CustomButton(
-                  text: "Download PDF",
-                  onPressed: () {
-                    controller.downloadPdf();
-                  },
+                Obx(
+                  () => CustomButton(
+                    text: "Download PDF",
+                    isLoading: controller.isDownloadingPdf.value,
+                    onPressed: controller.isDownloadingPdf.value
+                        ? () {}
+                        : controller.downloadPdf,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 CustomButton(

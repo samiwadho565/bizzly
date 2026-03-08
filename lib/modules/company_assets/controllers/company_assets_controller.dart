@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import 'package:bizly/app/constants/app_urls.dart';
@@ -10,6 +11,7 @@ import 'package:bizly/services/api_service.dart';
 import 'package:bizly/utils/app_dialouge.dart';
 import 'package:bizly/utils/app_utils.dart';
 import 'package:bizly/utils/date_formats.dart';
+import 'package:bizly/utils/form_validations.dart';
 
 class CompanyAssetsController extends GetxController {
   final TextEditingController searchController = TextEditingController();
@@ -20,6 +22,14 @@ class CompanyAssetsController extends GetxController {
   final RxBool isDeleting = false.obs;
 
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  final GlobalKey<FormFieldState<String>> assetNameFieldKey =
+      GlobalKey<FormFieldState<String>>();
+  final GlobalKey<FormFieldState<String>> assetTypeFieldKey =
+      GlobalKey<FormFieldState<String>>();
+  final GlobalKey<FormFieldState<String>> valueFieldKey =
+      GlobalKey<FormFieldState<String>>();
+  final GlobalKey assignedToFieldKey = GlobalKey();
+  final GlobalKey purchaseDateFieldKey = GlobalKey();
   final TextEditingController assetNameController = TextEditingController();
   final TextEditingController assetTypeController = TextEditingController();
   final TextEditingController valueController = TextEditingController();
@@ -33,7 +43,52 @@ class CompanyAssetsController extends GetxController {
   final RxList<EmployeeModel> employees = <EmployeeModel>[].obs;
   final RxBool isEmployeesLoading = false.obs;
 
+  static const int assetNameMax = 80;
+  static const int assetTypeMax = 60;
+  static const int assetValueMax = 15;
+
   bool get isEdit => editingAsset.value?.id != null;
+
+  List<TextInputFormatter> get assetNameInputFormatters =>
+      <TextInputFormatter>[
+        LengthLimitingTextInputFormatter(assetNameMax),
+      ];
+
+  List<TextInputFormatter> get assetTypeInputFormatters =>
+      <TextInputFormatter>[
+        LengthLimitingTextInputFormatter(assetTypeMax),
+      ];
+
+  List<TextInputFormatter> get assetValueInputFormatters =>
+      <TextInputFormatter>[
+        FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+        LengthLimitingTextInputFormatter(assetValueMax),
+      ];
+
+  FormFieldValidator<String> get assetNameValidator => (String? value) {
+        return FormValidations.validateCommonName(
+          value ?? '',
+          fieldName: "Asset Name",
+          minLength: 3,
+          maxLength: assetNameMax,
+        );
+      };
+
+  FormFieldValidator<String> get assetTypeValidator => (String? value) {
+        return FormValidations.validateRequiredMinMax(
+          value ?? '',
+          fieldName: "Asset Type",
+          min: 2,
+          max: assetTypeMax,
+        );
+      };
+
+  FormFieldValidator<String> get assetValueValidator => (String? value) {
+        return FormValidations.validateRequiredNumber(
+          value ?? '',
+          fieldName: "Value",
+        );
+      };
 
   @override
   void onInit() {
@@ -130,6 +185,24 @@ class CompanyAssetsController extends GetxController {
       return;
     }
     prepareForCreate();
+  }
+
+  Future<void> submitAssetFromForm() async {
+    if (isSubmitting.value) return;
+    showFieldErrors.value = true;
+    FocusManager.instance.primaryFocus?.unfocus();
+    final bool formValid = formKey.currentState?.validate() ?? false;
+    if (!formValid) {
+      await Future<void>.delayed(Duration.zero);
+      await _scrollToFirstError();
+      return;
+    }
+    if (selectedEmployeeId.value == null || selectedPurchaseDate.value == null) {
+      await Future<void>.delayed(Duration.zero);
+      await _scrollToFirstError();
+      return;
+    }
+    await submitAsset();
   }
 
   void loadForEdit(AssetModel asset) {
@@ -279,6 +352,54 @@ class CompanyAssetsController extends GetxController {
     );
   }
 
+  Future<void> _scrollToFirstError() async {
+    final List<GlobalKey<FormFieldState<String>>> textFieldKeys =
+        <GlobalKey<FormFieldState<String>>>[
+      assetNameFieldKey,
+      assetTypeFieldKey,
+      valueFieldKey,
+    ];
+
+    for (final GlobalKey<FormFieldState<String>> key in textFieldKeys) {
+      final FormFieldState<String>? state = key.currentState;
+      final BuildContext? context = key.currentContext;
+      if (state?.hasError == true && context != null) {
+        await Scrollable.ensureVisible(
+          context,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          alignment: 0.15,
+        );
+        return;
+      }
+    }
+
+    if (selectedEmployeeId.value == null) {
+      final BuildContext? context = assignedToFieldKey.currentContext;
+      if (context != null) {
+        await Scrollable.ensureVisible(
+          context,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          alignment: 0.15,
+        );
+        return;
+      }
+    }
+
+    if (selectedPurchaseDate.value == null) {
+      final BuildContext? context = purchaseDateFieldKey.currentContext;
+      if (context != null) {
+        await Scrollable.ensureVisible(
+          context,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          alignment: 0.15,
+        );
+      }
+    }
+  }
+
   Future<AssetModel?> _fetchAssetById(int id) async {
     final ApiResponse response = await ApiService().get(
       '${AppUrls.getAllAssets}/$id',
@@ -336,6 +457,7 @@ class CompanyAssetsController extends GetxController {
 
   void resetForm() {
     editingAsset.value = null;
+    showFieldErrors.value = false;
     assetNameController.clear();
     assetTypeController.clear();
     valueController.clear();

@@ -3,6 +3,7 @@ class AppImages {
   static const String bizzlyLogo = 'assets/images/bizzly.png';
   static const String background = 'assets/images/background.png';
   static const String profilePlaceholder = 'assets/images/profile.png';
+  static const String customerPicturePlaceholder = 'assets/images/picture.png';
   static const String iconSettings = 'assets/images/icon_settings.png';
   static const String iconHome = 'assets/images/icon_home.png';
   static const String home = 'assets/icons/home.png';
@@ -22,6 +23,7 @@ class AppImages {
   static const String customer = 'assets/icons/customer.png';
   static const String menu = 'assets/icons/menu.png';
   static const String edit = 'assets/icons/edit.png';
+  static const String calendar = 'assets/icons/calendar.png';
 
   // Dialog box icons (SVG)
   static const String dialogSuccess = 'assets/dialog_box/success.svg';

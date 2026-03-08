@@ -23,6 +23,8 @@ import 'package:bizly/modules/invoice/screens/invoice_pdf_preview_screen.dart';
 
 class InvoiceDetailController extends GetxController {
   final Rxn<InvoiceModel> model = Rxn<InvoiceModel>();
+  final Rxn<BusinessModel> business = Rxn<BusinessModel>();
+  final RxBool isViewLoading = false.obs;
   final RxBool isDownloadingPdf = false.obs;
 
   @override
@@ -32,37 +34,62 @@ class InvoiceDetailController extends GetxController {
     if (args is InvoiceModel) {
       model.value = args;
     }
+    loadInvoiceViewData();
   }
 
   Color getStatusColor() {
     switch ((model.value?.status ?? '').toLowerCase()) {
       case "paid":
-        return Colors.green;
+        return const Color(0xFF1B5E20);
       case "pending":
-        return Colors.orange;
+        return const Color(0xFFB26A00);
       case "unpaid":
-        return Colors.redAccent;
+        return const Color(0xFFB71C1C);
       case "partialy-paid":
       case "partially-paid":
       case "partially paid":
-        return Colors.blueAccent;
+        return const Color(0xFF0D47A1);
       default:
-        return Colors.grey.shade300;
+        return Colors.grey.shade700;
+    }
+  }
+
+  Color getStatusBackgroundColor() {
+    switch ((model.value?.status ?? '').toLowerCase()) {
+      case "paid":
+        return const Color(0xFFE8F5E9);
+      case "pending":
+        return const Color(0xFFFFF3E0);
+      case "unpaid":
+        return const Color(0xFFFFEBEE);
+      case "partialy-paid":
+      case "partially-paid":
+      case "partially paid":
+        return const Color(0xFFE3F2FD);
+      default:
+        return Colors.grey.shade100;
     }
   }
 
   Future<void> refreshInvoice() async {
+    await loadInvoiceViewData();
+  }
+
+  Future<void> loadInvoiceViewData() async {
     final int? id = model.value?.id;
     if (id == null) return;
-    final ApiResponse response = await ApiService().get(
-      '${AppUrls.createInvoice}/$id',
-      isAuth: true,
-    );
-    if (!response.success || response.data is! Map) return;
-    final Map<String, dynamic> map = Map<String, dynamic>.from(response.data as Map);
-    final Map<String, dynamic> payload =
-        map['data'] is Map ? Map<String, dynamic>.from(map['data'] as Map) : map;
-    model.value = InvoiceModel.fromJson(payload);
+    isViewLoading.value = true;
+    try {
+      final InvoiceModel? invoice = await _fetchInvoiceById(id);
+      if (invoice == null) return;
+      final InvoiceModel hydrated = await _hydrateInvoiceCustomer(invoice);
+      model.value = hydrated;
+      business.value = hydrated.businessId == null
+          ? null
+          : await _fetchBusinessById(hydrated.businessId!);
+    } finally {
+      isViewLoading.value = false;
+    }
   }
 
   Future<void> deleteInvoice() async {
@@ -138,12 +165,13 @@ class InvoiceDetailController extends GetxController {
 
       final InvoiceModel resolvedInvoice = await _hydrateInvoiceCustomer(invoice);
       model.value = resolvedInvoice;
-      final BusinessModel? business = invoice.businessId == null
+      final BusinessModel? businessModel = invoice.businessId == null
           ? null
           : await _fetchBusinessById(invoice.businessId!);
+      business.value = businessModel;
 
       final pw.Document doc = pw.Document();
-      final Uint8List? logoBytes = await _resolveLogoBytes(business);
+      final Uint8List? logoBytes = await _resolveLogoBytes(businessModel);
 
       doc.addPage(
         pw.MultiPage(
@@ -160,13 +188,13 @@ class InvoiceDetailController extends GetxController {
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  _buildPdfHeader(resolvedInvoice, business, logoBytes),
+                  _buildPdfHeader(resolvedInvoice, businessModel, logoBytes),
                   pw.SizedBox(height: 24),
-                  _buildPdfCustomer(resolvedInvoice, business),
+                  _buildPdfCustomer(resolvedInvoice, businessModel),
                   pw.SizedBox(height: 24),
-                  _buildPdfItems(resolvedInvoice, business),
+                  _buildPdfItems(resolvedInvoice, businessModel),
                   pw.SizedBox(height: 24),
-                  _buildPdfSummary(resolvedInvoice, business),
+                  _buildPdfSummary(resolvedInvoice, businessModel),
                 ],
               ),
             ),
@@ -208,6 +236,90 @@ class InvoiceDetailController extends GetxController {
     );
     if (!response.success || response.data is! Map) return null;
     return InvoiceModel.fromJson(Map<String, dynamic>.from(response.data as Map));
+  }
+
+  String displayBusinessName() {
+    return _firstNonEmpty(
+      <String?>[
+        business.value?.invoiceBusinessName,
+        business.value?.businessName,
+        model.value?.businessName,
+      ],
+      fallback: 'Business',
+    );
+  }
+
+  String displayBusinessAddress() {
+    return _firstNonEmpty(
+      <String?>[
+        business.value?.invoiceBusinessAddress,
+        business.value?.businessAddress,
+      ],
+      fallback: '',
+    );
+  }
+
+  String displayBusinessContact() {
+    return _composeBusinessContact(business.value);
+  }
+
+  String displayBusinessTaxId() {
+    return _firstNonEmpty(
+      <String?>[
+        business.value?.invoiceTaxNtn,
+        business.value?.taxNtnNumber,
+      ],
+      fallback: '',
+    );
+  }
+
+  bool get showCustomerEmail => business.value?.invoiceShowEmail ?? true;
+  bool get showCustomerPhone => business.value?.invoiceShowPhone ?? true;
+
+  String displayCurrency() {
+    return _firstNonEmpty(<String?>[business.value?.currency], fallback: 'PKR');
+  }
+
+  String money(dynamic amount) {
+    return _money(_toNum(amount), displayCurrency());
+  }
+
+  String subtotalText() => money(model.value?.subtotalAmount);
+  String taxText() => money((model.value?.taxEnabled == true) ? model.value?.taxAmount : 0);
+  String totalText() => money(model.value?.totalAmount);
+
+  String paymentTermsText() {
+    final int? days = business.value?.invoiceDueDateDays;
+    if (days == null || days <= 0) return '';
+    return '$days ${days == 1 ? 'day' : 'days'}';
+  }
+
+  String lateFeeText() {
+    final num? fee = _toNum(business.value?.invoiceLateFee);
+    if (fee == null || fee <= 0) return '';
+    return _cleanNum(fee);
+  }
+
+  String termsText() {
+    return _limitText(business.value?.invoiceTermsText ?? '', 120);
+  }
+
+  String additionalNotesText() {
+    return _limitText(business.value?.invoiceAdditionalNotes ?? '', 100);
+  }
+
+  String invoiceNotesText() {
+    return _limitText(model.value?.notes ?? '', 100);
+  }
+
+  String paymentMethodText() {
+    return (model.value?.paymentMethodName ?? '').trim();
+  }
+
+  String thankYouMessageText() {
+    final bool show = business.value?.invoiceShowThankYouMessage ?? true;
+    if (!show) return '';
+    return _limitText(business.value?.invoiceThankYouMessage ?? '', 120);
   }
 
   Future<BusinessModel?> _fetchBusinessById(int id) async {
@@ -342,7 +454,7 @@ class InvoiceDetailController extends GetxController {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Row(
-          crossAxisAlignment: pw.CrossAxisAlignment.center,
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
             if (logoBytes != null)
               pw.ClipRRect(
@@ -359,12 +471,34 @@ class InvoiceDetailController extends GetxController {
               ),
             if (logoBytes != null) pw.SizedBox(width: 10),
             pw.Expanded(
-              child: pw.Text(
-                businessName,
-                style: pw.TextStyle(
-                  fontSize: 18,
-                  fontWeight: pw.FontWeight.bold,
-                ),
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    businessName,
+                    style: pw.TextStyle(
+                      fontSize: 16,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  if (businessAddress.isNotEmpty) ...[
+                    pw.SizedBox(height: 2),
+                    pw.Text(
+                      businessAddress,
+                      style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+                    ),
+                  ],
+                  if (businessEmail.isNotEmpty)
+                    pw.Text(
+                      businessEmail,
+                      style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+                    ),
+                  if (taxNo.isNotEmpty)
+                    pw.Text(
+                      'Tax ID: $taxNo',
+                      style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+                    ),
+                ],
               ),
             ),
             pw.Column(
@@ -389,30 +523,6 @@ class InvoiceDetailController extends GetxController {
             ),
           ],
         ),
-        if (businessAddress.isNotEmpty || businessEmail.isNotEmpty || taxNo.isNotEmpty)
-          pw.Padding(
-            padding: pw.EdgeInsets.only(left: logoBytes != null ? 46 : 0, top: 6),
-            child: pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                if (businessAddress.isNotEmpty)
-                  pw.Text(
-                    businessAddress,
-                    style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
-                  ),
-                if (businessEmail.isNotEmpty)
-                  pw.Text(
-                    businessEmail,
-                    style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
-                  ),
-                if (taxNo.isNotEmpty)
-                  pw.Text(
-                    'Tax ID: $taxNo',
-                    style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
-                  ),
-              ],
-            ),
-          ),
         pw.SizedBox(height: 18),
         pw.Padding(
           padding: const pw.EdgeInsets.symmetric(horizontal: 4),
@@ -521,14 +631,23 @@ class InvoiceDetailController extends GetxController {
     final String terms = _limitText(business?.invoiceTermsText ?? '', 120);
     final String additionalNotes =
         _limitText(business?.invoiceAdditionalNotes ?? '', 100);
+    final bool showThankYou = business?.invoiceShowThankYouMessage ?? true;
+    final String thankYou = showThankYou
+        ? _limitText(business?.invoiceThankYouMessage ?? '', 120)
+        : '';
     final String dueDays = business?.invoiceDueDateDays != null
-        ? '${business!.invoiceDueDateDays} days'
+        ? '${business!.invoiceDueDateDays} ${business.invoiceDueDateDays == 1 ? 'day' : 'days'}'
         : '';
-    final String lateFee = business?.invoiceLateFee != null
-        ? _cleanNum(business!.invoiceLateFee!)
-        : '';
+    final num? lateFeeValue = _toNum(business?.invoiceLateFee);
+    final String lateFee =
+        (lateFeeValue == null || lateFeeValue <= 0) ? '' : _cleanNum(lateFeeValue);
     final String paymentMethod = (invoice.paymentMethodName ?? '').trim();
     final String invoiceNotes = _limitText(invoice.notes ?? '', 100);
+    final List<MapEntry<String, String>> metaEntries = <MapEntry<String, String>>[
+      if (dueDays.isNotEmpty) MapEntry<String, String>('Payment Terms', dueDays),
+      if (lateFee.isNotEmpty) MapEntry<String, String>('Late Fee', lateFee),
+      if (paymentMethod.isNotEmpty) MapEntry<String, String>('Payment Method', paymentMethod),
+    ];
     final bool showTax = invoice.taxEnabled == true;
     final String subtotal = _money(_toNum(invoice.subtotalAmount), currency);
     final String tax = _money(showTax ? _toNum(invoice.taxAmount) : 0, currency);
@@ -542,46 +661,30 @@ class InvoiceDetailController extends GetxController {
           children: [
             pw.Expanded(
               flex: 2,
-              child: pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  if (dueDays.isNotEmpty) ...[
-                    pw.Text(
-                      'Payment Terms',
-                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11),
+              child: metaEntries.isEmpty
+                  ? pw.SizedBox()
+                  : pw.Container(
+                      padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      decoration: pw.BoxDecoration(
+                        color: PdfColors.grey50,
+                        border: pw.Border.all(color: PdfColors.grey200, width: 0.5),
+                        borderRadius: pw.BorderRadius.circular(12),
+                      ),
+                      child: pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: List<pw.Widget>.generate(
+                          metaEntries.length,
+                          (int index) => _pdfMetaInfoRow(
+                            title: metaEntries[index].key,
+                            value: metaEntries[index].value,
+                            valueColor: metaEntries[index].key == 'Late Fee'
+                                ? PdfColors.red700
+                                : PdfColors.grey900,
+                            isLast: index == metaEntries.length - 1,
+                          ),
+                        ),
+                      ),
                     ),
-                    pw.SizedBox(height: 3),
-                    pw.Text(
-                      dueDays,
-                      style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey800),
-                    ),
-                    pw.SizedBox(height: 10),
-                  ],
-                  if (paymentMethod.isNotEmpty) ...[
-                    pw.Text(
-                      'Payment Method',
-                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11),
-                    ),
-                    pw.SizedBox(height: 3),
-                    pw.Text(
-                      paymentMethod,
-                      style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey800),
-                    ),
-                    pw.SizedBox(height: 10),
-                  ],
-                  if (invoiceNotes.isNotEmpty) ...[
-                    pw.Text(
-                      'Invoice Notes',
-                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11),
-                    ),
-                    pw.SizedBox(height: 3),
-                    pw.Text(
-                      invoiceNotes,
-                      style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey800),
-                    ),
-                  ],
-                ],
-              ),
             ),
             pw.SizedBox(width: 14),
             pw.Container(
@@ -620,16 +723,16 @@ class InvoiceDetailController extends GetxController {
             ),
           ],
         ),
-        if (lateFee.isNotEmpty) ...[
+        if (invoiceNotes.isNotEmpty) ...[
           pw.SizedBox(height: 12),
           pw.Text(
-            'Late Fee Policy',
+            'Invoice Notes',
             style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11),
           ),
           pw.SizedBox(height: 3),
           pw.Text(
-            lateFee,
-            style: const pw.TextStyle(fontSize: 10, color: PdfColors.red600),
+            invoiceNotes,
+            style: const pw.TextStyle(fontSize: 9.5, color: PdfColors.grey700),
           ),
         ],
         if (terms.isNotEmpty) ...[
@@ -653,6 +756,18 @@ class InvoiceDetailController extends GetxController {
           pw.SizedBox(height: 3),
           pw.Text(
             additionalNotes,
+            style: const pw.TextStyle(fontSize: 9.5, color: PdfColors.grey700),
+          ),
+        ],
+        if (thankYou.isNotEmpty) ...[
+          pw.SizedBox(height: 12),
+          pw.Text(
+            'Thank You',
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11),
+          ),
+          pw.SizedBox(height: 3),
+          pw.Text(
+            thankYou,
             style: const pw.TextStyle(fontSize: 9.5, color: PdfColors.grey700),
           ),
         ],
@@ -702,6 +817,46 @@ class InvoiceDetailController extends GetxController {
               fontSize: 9,
               fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
               color: PdfColors.grey900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _pdfMetaInfoRow({
+    required String title,
+    required String value,
+    PdfColor valueColor = PdfColors.grey900,
+    bool isLast = false,
+  }) {
+    return pw.Container(
+      margin: pw.EdgeInsets.only(bottom: isLast ? 0 : 7),
+      padding: pw.EdgeInsets.only(bottom: isLast ? 0 : 7),
+      decoration: isLast
+          ? null
+          : const pw.BoxDecoration(
+              border: pw.Border(
+                bottom: pw.BorderSide(color: PdfColors.grey200, width: 0.5),
+              ),
+            ),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            title,
+            style: pw.TextStyle(
+              fontSize: 9,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.grey700,
+            ),
+          ),
+          pw.SizedBox(height: 2),
+          pw.Text(
+            value,
+            style: pw.TextStyle(
+              fontSize: 9.5,
+              color: valueColor,
             ),
           ),
         ],

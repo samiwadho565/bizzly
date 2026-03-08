@@ -15,15 +15,27 @@ import 'package:bizly/components/common/top_border_ccontainer.dart';
 import 'package:bizly/components/common/loader/loader.dart';
 import 'package:bizly/modules/expense/models/expense_model.dart';
 
-class ExpenseScreen extends GetView<ExpensesListController> {
-  ExpenseScreen({super.key});
+class ExpenseScreen extends StatelessWidget {
+  final VoidCallback? openDrawer;
 
+  ExpenseScreen({super.key, this.openDrawer});
+
+  final ExpensesListController controller =
+      Get.isRegistered<ExpensesListController>()
+          ? Get.find<ExpensesListController>()
+          : Get.put(ExpensesListController());
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: CustomAppBar(title: "Expenses"),
+      appBar: CustomAppBar(
+        title: "Expenses",
+        leading: Image.asset(AppImages.menu, height: 40),
+        onLeadingTap: () {
+          openDrawer?.call();
+        },
+      ),
       body: Column(
         children: [
           Expanded(

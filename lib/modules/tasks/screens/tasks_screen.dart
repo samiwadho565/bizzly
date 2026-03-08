@@ -1,4 +1,5 @@
 import 'package:bizly/components/home/custom_app_bar.dart';
+import 'package:bizly/assets/images.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bizly/models/tasks_model.dart';
@@ -17,7 +18,9 @@ import '../../business/screens/business_detail_screen.dart';
 // import 'tasks_screen_controller.dart';
 
 class TasksScreen extends GetView<TasksScreenController> {
-  TasksScreen({super.key});
+  final VoidCallback? openDrawer;
+
+  TasksScreen({super.key, this.openDrawer});
 
 
 
@@ -25,7 +28,13 @@ class TasksScreen extends GetView<TasksScreenController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar:CustomAppBar(title: "Tasks"),
+      appBar: CustomAppBar(
+        title: "Tasks",
+        leading: Image.asset(AppImages.menu, height: 40),
+        onLeadingTap: () {
+          openDrawer?.call();
+        },
+      ),
       body:  TopBorderContainer(
         padding: const EdgeInsets.symmetric(vertical: 32),
         child: RefreshIndicator(

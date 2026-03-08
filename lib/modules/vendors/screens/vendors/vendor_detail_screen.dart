@@ -222,7 +222,14 @@ class VendorDetailScreen extends StatelessWidget {
                         child: CustomButton(
                           text: "Add Bill",
                           onPressed: () {
-                            Get.toNamed(Routes.addExpenseScreen);
+                            Get.toNamed(
+                              Routes.addExpenseScreen,
+                              arguments: <String, dynamic>{
+                                'vendorId': vendor.id,
+                                'vendorName': vendor.vendorName,
+                                'lockVendor': true,
+                              },
+                            );
                           },
                         ),
                       ),

@@ -9,19 +9,30 @@ import 'package:bizly/components/home/custom_app_bar.dart';
 import 'package:bizly/components/invoice/invoice_card.dart';
 import 'package:bizly/components/common/top_border_ccontainer.dart';
 import 'package:bizly/components/common/loader/loader.dart';
+import 'package:bizly/assets/images.dart';
 
 
 class InvoiceScreen extends StatelessWidget {
-  InvoiceScreen({super.key});
+  final VoidCallback? openDrawer;
+
+  InvoiceScreen({super.key, this.openDrawer});
 
   final InvoiceScreenController controller =
-  Get.find<InvoiceScreenController>();
+      Get.isRegistered<InvoiceScreenController>()
+          ? Get.find<InvoiceScreenController>()
+          : Get.put(InvoiceScreenController());
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: CustomAppBar(title: "Invoices"),
+      appBar: CustomAppBar(
+        title: "Invoices",
+        leading: Image.asset(AppImages.menu, height: 40),
+        onLeadingTap: () {
+          openDrawer?.call();
+        },
+      ),
       body: Column(
         children: [
           Expanded(

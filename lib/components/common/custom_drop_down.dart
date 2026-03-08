@@ -16,6 +16,7 @@ class CustomSearchDropdown extends StatelessWidget {
   final TextStyle? textStyle;
   final TextStyle? popupTextStyle;
   final String? displayValue;
+  final bool showDropdownIcon;
 
   const CustomSearchDropdown({
     super.key,
@@ -32,6 +33,7 @@ class CustomSearchDropdown extends StatelessWidget {
     this.popupTextStyle,
     this.width = double.infinity,
     this.enableSearch = false,
+    this.showDropdownIcon = true,
   });
 
   @override
@@ -54,14 +56,20 @@ class CustomSearchDropdown extends StatelessWidget {
       //     ),
       //   ],
       // ),
+      child: Listener(
+        onPointerDown: (_) {
+          FocusManager.instance.primaryFocus?.unfocus();
+        },
+        child: DropdownSearch<String>(
+          items: (filter, infiniteScrollProps) => items,
+          selectedItem: selectedItem,
+          onChanged: (value) {
+            FocusManager.instance.primaryFocus?.unfocus();
+            onChanged(value);
+          },
 
-      child: DropdownSearch<String>(
-        items: (filter, infiniteScrollProps) => items,
-        selectedItem: selectedItem,
-        onChanged: onChanged,
-
-        decoratorProps: DropDownDecoratorProps(
-          decoration: InputDecoration(
+          decoratorProps: DropDownDecoratorProps(
+            decoration: InputDecoration(
             // hintText: hintText,
             hintStyle: textStyle ??
                 const TextStyle(
@@ -82,90 +90,91 @@ class CustomSearchDropdown extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide.none,
             ),
-          ),
-        ),
-
-        dropdownBuilder: (context, selectedItem) {
-          final String? resolvedDisplay = displayValue ?? selectedItem;
-          return Align(
-            alignment: Alignment.centerLeft,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    (resolvedDisplay != null && resolvedDisplay.isNotEmpty)
-                        ? resolvedDisplay
-                        : hintText,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: textStyle ??
-                        const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
-                        ),
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.only(left: 4),
-                  child: Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    size: iconSize ?? 18,
-                  ),
-                ),
-              ],
             ),
-          );
-        },
+          ),
 
-        popupProps: PopupProps.menu(
-          showSearchBox: enableSearch,
-          itemBuilder: (context, item, isDisabled, isSelected) {
-            print("item : $item");
-            return Container(
-              decoration: BoxDecoration(
+          dropdownBuilder: (context, selectedItem) {
+            final String? resolvedDisplay = displayValue ?? selectedItem;
+            return Align(
+              alignment: Alignment.centerLeft,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      (resolvedDisplay != null && resolvedDisplay.isNotEmpty)
+                          ? resolvedDisplay
+                          : hintText,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textStyle ??
+                          const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black,
+                          ),
+                    ),
+                  ),
+                  if (showDropdownIcon)
+                    Padding(
+                      padding: EdgeInsets.only(left: 4),
+                      child: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        size: iconSize ?? 18,
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+
+          popupProps: PopupProps.menu(
+            showSearchBox: enableSearch,
+            itemBuilder: (context, item, isDisabled, isSelected) {
+              return Container(
+                decoration: BoxDecoration(
                   color: isSelected
                       ? AppColors.primary.withOpacity(0.2)
                       : item == "Add New Category" ? AppColors.primary : Colors.transparent,
                 borderRadius: BorderRadius.only(bottomRight: Radius.circular(10), bottomLeft: Radius.circular(10))
-              ),
-              padding: const EdgeInsets.symmetric(
-                  vertical: 10, horizontal: 12),
+                ),
+                padding: const EdgeInsets.symmetric(
+                    vertical: 10, horizontal: 12),
 
-              child: Text(
-                item,
-                textAlign: item == "Add New Category"  ?TextAlign.center : TextAlign.left,
-                style: popupTextStyle ??
-                     TextStyle(
-                      fontSize: 14,
-                      fontWeight: item == "Add New Category" ? FontWeight.w600 : FontWeight.w500,
-                      color: item == "Add New Category" ? Colors.white : Colors.black,
-                    ),
-              ),
-            );
-          },
-          searchFieldProps: TextFieldProps(
-            decoration: InputDecoration(
-              hintText: "Search...",
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
+                child: Text(
+                  item,
+                  textAlign: item == "Add New Category"  ?TextAlign.center : TextAlign.left,
+                  style: popupTextStyle ??
+                       TextStyle(
+                        fontSize: 14,
+                        fontWeight: item == "Add New Category" ? FontWeight.w600 : FontWeight.w500,
+                        color: item == "Add New Category" ? Colors.white : Colors.black,
+                      ),
+                ),
+              );
+            },
+            searchFieldProps: TextFieldProps(
+              decoration: InputDecoration(
+                hintText: "Search...",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
 
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+            ),
+            fit: FlexFit.loose,
+            constraints: const BoxConstraints(maxHeight: 250),
+            menuProps: MenuProps(
+              backgroundColor: AppColors.background,
+              borderRadius: BorderRadius.circular(15),
             ),
           ),
-          fit: FlexFit.loose,
-          constraints: const BoxConstraints(maxHeight: 250),
-          menuProps: MenuProps(
-            backgroundColor: AppColors.background,
-            borderRadius: BorderRadius.circular(15),
-          ),
-        ),
 
-        suffixProps: const DropdownSuffixProps(
-          dropdownButtonProps: DropdownButtonProps(
-            isVisible: false,
+          suffixProps: const DropdownSuffixProps(
+            dropdownButtonProps: DropdownButtonProps(
+              isVisible: false,
+            ),
           ),
         ),
       ),

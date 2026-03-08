@@ -1,9 +1,12 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 
 import 'package:bizly/app/constants/app_urls.dart';
 import 'package:bizly/models/api_response.dart';
@@ -13,10 +16,12 @@ import 'package:bizly/utils/app_dialouge.dart';
 import 'package:bizly/assets/images.dart';
 import 'package:bizly/modules/expense/controllers/expenses_list_controller.dart';
 import 'package:bizly/modules/expense/models/expense_model.dart';
+import 'package:bizly/modules/invoice/screens/invoice_pdf_preview_screen.dart';
 import 'package:bizly/utils/date_formats.dart';
 
 class ExpenseDetailController extends GetxController {
   final Rxn<ExpenseModel> model = Rxn<ExpenseModel>();
+  final RxBool isDownloadingPdf = false.obs;
 
   @override
   void onInit() {
@@ -104,8 +109,9 @@ class ExpenseDetailController extends GetxController {
   }
 
   Future<void> downloadPdf() async {
-    final String id = model.value?.id?.toString() ?? '';
-    if (id.isEmpty) {
+    if (isDownloadingPdf.value) return;
+    final ExpenseModel? expense = model.value;
+    if (expense?.id == null) {
       AppDialogs.showActionDialog(
         iconPath: AppImages.dialogWarning,
         title: "Missing ID",
@@ -114,8 +120,27 @@ class ExpenseDetailController extends GetxController {
       );
       return;
     }
-    final String url = '${AppUrls.expensePdf}/$id/pdf';
-    await _downloadFile(url, 'expense_$id', isPdf: true);
+    isDownloadingPdf.value = true;
+    try {
+      final Uint8List pdfBytes = await _buildExpensePdfBytes(expense!);
+      final String filePath = await _saveExpensePdfFile(expense.id!, pdfBytes);
+      await Get.to(
+        () => InvoicePdfPreviewScreen(
+          bytes: pdfBytes,
+          filePath: filePath,
+          title: 'Expense PDF Preview',
+        ),
+      );
+    } catch (_) {
+      AppDialogs.showActionDialog(
+        iconPath: AppImages.dialogWarning,
+        title: "PDF Failed",
+        message: "Unable to generate expense PDF. Please try again.",
+        actions: [AppDialogAction(label: "Ok")],
+      );
+    } finally {
+      isDownloadingPdf.value = false;
+    }
   }
 
   Future<void> _downloadFile(
@@ -171,5 +196,315 @@ class ExpenseDetailController extends GetxController {
       return path.substring(dot + 1);
     }
     return 'jpg';
+  }
+
+  Future<String> _saveExpensePdfFile(int id, Uint8List bytes) async {
+    final Directory dir = await getApplicationDocumentsDirectory();
+    final String filePath =
+        '${dir.path}/expense_${id}_${DateTime.now().millisecondsSinceEpoch}.pdf';
+    final File file = File(filePath);
+    await file.writeAsBytes(bytes, flush: true);
+    return filePath;
+  }
+
+  Future<Uint8List> _buildExpensePdfBytes(ExpenseModel expense) async {
+    final pw.Document doc = pw.Document();
+    final num amount = _toNum(expense.amount) ?? 0;
+    final num taxAmount = _toNum(expense.taxAmount) ?? 0;
+    final num subtotal = amount - taxAmount;
+
+    doc.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(18),
+        build: (pw.Context context) => <pw.Widget>[
+          pw.Container(
+            padding: const pw.EdgeInsets.all(20),
+            decoration: pw.BoxDecoration(
+              color: PdfColors.white,
+              borderRadius: pw.BorderRadius.circular(18),
+              border: pw.Border.all(color: PdfColors.grey200, width: 0.6),
+            ),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                _buildExpensePdfHeader(expense),
+                pw.SizedBox(height: 22),
+                pw.Row(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Expanded(
+                      child: _buildDetailsSection(
+                        title: 'EXPENSE INFORMATION',
+                        rows: <pw.Widget>[
+                          _pdfRow('Title', expense.title),
+                          _pdfRow('Category', expense.categoryName),
+                          _pdfRow('Expense Date', expense.expenseDate),
+                          _pdfRow('Payment Method', expense.paymentMethodName),
+                          _pdfRow('Reference Number', expense.referenceNumber),
+                          _pdfRow('Updated At', formattedUpdatedAt()),
+                        ],
+                      ),
+                    ),
+                    pw.SizedBox(width: 12),
+                    pw.Expanded(
+                      child: _buildDetailsSection(
+                        title: 'RELATED RECORDS',
+                        rows: <pw.Widget>[
+                          _pdfRow('Business', expense.businessName),
+                          _pdfRow('Vendor', expense.vendorName),
+                          _pdfRow('Customer', expense.customerName),
+                          _pdfRow('Project', expense.projectName),
+                          _pdfRow('Expense Type', expense.expenseType),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 16),
+                if ((expense.notes ?? '').trim().isNotEmpty) ...[
+                  _buildNotesBox(expense.notes!.trim()),
+                  pw.SizedBox(height: 14),
+                ],
+                _buildAmountSummary(
+                  subtotal: subtotal < 0 ? 0 : subtotal,
+                  tax: taxAmount,
+                  total: amount,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+    return doc.save();
+  }
+
+  pw.Widget _buildExpensePdfHeader(ExpenseModel expense) {
+    final String idLabel = expense.id == null ? '-' : '#${expense.id}';
+    final String dateLabel = _cleanText(expense.expenseDate);
+    final String typeLabel = _cleanText(expense.expenseType).toUpperCase();
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.center,
+          children: [
+            pw.Expanded(
+              child: pw.Text(
+                'Expense Report',
+                style: pw.TextStyle(
+                  fontSize: 20,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.grey900,
+                ),
+              ),
+            ),
+            _buildChip(typeLabel == 'N/A' ? 'EXPENSE' : typeLabel),
+          ],
+        ),
+        pw.SizedBox(height: 8),
+        pw.Row(
+          children: [
+            pw.Text(
+              'Expense ID: $idLabel',
+              style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+            ),
+            pw.SizedBox(width: 14),
+            pw.Text(
+              'Date: $dateLabel',
+              style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+            ),
+          ],
+        ),
+        pw.SizedBox(height: 14),
+        pw.Divider(color: PdfColors.grey200, height: 1),
+      ],
+    );
+  }
+
+  pw.Widget _buildDetailsSection({
+    required String title,
+    required List<pw.Widget> rows,
+  }) {
+    return pw.Container(
+      padding: const pw.EdgeInsets.all(12),
+      decoration: pw.BoxDecoration(
+        color: PdfColors.grey50,
+        borderRadius: pw.BorderRadius.circular(12),
+        border: pw.Border.all(color: PdfColors.grey200, width: 0.5),
+      ),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            title,
+            style: pw.TextStyle(
+              fontSize: 10,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.grey800,
+            ),
+          ),
+          pw.SizedBox(height: 8),
+          ...rows,
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _buildNotesBox(String notes) {
+    return pw.Container(
+      width: double.infinity,
+      padding: const pw.EdgeInsets.all(12),
+      decoration: pw.BoxDecoration(
+        borderRadius: pw.BorderRadius.circular(12),
+        border: pw.Border.all(color: PdfColors.grey200, width: 0.5),
+      ),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            'NOTES',
+            style: pw.TextStyle(
+              fontSize: 10,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.grey800,
+            ),
+          ),
+          pw.SizedBox(height: 6),
+          pw.Text(
+            notes,
+            style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey900),
+          ),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _buildAmountSummary({
+    required num subtotal,
+    required num tax,
+    required num total,
+  }) {
+    return pw.Container(
+      width: double.infinity,
+      padding: const pw.EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: pw.BoxDecoration(
+        color: PdfColors.grey50,
+        borderRadius: pw.BorderRadius.circular(12),
+        border: pw.Border.all(color: PdfColors.grey200, width: 0.5),
+      ),
+      child: pw.Column(
+        children: [
+          pw.Text(
+            'Amount Summary',
+            style: pw.TextStyle(
+              fontSize: 11,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.grey900,
+            ),
+          ),
+          pw.SizedBox(height: 10),
+          _amountRow('Subtotal', _money(subtotal)),
+          _amountRow('Tax', _money(tax)),
+          pw.Divider(color: PdfColors.grey300, height: 12),
+          _amountRow('Total', _money(total), bold: true),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _pdfRow(String label, String? value) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 7),
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.SizedBox(
+            width: 88,
+            child: pw.Text(
+              label,
+              style: pw.TextStyle(
+                fontSize: 9,
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColors.grey700,
+              ),
+            ),
+          ),
+          pw.Expanded(
+            child: pw.Text(
+              _cleanText(value),
+              style: const pw.TextStyle(fontSize: 9.5, color: PdfColors.grey900),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _buildChip(String text) {
+    return pw.Container(
+      padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: pw.BoxDecoration(
+        color: PdfColors.blue50,
+        borderRadius: pw.BorderRadius.circular(10),
+        border: pw.Border.all(color: PdfColors.blue300, width: 0.5),
+      ),
+      child: pw.Text(
+        text,
+        style: pw.TextStyle(
+          fontSize: 8,
+          fontWeight: pw.FontWeight.bold,
+          color: PdfColors.blue800,
+        ),
+      ),
+    );
+  }
+
+  pw.Widget _amountRow(String label, String value, {bool bold = false}) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 4),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Text(
+            label,
+            style: pw.TextStyle(
+              fontSize: 10,
+              color: PdfColors.grey800,
+              fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
+            ),
+          ),
+          pw.Text(
+            value,
+            style: pw.TextStyle(
+              fontSize: 10,
+              color: PdfColors.grey900,
+              fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _cleanText(String? value) {
+    final String normalized = (value ?? '').trim();
+    return normalized.isEmpty ? 'N/A' : normalized;
+  }
+
+  String _money(num value) {
+    return 'PKR ${_cleanNum(value)}';
+  }
+
+  num? _toNum(dynamic value) {
+    if (value is num) return value;
+    if (value is String) return num.tryParse(value);
+    return null;
+  }
+
+  String _cleanNum(num value) {
+    return value % 1 == 0 ? value.toStringAsFixed(0) : value.toStringAsFixed(2);
   }
 }

@@ -19,7 +19,10 @@ class CustomersScreen extends GetView<CustomersController> {
     return Scaffold(
       backgroundColor: AppColors.background,
       // appBar: const
-      body: Column(
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: Column(
 
         children: [
             Container(
@@ -94,6 +97,7 @@ class CustomersScreen extends GetView<CustomersController> {
           ),
         ],
       ),
+      ),
 
       // 🔹 Floating Add Button
       floatingActionButton: FloatingActionButton(
@@ -136,15 +140,16 @@ class CustomersScreen extends GetView<CustomersController> {
                       height: 48,
                       fit: BoxFit.cover,
                       placeholder: (_, __) => const Image(
-                        image: AssetImage(AppImages.profilePlaceholder),
+                        image: AssetImage(AppImages.customerPicturePlaceholder),
                         fit: BoxFit.cover,
                       ),
-                      errorWidget: (_, __, ___) => _initialsAvatar(
+                      errorWidget: (_, __, ___) => _firstNameAvatar(
                         customer.customerName,
-                        18,
                       ),
                     )
-                  : _initialsAvatar(customer.customerName, 18),
+                  : _firstNameAvatar(
+                      customer.customerName,
+                    ),
             ),
           ),
           const SizedBox(width: 12),
@@ -178,17 +183,23 @@ class CustomersScreen extends GetView<CustomersController> {
     );
   }
 
-  Widget _initialsAvatar(String name, double fontSize) {
+  Widget _firstNameAvatar(String name) {
+    final String trimmed = name.trim();
+    final String firstLetter =
+        trimmed.isEmpty ? "C" : trimmed[0].toUpperCase();
     return Container(
       width: 48,
       height: 48,
       alignment: Alignment.center,
       color: Colors.transparent,
       child: Text(
-        name.isNotEmpty ? name[0] : "?",
-        style: TextStyle(
-          fontSize: fontSize,
-          fontWeight: FontWeight.bold,
+        firstLetter,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
           color: AppColors.primary,
         ),
       ),

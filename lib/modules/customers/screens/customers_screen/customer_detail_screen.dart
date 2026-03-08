@@ -234,8 +234,14 @@ class CustomerDetailScreen extends StatelessWidget {
                           child: CustomButton(
                             text: "Create Invoice",
                             onPressed: () {
-
-                                Get.toNamed(Routes.createInvoiceScreen);
+                                Get.toNamed(
+                                  Routes.createInvoiceScreen,
+                                  arguments: <String, dynamic>{
+                                    'customerId': customer.id,
+                                    'customerName': customer.customerName,
+                                    'lockCustomer': true,
+                                  },
+                                );
 
                               // TODO: Navigate to CreateInvoiceScreen
                             },
