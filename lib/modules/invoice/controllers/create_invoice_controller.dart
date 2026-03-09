@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:convert';
 
 import 'package:bizly/utils/date_formats.dart';
 import 'package:bizly/app/constants/app_urls.dart';
@@ -62,7 +63,8 @@ class CreateInvoiceController extends GetxController {
   static const int itemUnitPriceMax = 15;
 
   bool get isPaidStatus => status.value == 'paid';
-  bool get isPartialPaidStatus => status.value == 'partialy-paid';
+  bool get isPartialPaidStatus =>
+      _normalizeStatusValue(status.value) == 'partially-paid';
   double get invoiceItemsTotal => _calculateItemsTotal(items);
   double get invoiceSubtotal => invoiceItemsTotal;
   double get invoiceTaxPercent {
@@ -348,24 +350,48 @@ class CreateInvoiceController extends GetxController {
       businessId: selectedBusinessId.value,
       paymentMethodId: selectedPaymentMethodId.value,
       invoiceDate: DateFormats.yyyyMmDd(invoiceDate.value!),
-      status: status.value,
+      status: _apiStatusValue(status.value),
       notes: notesController.text.trim(),
       taxEnabled: taxEnabled.value,
       items: items.toList(),
     );
+    final Map<String, dynamic> requestPayload = model.toJson();
+    if (!isEdit) {
+      requestPayload.remove('invoice_number');
+    }
+    debugPrint(
+      '[Invoice ${isEdit ? "Update" : "Create"}] '
+      'URL=${isEdit ? "${AppUrls.updateInvoice}/${editingInvoiceId.value}" : AppUrls.createInvoice}',
+    );
+    debugPrint('[Invoice ${isEdit ? "Update" : "Create"}] Payload=${jsonEncode(requestPayload)}');
 
     final int? editedId = editingInvoiceId.value;
     final ApiResponse response = isEdit
         ? await ApiService().post(
             '${AppUrls.updateInvoice}/${editingInvoiceId.value}',
-            data: model.toJson(),
+            data: requestPayload,
             isAuth: true,
           )
         : await ApiService().post(
             AppUrls.createInvoice,
-            data: model.toJson(),
+            data: requestPayload,
             isAuth: true,
           );
+    debugPrint(
+      '[Invoice ${isEdit ? "Update" : "Create"}] '
+      'Response success=${response.success}, '
+      'successCode=${response.success ? 1 : 0}, '
+      'statusCode=${response.statusCode}, '
+      'message=${response.message}',
+    );
+    debugPrint(
+      '[Invoice ${isEdit ? "Update" : "Create"}] '
+      'Response errors=${jsonEncode(response.errors)}',
+    );
+    debugPrint(
+      '[Invoice ${isEdit ? "Update" : "Create"}] '
+      'Response data=${jsonEncode(response.data)}',
+    );
 
     if (response.success) {
       InvoiceModel updatedInvoice = _buildUpdatedInvoice(
@@ -650,12 +676,18 @@ class CreateInvoiceController extends GetxController {
     editingInvoice.value = model;
     editingInvoiceId.value = model.id;
     notesController.text = model.notes ?? '';
-    status.value = model.status ?? 'unpaid';
-    if (status.value == 'pending') {
-      status.value = 'unpaid';
-    }
+    status.value = _resolveEditStatus(model);
     taxEnabled.value = model.taxEnabled ?? false;
-    partialPaidAmountController.clear();
+    if (isPartialPaidStatus) {
+      final double? paid = _toDouble(model.paidAmount);
+      if (paid != null && paid > 0) {
+        partialPaidAmountController.text = _formatAmountForInput(paid);
+      } else {
+        partialPaidAmountController.clear();
+      }
+    } else {
+      partialPaidAmountController.clear();
+    }
     if (model.invoiceDate != null && model.invoiceDate!.isNotEmpty) {
       invoiceDate.value = DateTime.tryParse(model.invoiceDate!);
     }
@@ -814,6 +846,49 @@ class CreateInvoiceController extends GetxController {
     if (value is int) return value;
     if (value is num) return value.toInt();
     return int.tryParse(value.toString().trim());
+  }
+
+  String _normalizeStatusValue(String? raw) {
+    final String normalized = (raw ?? '').trim().toLowerCase();
+    if (normalized == 'paid') return 'paid';
+    if (normalized == 'pending' || normalized == 'unpaid') return 'unpaid';
+    if (normalized == 'partialy-paid' ||
+        normalized == 'partially-paid' ||
+        normalized == 'partially paid' ||
+        normalized == 'partialy paid' ||
+        normalized == 'partially_paid' ||
+        normalized == 'partialy_paid' ||
+        normalized == 'partial paid') {
+      return 'partially-paid';
+    }
+    return 'unpaid';
+  }
+
+  String _resolveEditStatus(InvoiceModel model) {
+    final String normalizedStatus = _normalizeStatusValue(model.status);
+    final String normalizedPayment = _normalizeStatusValue(model.paymentStatus);
+    if (normalizedStatus == 'partially-paid' || normalizedStatus == 'paid') {
+      return normalizedStatus;
+    }
+    if (normalizedPayment == 'partially-paid' || normalizedPayment == 'paid') {
+      return normalizedPayment;
+    }
+    return normalizedStatus;
+  }
+
+  String _formatAmountForInput(double value) {
+    if (value % 1 == 0) {
+      return value.toStringAsFixed(0);
+    }
+    return value.toStringAsFixed(2).replaceFirst(RegExp(r'0+$'), '').replaceFirst(RegExp(r'\.$'), '');
+  }
+
+  String _apiStatusValue(String raw) {
+    final String normalized = _normalizeStatusValue(raw);
+    if (normalized == 'partially-paid') {
+      return 'partially_paid';
+    }
+    return normalized;
   }
 
   @override

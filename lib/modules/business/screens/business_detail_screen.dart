@@ -17,7 +17,14 @@ class BusinessDetailScreen extends GetView<BusinessDetailController> {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
+    return GetX<BusinessDetailController>(
+      initState: (_) {
+        final dynamic args = Get.arguments;
+        if (args is BusinessModel) {
+          controller.business.value = args;
+        }
+      },
+      builder: (_) {
       final BusinessModel? business = controller.business.value;
       final String businessName = business?.businessName.isNotEmpty == true
           ? business!.businessName
@@ -284,7 +291,10 @@ class BusinessDetailScreen extends GetView<BusinessDetailController> {
                       child: CustomButton(
                         text: "Business Activity",
                         onPressed: () {
-                          Get.toNamed(Routes.businessTabsScreen);
+                          Get.toNamed(
+                            Routes.businessTabsScreen,
+                            arguments: business,
+                          );
                         },
                       ),
                     ),

@@ -7,6 +7,8 @@ import 'package:bizly/modules/home/controllers/home_controller.dart';
 import 'package:bizly/services/api_service.dart';
 import 'package:bizly/app/constants/app_urls.dart';
 import 'package:bizly/models/api_response.dart';
+import 'package:bizly/modules/expense/models/expense_model.dart';
+import 'package:bizly/modules/invoice/models/invoice_model.dart';
 import 'package:bizly/utils/app_dialouge.dart';
 import 'package:bizly/assets/images.dart';
 import 'package:bizly/routes/routes.dart';
@@ -19,76 +21,16 @@ class BusinessDetailController extends GetxController {
   final RxBool detailsExpanded = false.obs;
   final RxBool isDeleting = false.obs;
 
-  /// Tasks List
-  RxList<TaskModel> tasks = <TaskModel>[
-    TaskModel(
-      id: 1,
-      taskTitle: "Inventory",
-      description: "Manage inventory stock",
-      dueDate: "2026-12-19",
-      assignedEmployeeName: "John Deo",
-      priority: "low",
-      status: "to do",
-    ),
-    TaskModel(
-      id: 2,
-      taskTitle: "Update Prices",
-      description: "Revise product pricing",
-      dueDate: "2026-12-20",
-      assignedEmployeeName: "Ali Traders",
-      priority: "medium",
-      status: "in progress",
-    ),
-    TaskModel(
-      id: 3,
-      taskTitle: "Server Backup",
-      description: "Weekly system backup",
-      dueDate: "2026-12-22",
-      assignedEmployeeName: "Tech Team",
-      priority: "high",
-      status: "to do",
-    ),
-    TaskModel(
-      id: 4,
-      taskTitle: "UI Improvements",
-      description: "Dashboard UI polishing",
-      dueDate: "2026-12-25",
-      assignedEmployeeName: "Design Team",
-      priority: "medium",
-      status: "done",
-    ),
-  ].obs;
-  /// Invoices List
-  final invoices = <Map<String, String>>[
-    {
-      "client": "John Doe",
-      "business": "TechNova",
-      "item": "Website Design",
-      "amount": "\$500",
-      "status": "Paid",
-    },
-    {
-      "client": "Robert De Niro",
-      "business": "Crypto Trading",
-      "item": "Mobile App",
-      "amount": "\$1200",
-      "status": "Paid",
-    },
-    {
-      "client": "John Doe",
-      "business": "TechNova",
-      "item": "Website Design",
-      "amount": "\$500",
-      "status": "Paid",
-    },
-    {
-      "client": "Robert De Niro",
-      "business": "Crypto Trading",
-      "item": "Mobile App",
-      "amount": "\$1200",
-      "status": "Paid",
-    },
-  ].obs;
+  final RxList<ExpenseModel> expenses = <ExpenseModel>[].obs;
+  final RxList<InvoiceModel> invoices = <InvoiceModel>[].obs;
+  final RxList<TaskModel> tasks = <TaskModel>[].obs;
+
+  final RxBool isExpensesLoading = false.obs;
+  final RxBool isInvoicesLoading = false.obs;
+  final RxBool isTasksLoading = false.obs;
+  final RxString expensesError = ''.obs;
+  final RxString invoicesError = ''.obs;
+  final RxString tasksError = ''.obs;
 
   /// Tab change handler
   void changeTab(String tab) {
@@ -102,6 +44,145 @@ class BusinessDetailController extends GetxController {
     if (args is BusinessModel) {
       business.value = args;
     }
+  }
+
+  Future<void> ensureBusinessActivityLoaded() async {
+    await fetchBusinessActivity();
+  }
+
+  Future<void> fetchBusinessActivity() async {
+    await Future.wait([
+      fetchBusinessInvoices(),
+      fetchBusinessExpenses(),
+      fetchBusinessTasks(),
+    ]);
+  }
+
+  Future<void> fetchBusinessExpenses({
+    int? categoryId,
+    int? paymentMethodId,
+    String? expenseType = 'business',
+    String? dateFrom,
+    String? dateTo,
+  }) async {
+    final int? businessId = business.value?.id;
+    if (businessId == null || isExpensesLoading.value) return;
+    isExpensesLoading.value = true;
+    expensesError.value = '';
+
+    final Map<String, dynamic> query = <String, dynamic>{
+      'business_id': businessId.toString(),
+      if (categoryId != null) 'category_id': categoryId.toString(),
+      if (paymentMethodId != null)
+        'payment_method_id': paymentMethodId.toString(),
+      if (expenseType != null && expenseType.trim().isNotEmpty)
+        'expense_type': expenseType.trim(),
+      if (dateFrom != null && dateFrom.trim().isNotEmpty)
+        'date_from': dateFrom.trim(),
+      if (dateTo != null && dateTo.trim().isNotEmpty) 'date_to': dateTo.trim(),
+    };
+
+    final ApiResponse response = await ApiService().get(
+      AppUrls.createExpense,
+      queryParameters: query,
+      isAuth: true,
+    );
+
+    if (response.success) {
+      final List<dynamic> items = _extractList(response.data);
+      expenses.assignAll(
+        items
+            .whereType<Map<String, dynamic>>()
+            .map((e) => ExpenseModel.fromJson(e))
+            .toList(),
+      );
+    } else {
+      expenses.clear();
+      expensesError.value = response.message;
+    }
+
+    isExpensesLoading.value = false;
+  }
+
+  Future<void> fetchBusinessInvoices() async {
+    final int? businessId = business.value?.id;
+    if (businessId == null || isInvoicesLoading.value) return;
+    isInvoicesLoading.value = true;
+    invoicesError.value = '';
+
+    final ApiResponse response = await ApiService().get(
+      AppUrls.createInvoice,
+      queryParameters: <String, dynamic>{
+        'business_id': businessId.toString(),
+      },
+      isAuth: true,
+    );
+
+    if (response.success) {
+      final List<dynamic> items = _extractList(response.data);
+      invoices.assignAll(
+        items
+            .whereType<Map<String, dynamic>>()
+            .map((e) => InvoiceModel.fromJson(e))
+            .toList(),
+      );
+    } else {
+      invoices.clear();
+      invoicesError.value = response.message;
+    }
+
+    isInvoicesLoading.value = false;
+  }
+
+  Future<void> fetchBusinessTasks({
+    String? status,
+    String? priority,
+    int? assignTo,
+    String? dueDateFilter,
+  }) async {
+    final int? businessId = business.value?.id;
+    if (businessId == null || isTasksLoading.value) return;
+    isTasksLoading.value = true;
+    tasksError.value = '';
+
+    final Map<String, dynamic> query = <String, dynamic>{
+      'business_id': businessId.toString(),
+      if (status != null && status.trim().isNotEmpty) 'status': status.trim(),
+      if (priority != null && priority.trim().isNotEmpty)
+        'priority': priority.trim(),
+      if (assignTo != null) 'assign_to': assignTo.toString(),
+      if (dueDateFilter != null && dueDateFilter.trim().isNotEmpty)
+        'due_date_filter': dueDateFilter.trim(),
+    };
+
+    final ApiResponse response = await ApiService().get(
+      AppUrls.getAllTasks,
+      queryParameters: query,
+      isAuth: true,
+    );
+
+    if (response.success) {
+      final List<dynamic> items = _extractList(response.data);
+      tasks.assignAll(
+        items
+            .where((e) => e is Map)
+            .map((e) => TaskModel.fromJson(Map<String, dynamic>.from(e as Map)))
+            .toList(),
+      );
+    } else {
+      tasks.clear();
+      tasksError.value = response.message;
+    }
+
+    isTasksLoading.value = false;
+  }
+
+  List<dynamic> _extractList(dynamic raw) {
+    if (raw is List) return raw;
+    if (raw is Map && raw['data'] is List) {
+      return raw['data'] as List<dynamic>;
+    }
+    return <dynamic>[];
   }
 
   void toggleDetails() {

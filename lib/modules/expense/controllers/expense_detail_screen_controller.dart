@@ -219,7 +219,7 @@ class ExpenseDetailController extends GetxController {
         margin: const pw.EdgeInsets.all(18),
         build: (pw.Context context) => <pw.Widget>[
           pw.Container(
-            padding: const pw.EdgeInsets.all(20),
+            padding: const pw.EdgeInsets.all(18),
             decoration: pw.BoxDecoration(
               color: PdfColors.white,
               borderRadius: pw.BorderRadius.circular(18),
@@ -229,7 +229,7 @@ class ExpenseDetailController extends GetxController {
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
                 _buildExpensePdfHeader(expense),
-                pw.SizedBox(height: 22),
+                pw.SizedBox(height: 16),
                 pw.Row(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
@@ -261,10 +261,10 @@ class ExpenseDetailController extends GetxController {
                     ),
                   ],
                 ),
-                pw.SizedBox(height: 16),
+                pw.SizedBox(height: 12),
                 if ((expense.notes ?? '').trim().isNotEmpty) ...[
                   _buildNotesBox(expense.notes!.trim()),
-                  pw.SizedBox(height: 14),
+                  pw.SizedBox(height: 12),
                 ],
                 _buildAmountSummary(
                   subtotal: subtotal < 0 ? 0 : subtotal,
@@ -284,41 +284,75 @@ class ExpenseDetailController extends GetxController {
     final String idLabel = expense.id == null ? '-' : '#${expense.id}';
     final String dateLabel = _cleanText(expense.expenseDate);
     final String typeLabel = _cleanText(expense.expenseType).toUpperCase();
+    final String generatedOn = DateFormats.dMonY(DateTime.now());
 
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        pw.Row(
-          crossAxisAlignment: pw.CrossAxisAlignment.center,
-          children: [
-            pw.Expanded(
-              child: pw.Text(
-                'Expense Report',
-                style: pw.TextStyle(
-                  fontSize: 20,
-                  fontWeight: pw.FontWeight.bold,
-                  color: PdfColors.grey900,
+        pw.Container(
+          width: double.infinity,
+          padding: const pw.EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: pw.BoxDecoration(
+            color: PdfColors.blue50,
+            borderRadius: pw.BorderRadius.circular(14),
+            border: pw.Border.all(color: PdfColors.blue100, width: 0.7),
+          ),
+          child: pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Expanded(
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text(
+                      'Expense Report',
+                      style: pw.TextStyle(
+                        fontSize: 20,
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColors.grey900,
+                      ),
+                    ),
+                    pw.SizedBox(height: 4),
+                    pw.Text(
+                      'Generated on $generatedOn',
+                      style: const pw.TextStyle(
+                        fontSize: 9.5,
+                        color: PdfColors.grey700,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            _buildChip(typeLabel == 'N/A' ? 'EXPENSE' : typeLabel),
-          ],
+              _buildChip(typeLabel == 'N/A' ? 'EXPENSE' : typeLabel),
+            ],
+          ),
         ),
-        pw.SizedBox(height: 8),
+        pw.SizedBox(height: 10),
         pw.Row(
           children: [
-            pw.Text(
-              'Expense ID: $idLabel',
-              style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+            pw.Expanded(
+              child: _buildMetaPill(
+                label: 'Expense ID',
+                value: idLabel,
+              ),
             ),
-            pw.SizedBox(width: 14),
-            pw.Text(
-              'Date: $dateLabel',
-              style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+            pw.SizedBox(width: 8),
+            pw.Expanded(
+              child: _buildMetaPill(
+                label: 'Expense Date',
+                value: dateLabel,
+              ),
+            ),
+            pw.SizedBox(width: 8),
+            pw.Expanded(
+              child: _buildMetaPill(
+                label: 'Updated At',
+                value: formattedUpdatedAt(),
+              ),
             ),
           ],
         ),
-        pw.SizedBox(height: 14),
+        pw.SizedBox(height: 10),
         pw.Divider(color: PdfColors.grey200, height: 1),
       ],
     );
@@ -338,12 +372,21 @@ class ExpenseDetailController extends GetxController {
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text(
-            title,
-            style: pw.TextStyle(
-              fontSize: 10,
-              fontWeight: pw.FontWeight.bold,
-              color: PdfColors.grey800,
+          pw.Container(
+            width: double.infinity,
+            padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            decoration: pw.BoxDecoration(
+              color: PdfColors.white,
+              borderRadius: pw.BorderRadius.circular(8),
+              border: pw.Border.all(color: PdfColors.grey200, width: 0.5),
+            ),
+            child: pw.Text(
+              title,
+              style: pw.TextStyle(
+                fontSize: 9.5,
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColors.grey800,
+              ),
             ),
           ),
           pw.SizedBox(height: 8),
@@ -358,8 +401,9 @@ class ExpenseDetailController extends GetxController {
       width: double.infinity,
       padding: const pw.EdgeInsets.all(12),
       decoration: pw.BoxDecoration(
+        color: PdfColors.amber50,
         borderRadius: pw.BorderRadius.circular(12),
-        border: pw.Border.all(color: PdfColors.grey200, width: 0.5),
+        border: pw.Border.all(color: PdfColors.amber100, width: 0.7),
       ),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -369,7 +413,7 @@ class ExpenseDetailController extends GetxController {
             style: pw.TextStyle(
               fontSize: 10,
               fontWeight: pw.FontWeight.bold,
-              color: PdfColors.grey800,
+              color: PdfColors.orange800,
             ),
           ),
           pw.SizedBox(height: 6),
@@ -389,27 +433,35 @@ class ExpenseDetailController extends GetxController {
   }) {
     return pw.Container(
       width: double.infinity,
-      padding: const pw.EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const pw.EdgeInsets.all(12),
       decoration: pw.BoxDecoration(
-        color: PdfColors.grey50,
+        color: PdfColors.green50,
         borderRadius: pw.BorderRadius.circular(12),
-        border: pw.Border.all(color: PdfColors.grey200, width: 0.5),
+        border: pw.Border.all(color: PdfColors.green100, width: 0.8),
       ),
-      child: pw.Column(
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text(
-            'Amount Summary',
-            style: pw.TextStyle(
-              fontSize: 11,
-              fontWeight: pw.FontWeight.bold,
-              color: PdfColors.grey900,
+          pw.Expanded(
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(
+                  'Amount Summary',
+                  style: pw.TextStyle(
+                    fontSize: 11,
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.green900,
+                  ),
+                ),
+                pw.SizedBox(height: 10),
+                _amountRow('Subtotal', _money(subtotal)),
+                _amountRow('Tax', _money(tax)),
+              ],
             ),
           ),
-          pw.SizedBox(height: 10),
-          _amountRow('Subtotal', _money(subtotal)),
-          _amountRow('Tax', _money(tax)),
-          pw.Divider(color: PdfColors.grey300, height: 12),
-          _amountRow('Total', _money(total), bold: true),
+          pw.SizedBox(width: 10),
+          _buildGrandTotalCard(total),
         ],
       ),
     );
@@ -426,7 +478,7 @@ class ExpenseDetailController extends GetxController {
             child: pw.Text(
               label,
               style: pw.TextStyle(
-                fontSize: 9,
+                fontSize: 9.2,
                 fontWeight: pw.FontWeight.bold,
                 color: PdfColors.grey700,
               ),
@@ -435,7 +487,7 @@ class ExpenseDetailController extends GetxController {
           pw.Expanded(
             child: pw.Text(
               _cleanText(value),
-              style: const pw.TextStyle(fontSize: 9.5, color: PdfColors.grey900),
+              style: const pw.TextStyle(fontSize: 9.8, color: PdfColors.grey900),
             ),
           ),
         ],
@@ -445,18 +497,17 @@ class ExpenseDetailController extends GetxController {
 
   pw.Widget _buildChip(String text) {
     return pw.Container(
-      padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const pw.EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: pw.BoxDecoration(
-        color: PdfColors.blue50,
-        borderRadius: pw.BorderRadius.circular(10),
-        border: pw.Border.all(color: PdfColors.blue300, width: 0.5),
+        color: PdfColors.blue800,
+        borderRadius: pw.BorderRadius.circular(11),
       ),
       child: pw.Text(
         text,
         style: pw.TextStyle(
-          fontSize: 8,
+          fontSize: 8.5,
           fontWeight: pw.FontWeight.bold,
-          color: PdfColors.blue800,
+          color: PdfColors.white,
         ),
       ),
     );
@@ -472,7 +523,7 @@ class ExpenseDetailController extends GetxController {
             label,
             style: pw.TextStyle(
               fontSize: 10,
-              color: PdfColors.grey800,
+              color: PdfColors.grey700,
               fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
             ),
           ),
@@ -482,6 +533,71 @@ class ExpenseDetailController extends GetxController {
               fontSize: 10,
               color: PdfColors.grey900,
               fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _buildMetaPill({
+    required String label,
+    required String value,
+  }) {
+    return pw.Container(
+      padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+      decoration: pw.BoxDecoration(
+        color: PdfColors.grey50,
+        borderRadius: pw.BorderRadius.circular(8),
+        border: pw.Border.all(color: PdfColors.grey200, width: 0.5),
+      ),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            label,
+            style: const pw.TextStyle(fontSize: 8.2, color: PdfColors.grey600),
+          ),
+          pw.SizedBox(height: 2),
+          pw.Text(
+            _cleanText(value),
+            style: pw.TextStyle(
+              fontSize: 9.4,
+              color: PdfColors.grey900,
+              fontWeight: pw.FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _buildGrandTotalCard(num total) {
+    return pw.Container(
+      width: 132,
+      padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: pw.BoxDecoration(
+        color: PdfColors.green800,
+        borderRadius: pw.BorderRadius.circular(10),
+      ),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            'TOTAL',
+            style: pw.TextStyle(
+              fontSize: 8.8,
+              color: PdfColors.white,
+              fontWeight: pw.FontWeight.bold,
+            ),
+          ),
+          pw.SizedBox(height: 5),
+          pw.Text(
+            _money(total),
+            style: pw.TextStyle(
+              fontSize: 13,
+              color: PdfColors.white,
+              fontWeight: pw.FontWeight.bold,
             ),
           ),
         ],

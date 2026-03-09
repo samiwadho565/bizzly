@@ -15,6 +15,7 @@ import 'package:bizly/modules/team/screens/team_screen/team_screen.dart';
 import 'package:bizly/modules/auth/bindings/login_binding.dart';
 import 'package:bizly/modules/auth/bindings/signup_binding.dart';
 import 'package:bizly/modules/business/bindings/create_business_binding.dart';
+import 'package:bizly/modules/business/bindings/business_activity_binding.dart';
 import 'package:bizly/modules/business/bindings/business_detail_binding.dart';
 import 'package:bizly/modules/expense/bindings/expense_binding.dart';
 import 'package:bizly/modules/expense/bindings/expense_detail_binding.dart';
@@ -236,6 +237,7 @@ class AppPages {
     GetPage(
       name: Routes.businessTabsScreen,
       page: () => const BusinessTabsScreen(),
+      binding: BusinessActivityBinding(),
     ),
     GetPage(
       name: Routes.teamScreen,

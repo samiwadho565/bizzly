@@ -37,6 +37,7 @@ class InvoiceDocumentCard extends StatelessWidget {
   final bool showTax;
   final String totalText;
   final String invoiceNotes;
+  final String paymentTermsText;
   final String lateFeeText;
   final String terms;
   final String additionalNotes;
@@ -64,6 +65,7 @@ class InvoiceDocumentCard extends StatelessWidget {
     this.showTax = false,
     required this.totalText,
     this.invoiceNotes = '',
+    this.paymentTermsText = '',
     this.lateFeeText = '',
     this.terms = '',
     this.additionalNotes = '',
@@ -362,14 +364,14 @@ class InvoiceDocumentCard extends StatelessWidget {
                     : const SizedBox.shrink(),
               ),
               const SizedBox(width: 12),
-              Container(
-                width: 180,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade200),
-                ),
+                Container(
+                  width: 180,
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
                 child: Column(
                   children: [
                     _summaryLine('Subtotal', subtotalText),
@@ -388,6 +390,34 @@ class InvoiceDocumentCard extends StatelessWidget {
             ],
             ),
           ),
+          if (paymentTermsText.trim().isNotEmpty || lateFeeText.trim().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8, bottom: 2),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: paymentTermsText.trim().isNotEmpty
+                        ? _smallInfoCard(
+                            title: 'Payment Terms',
+                            value: paymentTermsText,
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                  const SizedBox(width: 12),
+                  SizedBox(
+                    width: 180,
+                    child: lateFeeText.trim().isNotEmpty
+                        ? _smallInfoCard(
+                            title: 'Late Fee',
+                            value: lateFeeText,
+                            valueColor: Colors.red.shade700,
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ),
+            ),
           if (invoiceNotes.trim().isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 6),
@@ -395,12 +425,6 @@ class InvoiceDocumentCard extends StatelessWidget {
                 title: 'Invoice Notes',
                 value: invoiceNotes,
               ),
-            ),
-          if (lateFeeText.trim().isNotEmpty)
-            _detailSection(
-              title: 'Late Fee',
-              value: lateFeeText,
-              valueColor: Colors.red.shade700,
             ),
           if (terms.trim().isNotEmpty)
             Padding(
@@ -420,6 +444,43 @@ class InvoiceDocumentCard extends StatelessWidget {
               title: 'Thank You',
               value: thankYou,
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _smallInfoCard({
+    required String title,
+    required String value,
+    Color? valueColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
+              color: valueColor ?? Colors.black87,
+            ),
+          ),
         ],
       ),
     );

@@ -37,7 +37,13 @@ class ExpenseDetailScreen extends GetView<ExpenseDetailController> {
         ),
         child: SingleChildScrollView(
           // padding: const EdgeInsets.all(16.0),
-          child: Obx(() => Padding(
+          child: Obx(() {
+            final ExpenseModel? expense = controller.model.value;
+            final num amount = _toNum(expense?.amount) ?? 0;
+            final num taxAmount = _toNum(expense?.taxAmount) ?? 0;
+            final num subtotal = amount - taxAmount;
+
+            return Padding(
             padding: EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,6 +98,11 @@ class ExpenseDetailScreen extends GetView<ExpenseDetailController> {
                   // valueColor: AppColors.textPrimary,
                   valueFontSize: 17,
                   valueFontWeight: FontWeight.bold,
+                ),
+                _buildInfoCard(
+                  icon: Icons.summarize,
+                  title: "Subtotal",
+                  value: _money(subtotal < 0 ? 0 : subtotal),
                 ),
 
                 if (controller.model.value?.expenseDate != null &&
@@ -178,7 +189,7 @@ class ExpenseDetailScreen extends GetView<ExpenseDetailController> {
                 _buildInfoCard(
                   icon: Icons.percent,
                   title: "Tax Amount",
-                  value: (controller.model.value?.taxAmount ?? '').toString(),
+                  value: _money(taxAmount),
                 ),
                 _buildInfoCard(
                   icon: Icons.work,
@@ -322,7 +333,8 @@ class ExpenseDetailScreen extends GetView<ExpenseDetailController> {
                 const SizedBox(height: 30),
               ],
             ),
-          )),
+          );
+          }),
         ),
       ),
     );
@@ -398,6 +410,16 @@ class ExpenseDetailScreen extends GetView<ExpenseDetailController> {
       child: card,
     );
   }
+
+  num? _toNum(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value;
+    final String raw = value.toString().trim();
+    if (raw.isEmpty) return null;
+    return num.tryParse(raw);
+  }
+
+  String _money(num value) => 'Rs. ${value.toStringAsFixed(2)}';
 
   void _showReceiptPreview(BuildContext context) {
     showDialog(

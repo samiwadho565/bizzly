@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:flutter/rendering.dart';
+import 'package:gallery_saver_plus/gallery_saver.dart';
 
 import 'package:bizly/app/constants/app_urls.dart';
 import 'package:bizly/assets/images.dart';
@@ -25,7 +28,10 @@ class InvoiceDetailController extends GetxController {
   final Rxn<InvoiceModel> model = Rxn<InvoiceModel>();
   final Rxn<BusinessModel> business = Rxn<BusinessModel>();
   final RxBool isViewLoading = false.obs;
+  final RxBool isInitialLoadCompleted = false.obs;
   final RxBool isDownloadingPdf = false.obs;
+  final RxBool isCapturingInvoice = false.obs;
+  final GlobalKey invoiceCaptureKey = GlobalKey();
 
   @override
   void onInit() {
@@ -38,7 +44,7 @@ class InvoiceDetailController extends GetxController {
   }
 
   Color getStatusColor() {
-    switch ((model.value?.status ?? '').toLowerCase()) {
+    switch (_resolvedStatus(model.value)) {
       case "paid":
         return const Color(0xFF1B5E20);
       case "pending":
@@ -55,7 +61,7 @@ class InvoiceDetailController extends GetxController {
   }
 
   Color getStatusBackgroundColor() {
-    switch ((model.value?.status ?? '').toLowerCase()) {
+    switch (_resolvedStatus(model.value)) {
       case "paid":
         return const Color(0xFFE8F5E9);
       case "pending":
@@ -76,8 +82,18 @@ class InvoiceDetailController extends GetxController {
   }
 
   Future<void> loadInvoiceViewData() async {
+    final DateTime loadStartedAt = DateTime.now();
     final int? id = model.value?.id;
-    if (id == null) return;
+    if (id == null) {
+      if (!isInitialLoadCompleted.value) {
+        final int elapsedMs = DateTime.now().difference(loadStartedAt).inMilliseconds;
+        if (elapsedMs < 2000) {
+          await Future<void>.delayed(Duration(milliseconds: 2000 - elapsedMs));
+        }
+        isInitialLoadCompleted.value = true;
+      }
+      return;
+    }
     isViewLoading.value = true;
     try {
       final InvoiceModel? invoice = await _fetchInvoiceById(id);
@@ -89,6 +105,13 @@ class InvoiceDetailController extends GetxController {
           : await _fetchBusinessById(hydrated.businessId!);
     } finally {
       isViewLoading.value = false;
+      if (!isInitialLoadCompleted.value) {
+        final int elapsedMs = DateTime.now().difference(loadStartedAt).inMilliseconds;
+        if (elapsedMs < 2000) {
+          await Future<void>.delayed(Duration(milliseconds: 2000 - elapsedMs));
+        }
+        isInitialLoadCompleted.value = true;
+      }
     }
   }
 
@@ -229,6 +252,111 @@ class InvoiceDetailController extends GetxController {
     }
   }
 
+  Future<void> captureInvoiceSnapshot() async {
+    if (isCapturingInvoice.value) return;
+    if (!isInitialLoadCompleted.value || isViewLoading.value) return;
+    final InvoiceModel? current = model.value;
+    if (current == null) {
+      AppDialogs.showActionDialog(
+        iconPath: AppImages.dialogWarning,
+        title: "Missing Invoice",
+        message: "Invoice data is not available.",
+        actions: [AppDialogAction(label: "Ok")],
+      );
+      return;
+    }
+
+    final BuildContext? context = invoiceCaptureKey.currentContext;
+    if (context == null) {
+      AppDialogs.showActionDialog(
+        iconPath: AppImages.dialogWarning,
+        title: "Capture Failed",
+        message: "Unable to capture invoice right now. Please try again.",
+        actions: [AppDialogAction(label: "Ok")],
+      );
+      return;
+    }
+
+    isCapturingInvoice.value = true;
+    AppDialogs.showLoading(message: "Capturing invoice...");
+
+    try {
+      await Future<void>.delayed(const Duration(milliseconds: 40));
+      final RenderObject? renderObject = context.findRenderObject();
+      if (renderObject is! RenderRepaintBoundary) {
+        throw Exception('Invoice boundary not found');
+      }
+
+      final ui.Image image = await renderObject.toImage(pixelRatio: 3);
+      final ByteData? byteData =
+          await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) {
+        throw Exception('Unable to encode image');
+      }
+
+      final Uint8List pngBytes = byteData.buffer.asUint8List();
+      final Directory directory = await getApplicationDocumentsDirectory();
+      final String invoiceNo = (current.invoiceNumber ?? 'invoice').trim();
+      final String safeName = invoiceNo.replaceAll(RegExp(r'[^A-Za-z0-9_-]'), '_');
+      final File file = File(
+        '${directory.path}/${safeName}_${DateTime.now().millisecondsSinceEpoch}.png',
+      );
+      await file.writeAsBytes(pngBytes);
+      final bool? savedToGallery = await GallerySaver.saveImage(
+        file.path,
+        albumName: 'Bizly Invoices',
+      );
+
+      AppDialogs.closeDialog();
+      Get.rawSnackbar(
+        title: (savedToGallery ?? false)
+            ? 'Saved to Gallery'
+            : 'Saved (Local Only)',
+        messageText: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: Image.memory(
+                pngBytes,
+                width: 42,
+                height: 42,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                (savedToGallery ?? false)
+                    ? 'Invoice image saved in your gallery.'
+                    : 'Saved locally at ${file.path}',
+                style: const TextStyle(color: Colors.white),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: AppColors.primaryDense,
+        snackPosition: SnackPosition.BOTTOM,
+        snackStyle: SnackStyle.FLOATING,
+        margin: const EdgeInsets.fromLTRB(14, 0, 14, 16),
+        borderRadius: 14,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        duration: const Duration(seconds: 4),
+      );
+    } catch (_) {
+      AppDialogs.closeDialog();
+      AppDialogs.showActionDialog(
+        iconPath: AppImages.dialogWarning,
+        title: "Capture Failed",
+        message: "Unable to capture invoice image. Please try again.",
+        actions: [AppDialogAction(label: "Ok")],
+      );
+    } finally {
+      isCapturingInvoice.value = false;
+    }
+  }
+
   Future<InvoiceModel?> _fetchInvoiceById(int id) async {
     final ApiResponse response = await ApiService().get(
       '${AppUrls.createInvoice}/$id',
@@ -278,6 +406,42 @@ class InvoiceDetailController extends GetxController {
 
   String displayCurrency() {
     return _firstNonEmpty(<String?>[business.value?.currency], fallback: 'PKR');
+  }
+
+  String resolveInvoiceStatus(InvoiceModel invoice) {
+    return _resolvedStatus(invoice);
+  }
+
+  bool isPartialStatus(InvoiceModel invoice) {
+    return _resolvedStatus(invoice) == 'partialy-paid';
+  }
+
+  String partialPaidAmountText(InvoiceModel invoice) {
+    final num? paid = _toNum(invoice.paidAmount);
+    if (paid != null && paid > 0) {
+      return _money(paid, displayCurrency());
+    }
+
+    final num? total = _toNum(invoice.totalAmount);
+    final num? remaining = _toNum(invoice.remainingAmount);
+    if (total != null && remaining != null) {
+      final num computed = total - remaining;
+      if (computed > 0) {
+        return _money(computed, displayCurrency());
+      }
+    }
+
+    if (invoice.payments.isNotEmpty) {
+      double sum = 0;
+      for (final payment in invoice.payments) {
+        sum += _toNum(payment.paymentAmount) ?? 0;
+      }
+      if (sum > 0) {
+        return _money(sum, displayCurrency());
+      }
+    }
+
+    return _money(0, displayCurrency());
   }
 
   String money(dynamic amount) {
@@ -449,6 +613,7 @@ class InvoiceDetailController extends GetxController {
       ],
       fallback: '',
     );
+    final String resolvedStatus = _resolvedStatus(invoice);
 
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -505,7 +670,7 @@ class InvoiceDetailController extends GetxController {
               crossAxisAlignment: pw.CrossAxisAlignment.end,
               children: [
                 if ((invoice.status ?? '').trim().isNotEmpty) ...[
-                  _buildStatusBadge(invoice.status ?? ''),
+                  _buildStatusBadge(resolvedStatus),
                   pw.SizedBox(height: 6),
                 ],
                 pw.Text(
@@ -643,9 +808,9 @@ class InvoiceDetailController extends GetxController {
         (lateFeeValue == null || lateFeeValue <= 0) ? '' : _cleanNum(lateFeeValue);
     final String paymentMethod = (invoice.paymentMethodName ?? '').trim();
     final String invoiceNotes = _limitText(invoice.notes ?? '', 100);
+    final String partialPaid = _partialPaidAmountForPdf(invoice, currency);
     final List<MapEntry<String, String>> metaEntries = <MapEntry<String, String>>[
-      if (dueDays.isNotEmpty) MapEntry<String, String>('Payment Terms', dueDays),
-      if (lateFee.isNotEmpty) MapEntry<String, String>('Late Fee', lateFee),
+      if (partialPaid.isNotEmpty) MapEntry<String, String>('Partial Paid', partialPaid),
       if (paymentMethod.isNotEmpty) MapEntry<String, String>('Payment Method', paymentMethod),
     ];
     final bool showTax = invoice.taxEnabled == true;
@@ -677,9 +842,7 @@ class InvoiceDetailController extends GetxController {
                           (int index) => _pdfMetaInfoRow(
                             title: metaEntries[index].key,
                             value: metaEntries[index].value,
-                            valueColor: metaEntries[index].key == 'Late Fee'
-                                ? PdfColors.red700
-                                : PdfColors.grey900,
+                            valueColor: PdfColors.grey900,
                             isLast: index == metaEntries.length - 1,
                           ),
                         ),
@@ -689,7 +852,7 @@ class InvoiceDetailController extends GetxController {
             pw.SizedBox(width: 14),
             pw.Container(
               width: 150,
-              padding: const pw.EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              padding: const pw.EdgeInsets.fromLTRB(14, 12, 14, 6),
               decoration: pw.BoxDecoration(
                 color: PdfColors.grey50,
                 border: pw.Border.all(color: PdfColors.grey200, width: 0.5),
@@ -723,6 +886,34 @@ class InvoiceDetailController extends GetxController {
             ),
           ],
         ),
+        if (dueDays.isNotEmpty || lateFee.isNotEmpty) ...[
+          pw.SizedBox(height: 8),
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Expanded(
+                flex: 2,
+                child: dueDays.isNotEmpty
+                    ? _pdfMiniInfoCard(
+                        title: 'Payment Terms',
+                        value: dueDays,
+                      )
+                    : pw.SizedBox(),
+              ),
+              pw.SizedBox(width: 14),
+              pw.Container(
+                width: 150,
+                child: lateFee.isNotEmpty
+                    ? _pdfMiniInfoCard(
+                        title: 'Late Fee',
+                        value: lateFee,
+                        valueColor: PdfColors.red700,
+                      )
+                    : pw.SizedBox(),
+              ),
+            ],
+          ),
+        ],
         if (invoiceNotes.isNotEmpty) ...[
           pw.SizedBox(height: 12),
           pw.Text(
@@ -864,6 +1055,67 @@ class InvoiceDetailController extends GetxController {
     );
   }
 
+  pw.Widget _pdfMiniInfoCard({
+    required String title,
+    required String value,
+    PdfColor valueColor = PdfColors.grey900,
+  }) {
+    return pw.Container(
+      padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: pw.BoxDecoration(
+        color: PdfColors.grey50,
+        border: pw.Border.all(color: PdfColors.grey200, width: 0.5),
+        borderRadius: pw.BorderRadius.circular(10),
+      ),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            title,
+            style: pw.TextStyle(
+              fontSize: 9,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.grey700,
+            ),
+          ),
+          pw.SizedBox(height: 2),
+          pw.Text(
+            value,
+            style: pw.TextStyle(
+              fontSize: 9.5,
+              color: valueColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _partialPaidAmountForPdf(InvoiceModel invoice, String currency) {
+    final num? paid = _toNum(invoice.paidAmount);
+    if (paid != null && paid > 0) {
+      return _money(paid, currency);
+    }
+    final num? total = _toNum(invoice.totalAmount);
+    final num? remaining = _toNum(invoice.remainingAmount);
+    if (total != null && remaining != null) {
+      final num computed = total - remaining;
+      if (computed > 0) {
+        return _money(computed, currency);
+      }
+    }
+    if (invoice.payments.isNotEmpty) {
+      double sum = 0;
+      for (final payment in invoice.payments) {
+        sum += _toNum(payment.paymentAmount) ?? 0;
+      }
+      if (sum > 0) {
+        return _money(sum, currency);
+      }
+    }
+    return '';
+  }
+
   pw.Widget _cell(String text, {bool isHeader = false, pw.TextAlign align = pw.TextAlign.left}) {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 12),
@@ -913,6 +1165,31 @@ class InvoiceDetailController extends GetxController {
   String _money(num? amount, String currency) {
     final num value = amount ?? 0;
     return '$currency ${_cleanNum(value)}';
+  }
+
+  String _resolvedStatus(InvoiceModel? invoice) {
+    final String status = _normalizeStatus(invoice?.status);
+    final String payment = _normalizeStatus(invoice?.paymentStatus);
+
+    if (status == 'paid' || status == 'partialy-paid') return status;
+    if (payment == 'paid' || payment == 'partialy-paid') return payment;
+    return status;
+  }
+
+  String _normalizeStatus(String? raw) {
+    final String normalized = (raw ?? '').trim().toLowerCase();
+    if (normalized == 'paid') return 'paid';
+    if (normalized == 'pending' || normalized == 'unpaid') return 'unpaid';
+    if (normalized == 'partialy-paid' ||
+        normalized == 'partially-paid' ||
+        normalized == 'partially paid' ||
+        normalized == 'partialy paid' ||
+        normalized == 'partially_paid' ||
+        normalized == 'partialy_paid' ||
+        normalized == 'partial paid') {
+      return 'partialy-paid';
+    }
+    return 'unpaid';
   }
 
   String _cleanNum(num value) {

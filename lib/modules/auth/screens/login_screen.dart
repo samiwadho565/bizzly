@@ -13,8 +13,8 @@ class LoginScreen extends GetView<SignInController> {
   @override
   Widget build(BuildContext context) {
 
-    controller.emailController.text = "wadho.dev@gmail.com";
-    controller.passwordController.text = "12345678";
+    // controller.emailController.text = "wadho.dev@gmail.com";
+    // controller.passwordController.text = "12345678";
 
     // Screen ki height aur width nikalne ke liye
     final double screenHeight = MediaQuery.of(context).size.height;

@@ -102,13 +102,13 @@ class InvoicePreviewScreen extends StatelessWidget {
           billToPhone: (clientPhone ?? '').trim(),
           items: lineItems,
           metaEntries: <MapEntry<String, String>>[
-            if ((paymentTerms ?? '').trim().isNotEmpty)
-              MapEntry<String, String>('Payment Terms', paymentTerms!.trim()),
+            const MapEntry<String, String>('Payment Method', 'Bank Transfer'),
           ],
           subtotalText: _money(subtotal),
           taxText: _money(0),
           showTax: false,
           totalText: _money(totalAmount),
+          paymentTermsText: (paymentTerms ?? '').trim(),
           lateFeeText: (lateFee ?? '').trim(),
           terms: (termsAndConditions ?? '').trim(),
           additionalNotes: (additionalNotes ?? '').trim(),

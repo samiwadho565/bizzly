@@ -3,20 +3,40 @@ import 'package:get/get.dart';
 
 import 'package:bizly/components/common/custom_app_bar_2.dart';
 import 'package:bizly/components/common/custom_tab_bar.dart';
-import 'package:bizly/modules/business/controllers/business_controller.dart';
+import 'package:bizly/modules/business/controllers/business_activity_controller.dart';
 import 'package:bizly/modules/business/screens/tabs/business_invoices_tab.dart';
 import 'package:bizly/modules/business/screens/tabs/business_expenses_tab.dart';
 import 'package:bizly/modules/business/screens/tabs/business_tasks_tab.dart';
 
-class BusinessTabsScreen extends StatelessWidget {
+class BusinessTabsScreen extends StatefulWidget {
   const BusinessTabsScreen({super.key});
 
   @override
+  State<BusinessTabsScreen> createState() => _BusinessTabsScreenState();
+}
+
+class _BusinessTabsScreenState extends State<BusinessTabsScreen> {
+  late final BusinessActivityController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.find<BusinessActivityController>();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final controller = Get.find<BusinessDetailController>();
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: const CustomAppBar2(title: "Business Details"),
+      appBar: CustomAppBar2(
+        title: "Business Details",
+        actions: [
+          IconButton(
+            onPressed: controller.fetchBusinessActivity,
+            icon: const Icon(Icons.refresh, color: Colors.black54),
+          ),
+        ],
+      ),
       body: CustomScrollView(
         slivers: [
           SliverPersistentHeader(

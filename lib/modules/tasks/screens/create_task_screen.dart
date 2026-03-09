@@ -6,10 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'package:bizly/assets/images.dart';
 import 'package:bizly/components/common/custom_app_bar_2.dart';
+import 'package:bizly/components/common/business_picker_bottom_sheet.dart';
 import 'package:bizly/components/common/custom_button.dart';
 import 'package:bizly/components/common/custom_drop_down.dart';
 import 'package:bizly/components/common/custom_text_field.dart';
+import 'package:bizly/components/common/loader/loader.dart';
 import 'package:bizly/modules/tasks/controllers/create_task_controller.dart';
 import 'package:bizly/utils/app_colors.dart';
 import 'package:bizly/utils/app_utils.dart';
@@ -31,12 +34,19 @@ class CreateTaskScreen extends GetView<CreateTaskController> {
       backgroundColor: AppColors.background,
       appBar:  CustomAppBar2(title:  controller.isEditMode ? "Update Task" : "Create New Task"),
       body: SafeArea(
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
+        child: Obx(() {
+          final bool showBusinessLoader =
+              controller.isBusinessesLoading.value &&
+                  !controller.isBusinessLocked.value;
+          if (showBusinessLoader) {
+            return const Center(child: FinancePulseLoader());
+          }
+          return GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
                 child: Container(
                   constraints: BoxConstraints(minHeight: constraints.maxHeight),
                   margin: const EdgeInsets.only(top: 15),
@@ -56,53 +66,86 @@ class CreateTaskScreen extends GetView<CreateTaskController> {
                         Text("Task Title", style: sectionTitleStyle),
                         const SizedBox(height: 10),
                         CustomTextField(
+                          fieldKey: controller.titleFieldKey,
                           hintText: "Enter task title...",
                           controller: controller.titleController,
-                          validator: (v) => FormValidations.validateRequiredMin3(
+                          focusNode: controller.titleFocusNode,
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) =>
+                              FocusManager.instance.primaryFocus?.unfocus(),
+                          inputFormatters: controller.taskTitleInputFormatters,
+                          validator: (v) => FormValidations.validateRequiredMinMax(
                             v ?? '',
                             fieldName: "Task Title",
+                            min: 3,
+                            max: CreateTaskController.taskTitleMax,
                           ),
                         ),
                         const SizedBox(height: 20),
-                        Text("Assign to", style: sectionTitleStyle),
-                        const SizedBox(height: 10),
-                        Obx(() {
-                          final List<String> names = controller.employees
-                              .map((e) => e.fullName)
-                              .where((e) => e.isNotEmpty)
-                              .toList();
-                          String? selectedName;
-                          if (controller.selectedEmployeeId.value != null) {
-                            for (final emp in controller.employees) {
-                              if (emp.id == controller.selectedEmployeeId.value) {
-                                selectedName = emp.fullName;
-                                break;
-                              }
-                            }
-                          }
-                          return CustomSearchDropdown(
-                            height: 50,
-                            horizontalPadding: 12,
-                            verticalPadding: 20,
-                            iconSize: 25,
-                            textStyle:
-                                const TextStyle(fontSize: 15, color: Colors.black),
-                            hintText: "Select Employee",
-                            items: names,
-                            selectedItem: selectedName,
-                            onChanged: (val) {
-                              FocusManager.instance.primaryFocus?.unfocus();
-                              int? id;
-                              for (final emp in controller.employees) {
-                                if (emp.fullName == val) {
-                                  id = emp.id;
-                                  break;
+                        Container(
+                          key: controller.businessFieldKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Business", style: sectionTitleStyle),
+                              const SizedBox(height: 10),
+                              Obx(
+                                () => _buildBusinessSelector(context),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Container(
+                          key: controller.assignFieldKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Assign to", style: sectionTitleStyle),
+                              const SizedBox(height: 10),
+                              Obx(() {
+                                final List<String> names = controller.employees
+                                    .map((e) => e.fullName)
+                                    .where((e) => e.isNotEmpty)
+                                    .toList();
+                                String? selectedName;
+                                if (controller.selectedEmployeeId.value != null) {
+                                  for (final emp in controller.employees) {
+                                    if (emp.id ==
+                                        controller.selectedEmployeeId.value) {
+                                      selectedName = emp.fullName;
+                                      break;
+                                    }
+                                  }
                                 }
-                              }
-                              controller.selectedEmployeeId.value = id;
-                            },
-                          );
-                        }),
+                                return CustomSearchDropdown(
+                                  height: 50,
+                                  horizontalPadding: 12,
+                                  verticalPadding: 20,
+                                  iconSize: 25,
+                                  textStyle: const TextStyle(
+                                    fontSize: 15,
+                                    color: Colors.black,
+                                  ),
+                                  hintText: "Select Employee",
+                                  items: names,
+                                  selectedItem: selectedName,
+                                  onChanged: (val) {
+                                    FocusManager.instance.primaryFocus?.unfocus();
+                                    int? id;
+                                    for (final emp in controller.employees) {
+                                      if (emp.fullName == val) {
+                                        id = emp.id;
+                                        break;
+                                      }
+                                    }
+                                    controller.selectedEmployeeId.value = id;
+                                  },
+                                );
+                              }),
+                            ],
+                          ),
+                        ),
                         const SizedBox(height: 20),
                         Row(
                           children: [
@@ -124,7 +167,9 @@ class CreateTaskScreen extends GetView<CreateTaskController> {
                                       ),
                                       hintText: "Select",
                                       items: const ["High", "Medium", "Low"],
-                                      selectedItem: _cap(controller.selectedPriorityCreate.value),
+                                      selectedItem: _cap(
+                                        controller.selectedPriorityCreate.value,
+                                      ),
                                       onChanged: (val) {
                                         if (val == null) return;
                                         controller.selectedPriorityCreate.value =
@@ -137,59 +182,76 @@ class CreateTaskScreen extends GetView<CreateTaskController> {
                             ),
                             const SizedBox(width: 15),
                             Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text("Due Date", style: sectionTitleStyle),
-                                  const SizedBox(height: 10),
-                                  Obx(
-                                    () => GestureDetector(
-                                      onTap: () async {
-                                        FocusManager.instance.primaryFocus
-                                            ?.unfocus();
-                                        final DateTime? date =
-                                            await AppUtils.pickDate();
-                                        if (date != null) {
-                                          controller.selectedDueDate.value = date;
-                                        }
-                                      },
-                                      child: Container(
-                                        height: 50,
-                                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.textField,
-                                          borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(
-                                            color: Colors.grey.shade300,
+                              child: Container(
+                                key: controller.dueDateFieldKey,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text("Due Date", style: sectionTitleStyle),
+                                    const SizedBox(height: 10),
+                                    Obx(
+                                      () => GestureDetector(
+                                        onTap: () async {
+                                          FocusManager.instance.primaryFocus
+                                              ?.unfocus();
+                                          final DateTime? date =
+                                              await AppUtils.pickDate(
+                                            initialDate:
+                                                controller.selectedDueDate.value ??
+                                                    DateTime.now(),
+                                          );
+                                          if (date != null) {
+                                            controller.selectedDueDate.value = date;
+                                          }
+                                        },
+                                        child: Container(
+                                          height: 50,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
                                           ),
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text(
-                                              controller.selectedDueDate.value == null
-                                                  ? "Pick Date"
-                                                  : DateFormats.dMonY(
-                                                      controller.selectedDueDate.value!),
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                color: controller.selectedDueDate.value == null
-                                                    ? Colors.grey
-                                                    : Colors.black,
+                                          decoration: BoxDecoration(
+                                            color: AppColors.textField,
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            border: Border.all(
+                                              color: Colors.grey.shade300,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                controller.selectedDueDate.value ==
+                                                        null
+                                                    ? "Pick Date"
+                                                    : DateFormats.dMonY(
+                                                        controller.selectedDueDate
+                                                            .value!,
+                                                      ),
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  color: controller.selectedDueDate
+                                                              .value ==
+                                                          null
+                                                      ? Colors.grey
+                                                      : Colors.black,
+                                                ),
                                               ),
-                                            ),
-                                            Icon(
-                                              Icons.calendar_month,
-                                              size: 18,
-                                              color: Colors.grey.shade600,
-                                            ),
-                                          ],
+                                              Image.asset(
+                                                AppImages.calendar,
+                                                width: 18,
+                                                height: 18,
+                                                color: Colors.grey.shade600,
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ],
@@ -220,12 +282,21 @@ class CreateTaskScreen extends GetView<CreateTaskController> {
                         Text("Description", style: sectionTitleStyle),
                         const SizedBox(height: 10),
                         CustomTextField(
+                          fieldKey: controller.descriptionFieldKey,
                           hintText: "Write task details here...",
                           controller: controller.descriptionController,
+                          focusNode: controller.descriptionFocusNode,
                           maxLine: 4,
-                          validator: (v) => FormValidations.validateRequired(
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) =>
+                              FocusManager.instance.primaryFocus?.unfocus(),
+                          inputFormatters:
+                              controller.taskDescriptionInputFormatters,
+                          validator: (v) => FormValidations.validateRequiredMinMax(
                             v ?? '',
                             fieldName: "Description",
+                            min: 1,
+                            max: CreateTaskController.taskDescriptionMax,
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -417,9 +488,10 @@ class CreateTaskScreen extends GetView<CreateTaskController> {
                   ),
                 ),
               );
-            },
-          ),
-        ),
+              },
+            ),
+          );
+        }),
       ),
     );
   }
@@ -434,6 +506,91 @@ class CreateTaskScreen extends GetView<CreateTaskController> {
     if (raw.toLowerCase() == 'in progress') return 'In Progress';
     if (raw.toLowerCase() == 'done') return 'Done';
     return raw;
+  }
+
+  Widget _buildBusinessSelector(BuildContext context) {
+    final bool isLocked = controller.isBusinessLocked.value;
+    final String selectedName = controller.selectedBusinessName ?? '';
+    final bool hasSelection = selectedName.isNotEmpty;
+    final String? imageUrl = controller.selectedBusinessImageUrl;
+    final bool isLoading = controller.isBusinessesLoading.value &&
+        controller.businesses.isEmpty;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: isLocked || isLoading
+          ? null
+          : () async {
+              FocusManager.instance.primaryFocus?.unfocus();
+              final selected = await showBusinessPickerBottomSheet(
+                context,
+                businesses: controller.businesses.toList(),
+                selectedBusinessId: controller.selectedBusinessId.value,
+              );
+              if (selected != null) {
+                controller.setSelectedBusinessByName(selected.businessName);
+              }
+            },
+      child: Container(
+        height: 50,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: AppColors.textField,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Row(
+          children: [
+            _businessAvatar(imageUrl),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                isLoading
+                    ? "Loading businesses..."
+                    : (hasSelection ? selectedName : "Select Business"),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: hasSelection ? Colors.black : Colors.grey,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            if (!isLocked && !isLoading)
+              Icon(
+                Icons.keyboard_arrow_down_rounded,
+                size: 22,
+                color: Colors.grey.shade700,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _businessAvatar(String? imageUrl) {
+    final String normalized = imageUrl?.trim() ?? '';
+    if (normalized.isEmpty) {
+      return CircleAvatar(
+        radius: 14,
+        backgroundColor: AppColors.greyCard,
+        child: const Icon(Icons.business, size: 14, color: Colors.black54),
+      );
+    }
+    return ClipOval(
+      child: CachedNetworkImage(
+        imageUrl: normalized,
+        width: 28,
+        height: 28,
+        fit: BoxFit.cover,
+        errorWidget: (_, __, ___) => CircleAvatar(
+          radius: 14,
+          backgroundColor: AppColors.greyCard,
+          child: const Icon(Icons.business, size: 14, color: Colors.black54),
+        ),
+      ),
+    );
   }
 
   void _openLocalImagePreview(BuildContext context, File file) {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'dart:convert';
 
 import 'package:bizly/app/constants/app_urls.dart';
 import 'package:bizly/assets/images.dart';
@@ -92,6 +93,8 @@ class TaskDetailController extends GetxController {
     task.value = TaskModel(
       id: current.id,
       userId: current.userId,
+      businessId: current.businessId,
+      businessName: current.businessName,
       assignTo: current.assignTo,
       assignedEmployeeName: current.assignedEmployeeName,
       taskTitle: current.taskTitle,
@@ -171,10 +174,43 @@ class TaskDetailController extends GetxController {
   Future<void> editTask() async {
     final TaskModel? current = task.value;
     if (current == null) return;
+    TaskModel taskForEdit = current;
+    if (current.id != null) {
+      final TaskModel? fresh = await _fetchTaskById(current.id!);
+      if (fresh != null) {
+        taskForEdit = TaskModel(
+          id: fresh.id ?? current.id,
+          userId: fresh.userId ?? current.userId,
+          businessId: fresh.businessId ?? current.businessId,
+          businessName: (fresh.businessName?.trim().isNotEmpty == true)
+              ? fresh.businessName
+              : current.businessName,
+          assignTo: fresh.assignTo ?? current.assignTo,
+          assignedEmployeeName:
+              (fresh.assignedEmployeeName?.trim().isNotEmpty == true)
+                  ? fresh.assignedEmployeeName
+                  : current.assignedEmployeeName,
+          taskTitle:
+              fresh.taskTitle.trim().isNotEmpty ? fresh.taskTitle : current.taskTitle,
+          priority:
+              fresh.priority.trim().isNotEmpty ? fresh.priority : current.priority,
+          dueDate: fresh.dueDate.trim().isNotEmpty ? fresh.dueDate : current.dueDate,
+          description: fresh.description.trim().isNotEmpty
+              ? fresh.description
+              : current.description,
+          status: fresh.status.trim().isNotEmpty ? fresh.status : current.status,
+          attachments: fresh.attachments.isNotEmpty
+              ? fresh.attachments
+              : current.attachments,
+          createdAt: fresh.createdAt ?? current.createdAt,
+          updatedAt: fresh.updatedAt ?? current.updatedAt,
+        );
+      }
+    }
 
     final dynamic result = await Get.toNamed(
       Routes.createTaskScreen,
-      arguments: current,
+      arguments: taskForEdit,
     );
     if (result is TaskModel) {
       task.value = result;
@@ -182,36 +218,70 @@ class TaskDetailController extends GetxController {
     }
   }
 
+  Future<TaskModel?> _fetchTaskById(int id) async {
+    final ApiResponse response = await ApiService().get(
+      '${AppUrls.getAllTasks}/$id',
+      isAuth: true,
+    );
+    debugPrint(
+      '[Task By Id] id=$id success=${response.success} statusCode=${response.statusCode} '
+      'message=${response.message}',
+    );
+    debugPrint(
+      '[Task By Id] data=${jsonEncode(response.data)}',
+    );
+    if (!response.success || response.data is! Map) return null;
+    final Map<String, dynamic> map =
+        Map<String, dynamic>.from(response.data as Map);
+    final Map<String, dynamic> payload =
+        map['data'] is Map ? Map<String, dynamic>.from(map['data'] as Map) : map;
+    debugPrint('[Task By Id] payload=${jsonEncode(payload)}');
+    return TaskModel.fromJson(payload);
+  }
+
   Future<void> deleteTask() async {
     final TaskModel? current = task.value;
     if (current?.id == null) return;
 
-    AppDialogs.showConfirmation(
-      title: "Delete Task",
-      message: "Are you sure you want to delete this task?",
-      onYes: () async {
-        AppDialogs.showLoading(message: "Deleting...");
-        final ApiResponse response = await ApiService().delete(
-          '${AppUrls.deleteTask}/${current!.id}',
-          isAuth: true,
-        );
-        AppDialogs.closeDialog();
-
-        if (!response.success) {
-          AppDialogs.showActionDialog(
-            iconPath: AppImages.dialogWarning,
-            title: "Error!",
-            message: response.message,
-            actions: [AppDialogAction(label: "Ok")],
-          );
-          return;
-        }
-
-        if (Get.isRegistered<TasksScreenController>()) {
-          Get.find<TasksScreenController>().fetchTasks();
-        }
-        Get.back(result: true);
-      },
+    AppDialogs.showActionDialog(
+      iconPath: AppImages.dialogTrash,
+      title: "Delete Task!",
+      message: "Are you sure you want to delete ${current!.taskTitle}?",
+      actions: [
+        AppDialogAction(
+          label: "Delete Task",
+          textColor: Colors.red,
+          onPressed: () async {
+            Get.back();
+            await _performDeleteTask(current.id!);
+          },
+        ),
+        AppDialogAction(label: "Cancel"),
+      ],
     );
+  }
+
+  Future<void> _performDeleteTask(int taskId) async {
+    AppDialogs.showLoading(message: "Deleting...");
+    final ApiResponse response = await ApiService().delete(
+      '${AppUrls.deleteTask}/$taskId',
+      isAuth: true,
+    );
+    AppDialogs.closeDialog();
+
+    if (!response.success) {
+      AppDialogs.showActionDialog(
+        iconPath: AppImages.dialogWarning,
+        title: "Error!",
+        message: response.message,
+        actions: [AppDialogAction(label: "Ok")],
+      );
+      return;
+    }
+
+    if (Get.isRegistered<TasksScreenController>()) {
+      Get.find<TasksScreenController>().fetchTasks();
+    }
+    Get.back(result: true);
   }
 }

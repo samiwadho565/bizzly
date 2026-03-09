@@ -8,7 +8,7 @@ import 'package:bizly/modules/expense/controllers/expenses_list_controller.dart'
 import 'package:bizly/routes/routes.dart';
 import 'package:bizly/components/common/add_button.dart';
 import 'package:bizly/components/common/custom_search_field.dart';
-import 'package:bizly/components/common/custom_tab_bar.dart';
+import 'package:bizly/components/common/custom_drop_down.dart';
 import 'package:bizly/modules/expense/components/expense_card_widget.dart';
 import 'package:bizly/components/home/custom_app_bar.dart';
 import 'package:bizly/components/common/top_border_ccontainer.dart';
@@ -63,6 +63,73 @@ class ExpenseScreen extends StatelessWidget {
                     ),
 
                     const SizedBox(height: 20),
+                    Obx(() {
+                      final List<String> categoryNames = controller.categories
+                          .map((e) => e['name']?.toString() ?? '')
+                          .where((e) => e.isNotEmpty)
+                          .toList();
+                      final List<String> paymentNames = controller.paymentMethods
+                          .map((e) => e['name']?.toString() ?? '')
+                          .where((e) => e.isNotEmpty)
+                          .toList();
+                      final bool hasFilters =
+                          controller.selectedCategoryId.value != null ||
+                              controller.selectedPaymentMethodId.value != null;
+                      return Column(
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: CustomSearchDropdown(
+                                  height: 50,
+                                  hintText: "Category",
+                                  items: categoryNames,
+                                  selectedItem: controller.selectedCategoryName,
+                                  onChanged: controller.setCategoryFilterByName,
+                                  textStyle: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: CustomSearchDropdown(
+                                  height: 50,
+                                  hintText: "Payment Method",
+                                  items: paymentNames,
+                                  selectedItem:
+                                      controller.selectedPaymentMethodName,
+                                  onChanged:
+                                      controller.setPaymentMethodFilterByName,
+                                  textStyle: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (hasFilters) ...[
+                            const SizedBox(height: 10),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: GestureDetector(
+                                onTap: controller.clearFilters,
+                                child: Text(
+                                  'Clear Filters',
+                                  style: TextStyle(
+                                    color: AppColors.primary,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      );
+                    }),
 
                     // Obx(() => CustomTabBar(
                     //   options: const ["All", "Business", "Personal"],

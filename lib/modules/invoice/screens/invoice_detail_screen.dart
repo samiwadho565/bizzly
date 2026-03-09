@@ -22,6 +22,9 @@ class InvoiceDetailScreen extends GetView<InvoiceDetailController> {
       backgroundColor: AppColors.background,
       body: Obx(
         () {
+          if (!controller.isInitialLoadCompleted.value) {
+            return const Center(child: FinancePulseLoader());
+          }
           if (controller.isViewLoading.value && controller.model.value == null) {
             return const Center(child: FinancePulseLoader());
           }
@@ -50,45 +53,74 @@ class InvoiceDetailScreen extends GetView<InvoiceDetailController> {
                   Expanded(
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-                      child: _invoicePreview(invoice),
+                      child: RepaintBoundary(
+                        key: controller.invoiceCaptureKey,
+                        child: _invoicePreview(invoice),
+                      ),
                     ),
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     child: Obx(
-                      () => CustomButton(
-                        text: "Download PDF",
-                        isLoading: controller.isDownloadingPdf.value,
-                        onPressed: controller.isDownloadingPdf.value
-                            ? () {}
-                            : controller.downloadPdf,
-                      ),
+                      () {
+                        final bool canTakeScreenshot = controller.isInitialLoadCompleted.value &&
+                            !controller.isViewLoading.value &&
+                            controller.model.value != null &&
+                            !controller.isCapturingInvoice.value;
+                        final bool canDownloadPdf = controller.isInitialLoadCompleted.value &&
+                            !controller.isViewLoading.value &&
+                            controller.model.value != null &&
+                            !controller.isDownloadingPdf.value;
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: CustomButton(
+                                text: "Take Screenshot",
+                                isLoading: controller.isCapturingInvoice.value,
+                                onPressed: canTakeScreenshot
+                                    ? controller.captureInvoiceSnapshot
+                                    : () {},
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: CustomButton(
+                                text: "Download PDF",
+                                isLoading: controller.isDownloadingPdf.value,
+                                onPressed: canDownloadPdf
+                                    ? controller.downloadPdf
+                                    : () {},
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
                     child: Row(
                       children: [
-                        Expanded(
-                          child: _actionIconButton(
-                            icon: Icons.edit_outlined,
-                            label: 'Edit',
-                            onTap: () async {
-                              final dynamic result = await Get.toNamed(
-                                Routes.createInvoiceScreen,
-                                arguments: controller.model.value,
-                              );
-                              if (result is InvoiceModel) {
-                                controller.model.value = result;
-                              } else {
-                                await controller.refreshInvoice();
-                              }
-                              if (Get.isRegistered<InvoiceScreenController>()) {
-                                Get.find<InvoiceScreenController>().fetchInvoices();
-                              }
-                            },
-                          ),
-                        ),
+                        // Expanded(
+                        //   child: _actionIconButton(
+                        //     icon: Icons.edit_outlined,
+                        //     label: 'Edit',
+                        //     onTap: () async {
+                        //       final dynamic result = await Get.toNamed(
+                        //         Routes.createInvoiceScreen,
+                        //         arguments: controller.model.value,
+                        //       );
+                        //       if (result is InvoiceModel) {
+                        //         controller.model.value = result;
+                        //       } else {
+                        //         await controller.refreshInvoice();
+                        //       }
+                        //       if (Get.isRegistered<InvoiceScreenController>()) {
+                        //         Get.find<InvoiceScreenController>().fetchInvoices();
+                        //       }
+                        //     },
+                        //   ),
+                        // ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: _actionIconButton(
@@ -132,7 +164,7 @@ class InvoiceDetailScreen extends GetView<InvoiceDetailController> {
   }
 
   Widget _invoicePreview(InvoiceModel invoice) {
-    final String status = (invoice.status ?? '').trim();
+    final String status = controller.resolveInvoiceStatus(invoice);
     final List<InvoiceDocumentLineItem> lineItems = invoice.items
         .map(
           (item) => InvoiceDocumentLineItem(
@@ -160,8 +192,11 @@ class InvoiceDetailScreen extends GetView<InvoiceDetailController> {
       billToPhone: controller.showCustomerPhone ? (invoice.customerPhone ?? '') : '',
       items: lineItems,
       metaEntries: <MapEntry<String, String>>[
-        if (controller.paymentTermsText().isNotEmpty)
-          MapEntry<String, String>('Payment Terms', controller.paymentTermsText()),
+        if (controller.isPartialStatus(invoice))
+          MapEntry<String, String>(
+            'Partial Paid',
+            controller.partialPaidAmountText(invoice),
+          ),
         if (controller.paymentMethodText().isNotEmpty)
           MapEntry<String, String>('Payment Method', controller.paymentMethodText()),
       ],
@@ -170,6 +205,7 @@ class InvoiceDetailScreen extends GetView<InvoiceDetailController> {
       showTax: invoice.taxEnabled == true,
       totalText: controller.totalText(),
       invoiceNotes: controller.invoiceNotesText(),
+      paymentTermsText: controller.paymentTermsText(),
       lateFeeText: controller.lateFeeText(),
       terms: controller.termsText(),
       additionalNotes: controller.additionalNotesText(),

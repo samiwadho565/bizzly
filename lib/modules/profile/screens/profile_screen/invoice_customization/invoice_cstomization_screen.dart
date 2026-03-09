@@ -72,9 +72,9 @@ class InvoiceCustomizationScreen extends StatelessWidget {
                     isAction: true,
                   ),
                 ),
-                Obx(() => _infoRow("Business Name", controller.businessName.value, onTap: () => controller.editField("Business Name", controller.businessName))),
-                Obx(() => _infoRow("Business Address", controller.businessAddress.value, onTap: () => controller.editField("Business Address", controller.businessAddress))),
-                Obx(() => _infoRow("Email / Phone", controller.businessEmail.value, onTap: () => controller.editField("Email / Phone", controller.businessEmail))),
+                Obx(() => _infoRow("Business Name", controller.businessName.value, onTap: () => controller.editField("Business Name", controller.businessName, maxLength: 60))),
+                Obx(() => _infoRow("Business Address", controller.businessAddress.value, onTap: () => controller.editField("Business Address", controller.businessAddress, maxLength: 120, maxLines: 2))),
+                Obx(() => _infoRow("Email / Phone", controller.businessEmail.value, onTap: () => controller.editField("Email / Phone", controller.businessEmail, maxLength: 80))),
                 Obx(() => _infoRow("Tax / Registration No.", controller.taxNo.value, onTap: null, showIcon: false)),
                 //Obx(() => _infoRow("Tax / Registration No.", controller.taxNo.value, onTap: () => controller.editField("Tax No", controller.taxNo))),
               ],
@@ -132,6 +132,7 @@ class InvoiceCustomizationScreen extends StatelessWidget {
                     onTap: () => controller.editField(
                       "Precision",
                       controller.precision,
+                      maxLength: 2,
                       keyboardType: TextInputType.number,
                       inputFormatters: <TextInputFormatter>[
                         FilteringTextInputFormatter.digitsOnly,
@@ -156,6 +157,7 @@ class InvoiceCustomizationScreen extends StatelessWidget {
                     onTap: () => controller.editField(
                       "Due Date",
                       controller.dueDate,
+                      maxLength: 3,
                       keyboardType: TextInputType.number,
                       inputFormatters: <TextInputFormatter>[
                         FilteringTextInputFormatter.digitsOnly,
@@ -176,6 +178,7 @@ class InvoiceCustomizationScreen extends StatelessWidget {
                     onTap: () => controller.editField(
                       "Late Fee",
                       controller.lateFee,
+                      maxLength: 8,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: <TextInputFormatter>[
                         FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
@@ -193,9 +196,9 @@ class InvoiceCustomizationScreen extends StatelessWidget {
             _buildSectionCard(
               title: "Footer Notes",
               children: [
-                Obx(() => _infoRow("Terms & Conditions", controller.terms.value, onTap: () => controller.editField("Terms", controller.terms, maxLength: 120))),
-                Obx(() => _infoRow("Additional Notes", controller.additionalNotes.value, onTap: () => controller.editField("Notes", controller.additionalNotes, maxLength: 100))),
-                Obx(() => _infoRow("Thank You Message", controller.thankYouMsg.value, onTap: () => controller.editField("Thank You Message", controller.thankYouMsg))),
+                Obx(() => _infoRow("Terms & Conditions", controller.terms.value, onTap: () => controller.editField("Terms", controller.terms, maxLength: 120, maxLines: 3))),
+                Obx(() => _infoRow("Additional Notes", controller.additionalNotes.value, onTap: () => controller.editField("Notes", controller.additionalNotes, maxLength: 100, maxLines: 3))),
+                Obx(() => _infoRow("Thank You Message", controller.thankYouMsg.value, onTap: () => controller.editField("Thank You Message", controller.thankYouMsg, maxLength: 120, maxLines: 2))),
               ],
             ),
 

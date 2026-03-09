@@ -112,6 +112,7 @@ class InvoiceCustomizationController extends GetxController {
     String title,
     RxString observableValue, {
     int? maxLength,
+    int maxLines = 1,
     TextInputType keyboardType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
     bool sanitizeNumericInput = false,
@@ -145,7 +146,7 @@ class InvoiceCustomizationController extends GetxController {
               maxLength: maxLength,
               keyboardType: keyboardType,
               inputFormatters: inputFormatters,
-              maxLines: maxLength == null ? 1 : 3,
+              maxLines: maxLines,
               decoration: InputDecoration(
                 filled: true,
                 fillColor: Colors.grey.shade100,

@@ -63,7 +63,8 @@ Widget addDropdownButton({
             final String route = selectedItem['route'] as String;
             final bool shouldLockBusiness =
                 route == Routes.addExpenseScreen ||
-                    route == Routes.createInvoiceScreen;
+                    route == Routes.createInvoiceScreen ||
+                    route == Routes.createTaskScreen;
             final int? businessId = business?.id;
             if (shouldLockBusiness && businessId != null) {
               Get.toNamed(
@@ -71,6 +72,7 @@ Widget addDropdownButton({
                 arguments: <String, dynamic>{
                   'businessId': businessId,
                   'businessName': business?.businessName,
+                  'businessImageUrl': business?.businessImageUrl,
                   'lockBusiness': true,
                 },
               );

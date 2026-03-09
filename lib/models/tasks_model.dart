@@ -38,6 +38,8 @@ class TaskAttachmentModel {
 class TaskModel {
   final int? id;
   final int? userId;
+  final int? businessId;
+  final String? businessName;
   final int? assignTo;
   final String? assignedEmployeeName;
   final String taskTitle;
@@ -53,6 +55,8 @@ class TaskModel {
   TaskModel({
     this.id,
     this.userId,
+    this.businessId,
+    this.businessName,
     this.assignTo,
     this.assignedEmployeeName,
     required this.taskTitle,
@@ -70,8 +74,15 @@ class TaskModel {
     final Map<String, dynamic> payload = json['data'] is Map
         ? Map<String, dynamic>.from(json['data'] as Map)
         : json;
+    final dynamic businessRaw = payload['business'] ??
+        payload['businesses'] ??
+        payload['business_detail'] ??
+        payload['company'];
     final Map<String, dynamic>? assignedEmployee = payload['assigned_employee'] is Map
         ? Map<String, dynamic>.from(payload['assigned_employee'] as Map)
+        : null;
+    final Map<String, dynamic>? business = businessRaw is Map
+        ? Map<String, dynamic>.from(businessRaw as Map)
         : null;
     final List<TaskAttachmentModel> parsedAttachments = (payload['attachments'] is List)
         ? (payload['attachments'] as List)
@@ -83,6 +94,26 @@ class TaskModel {
     return TaskModel(
       id: _toInt(payload['id']),
       userId: _toInt(payload['user_id']),
+      businessId: _toInt(
+            payload['business_id'] ??
+                payload['businessId'] ??
+                payload['businesses_id'] ??
+                payload['businessIdFk'] ??
+                payload['company_id'] ??
+                (businessRaw is Map ? businessRaw['id'] : businessRaw),
+          ) ??
+          _toInt(business?['id']),
+      businessName: _firstNonEmpty(<dynamic>[
+        business?['business_name'],
+        business?['name'],
+        business?['title'],
+        payload['business_name'],
+        payload['businessName'],
+        payload['business_title'],
+        payload['businessTitle'],
+        payload['company_name'],
+        businessRaw is String ? businessRaw : null,
+      ]),
       assignTo: _toInt(payload['assign_to']) ?? _toInt(assignedEmployee?['id']),
       assignedEmployeeName: assignedEmployee?['full_name']?.toString(),
       taskTitle: payload['task_title']?.toString() ?? '',
@@ -100,6 +131,7 @@ class TaskModel {
     return {
       'task_title': taskTitle,
       'assign_to': assignTo?.toString(),
+      if (businessId != null) 'business_id': businessId?.toString(),
       'priority': priority,
       'due_date': dueDate,
       'description': description,
@@ -167,7 +199,16 @@ class TaskModel {
 
   static int? _toInt(dynamic value) {
     if (value is int) return value;
+    if (value is num) return value.toInt();
     if (value is String) return int.tryParse(value);
+    return null;
+  }
+
+  static String? _firstNonEmpty(List<dynamic> values) {
+    for (final dynamic value in values) {
+      final String normalized = value?.toString().trim() ?? '';
+      if (normalized.isNotEmpty) return normalized;
+    }
     return null;
   }
 }

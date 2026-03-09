@@ -219,8 +219,7 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
                     ],
                   ),
                   Obx(
-                    () => controller.editingInvoiceId.value == null &&
-                            controller.isPartialPaidStatus
+                    () => controller.isPartialPaidStatus
                         ? Padding(
                             padding: const EdgeInsets.only(top: 12),
                             child: Column(
@@ -504,7 +503,7 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
   }
 
   Widget _buildStatusDropdown() {
-    const List<String> items = ["Paid", "Unpaid", "Partialy Paid"];
+    const List<String> items = ["Paid", "Unpaid", "Partially Paid"];
     return CustomSearchDropdown(
       height: 50,
       horizontalPadding: 12,
@@ -889,11 +888,14 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
   }
 
   String _statusValueToLabel(String value) {
-    switch (value) {
+    switch (value.trim().toLowerCase()) {
       case 'paid':
         return 'Paid';
       case 'partialy-paid':
-        return 'Partialy Paid';
+      case 'partially-paid':
+      case 'partially paid':
+      case 'partialy paid':
+        return 'Partially Paid';
       case 'unpaid':
       default:
         return 'Unpaid';
@@ -905,7 +907,8 @@ class CreateInvoiceScreen extends GetView<CreateInvoiceController> {
       case 'paid':
         return 'paid';
       case 'partialy paid':
-        return 'partialy-paid';
+      case 'partially paid':
+        return 'partially-paid';
       case 'unpaid':
       default:
         return 'unpaid';
