@@ -17,25 +17,27 @@ import '../../../components/common/loader/loader.dart';
 import '../../business/screens/business_detail_screen.dart';
 // import 'tasks_screen_controller.dart';
 
-class TasksScreen extends GetView<TasksScreenController> {
+class TasksScreen extends StatelessWidget {
   final VoidCallback? openDrawer;
+  final bool embedded;
 
-  TasksScreen({super.key, this.openDrawer});
+  TasksScreen({super.key, this.openDrawer, this.embedded = false});
+
+  final TasksScreenController controller =
+      Get.isRegistered<TasksScreenController>()
+          ? Get.find<TasksScreenController>()
+          : Get.put(TasksScreenController());
 
 
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: CustomAppBar(
-        title: "Tasks",
-        leading: Image.asset(AppImages.menu, height: 40),
-        onLeadingTap: () {
-          openDrawer?.call();
-        },
-      ),
-      body:  TopBorderContainer(
+    final String title = controller.isBusinessScoped &&
+            controller.scopedBusinessName.value.trim().isNotEmpty
+        ? "Tasks - ${controller.scopedBusinessName.value.trim()}"
+        : "Tasks";
+
+    final Widget content = TopBorderContainer(
         padding: const EdgeInsets.symmetric(vertical: 32),
         child: RefreshIndicator(
           color: AppColors.primary,
@@ -58,8 +60,16 @@ class TasksScreen extends GetView<TasksScreenController> {
                     addButton(
                       "Add Task",
                       onTap: () async {
-                        final dynamic result =
-                            await Get.toNamed(Routes.createTaskScreen);
+                        final dynamic result = controller.isBusinessScoped
+                            ? await Get.toNamed(
+                                Routes.createTaskScreen,
+                                arguments: <String, dynamic>{
+                                  'businessId': controller.scopedBusinessId.value,
+                                  'businessName': controller.scopedBusinessName.value,
+                                  'lockBusiness': true,
+                                },
+                              )
+                            : await Get.toNamed(Routes.createTaskScreen);
                         if (result != null) {
                           controller.fetchTasks();
                         }
@@ -294,8 +304,19 @@ class TasksScreen extends GetView<TasksScreenController> {
             ],
           ),
         ),
-      ),
+      );
 
+    if (embedded) return content;
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: CustomAppBar(
+        title: title,
+        leading: Image.asset(AppImages.menu, height: 40),
+        onLeadingTap: () {
+          openDrawer?.call();
+        },
+      ),
+      body: content,
     );
   }
 

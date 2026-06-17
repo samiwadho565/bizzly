@@ -150,6 +150,145 @@ class AppDialogs {
     }
   }
 
+  /// 🔹 Delete Confirmation Dialog
+  static void showDeleteDialog({
+    required String title,
+    String? message,
+    String deleteText = 'Delete',
+    required VoidCallback onDelete,
+    bool barrierDismissible = true,
+  }) {
+    Get.dialog(
+      Dialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 32),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 320),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icon container
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.delete_outline_rounded,
+                    color: Colors.red.shade400,
+                    size: 30,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1A1A2E),
+                  ),
+                ),
+                if (message != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade500,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Get.back(),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: Colors.grey.shade300),
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Get.back();
+                          onDelete();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red.shade400,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: Text(
+                          deleteText,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: barrierDismissible,
+    );
+  }
+
+  /// 🔹 Reject Dialog (icon + title + text input + buttons)
+  static void showRejectDialog({
+    required String title,
+    String? message,
+    required String iconPath,
+    String hintText = 'Enter reason...',
+    required ValueChanged<String> onReject,
+    String rejectText = 'Reject',
+    bool barrierDismissible = true,
+  }) {
+    final TextEditingController ctrl = TextEditingController();
+    Get.dialog(
+      _AppRejectDialog(
+        iconPath: iconPath,
+        title: title,
+        message: message,
+        hintText: hintText,
+        rejectText: rejectText,
+        controller: ctrl,
+        onReject: onReject,
+      ),
+      barrierDismissible: barrierDismissible,
+    );
+  }
+
   /// 🔹 Custom Action Dialog (matches dialogbox.png style)
   static void showActionDialog({
     required String iconPath,
@@ -185,67 +324,93 @@ class _AppActionDialog extends StatelessWidget {
   final String? message;
   final List<AppDialogAction> actions;
 
+  // Detect icon type from path to colour the circle
+  _IconTheme get _theme {
+    if (iconPath.contains('success')) {
+      return _IconTheme(bg: const Color(0xFFE8F5E9), icon: const Color(0xFF43A047));
+    } else if (iconPath.contains('warning') || iconPath.contains('error')) {
+      return _IconTheme(bg: const Color(0xFFFFF3E0), icon: const Color(0xFFFB8C00));
+    } else if (iconPath.contains('trash')) {
+      return _IconTheme(bg: const Color(0xFFFFEBEE), icon: const Color(0xFFE53935));
+    }
+    return _IconTheme(bg: const Color(0xFFE3F2FD), icon: AppColors.primary);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final _IconTheme theme = _theme;
     return Dialog(
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.transparent,
-      shadowColor: Colors.black.withOpacity(0.2),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 32),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 320),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 16),
-            SvgPicture.asset(iconPath, width: 36, height: 36),
-            const SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon in coloured circle
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: theme.bg,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: SvgPicture.asset(iconPath, width: 30, height: 30),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
                 title,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1A1A2E),
                 ),
               ),
-            ),
-            if (message != null && message!.trim().isNotEmpty) ...[
-              const SizedBox(height: 6),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
+              if (message != null && message!.trim().isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
                   message!,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey.shade500,
+                    height: 1.4,
                   ),
                 ),
-              ),
+              ],
+              const SizedBox(height: 24),
+              _buildActions(),
             ],
-            const SizedBox(height: 14),
-             Divider(height: 1, thickness: 1, color:Colors.grey.shade200),
-            _buildActions(),
-          ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildActions() {
-    if (actions.length <= 1) {
-      final AppDialogAction action =
-          actions.isNotEmpty ? actions.first : AppDialogAction(label: 'OK');
-      return _DialogActionButton(
-        label: action.label,
-        textColor: action.textColor ?? AppColors.primary,
+    if (actions.isEmpty) {
+      return _solidButton(
+        label: 'OK',
+        color: AppColors.primary,
+        onPressed: () => Get.back(),
+      );
+    }
+
+    if (actions.length == 1) {
+      final AppDialogAction a = actions.first;
+      return _solidButton(
+        label: a.label,
+        color: a.textColor ?? AppColors.primary,
         onPressed: () {
           Get.back();
-          action.onPressed?.call();
+          a.onPressed?.call();
         },
       );
     }
@@ -254,23 +419,20 @@ class _AppActionDialog extends StatelessWidget {
       return Row(
         children: [
           Expanded(
-            child: _DialogActionButton(
+            child: _outlinedButton(
               label: actions[0].label,
-              textColor: actions[0].textColor ?? AppColors.primary,
+              color: actions[0].textColor ?? Colors.grey.shade600,
               onPressed: () {
                 Get.back();
                 actions[0].onPressed?.call();
               },
             ),
           ),
-           SizedBox(
-            height: 44,
-            child: VerticalDivider(width: 1, thickness: 1, color: Colors.grey.shade200),
-          ),
+          const SizedBox(width: 12),
           Expanded(
-            child: _DialogActionButton(
+            child: _solidButton(
               label: actions[1].label,
-              textColor: actions[1].textColor ?? AppColors.primary,
+              color: actions[1].textColor ?? AppColors.primary,
               onPressed: () {
                 Get.back();
                 actions[1].onPressed?.call();
@@ -281,52 +443,241 @@ class _AppActionDialog extends StatelessWidget {
       );
     }
 
+    // 3+ actions — stacked solid buttons
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         for (int i = 0; i < actions.length; i++) ...[
-          if (i > 0)
-             Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
-          _DialogActionButton(
-            label: actions[i].label,
-            textColor: actions[i].textColor ?? AppColors.viewAll,
-            onPressed: () {
-              Get.back();
-              actions[i].onPressed?.call();
-            },
-          ),
+          if (i > 0) const SizedBox(height: 10),
+          i == actions.length - 1
+              ? _outlinedButton(
+                  label: actions[i].label,
+                  color: actions[i].textColor ?? Colors.grey.shade600,
+                  onPressed: () {
+                    Get.back();
+                    actions[i].onPressed?.call();
+                  },
+                )
+              : _solidButton(
+                  label: actions[i].label,
+                  color: actions[i].textColor ?? AppColors.primary,
+                  onPressed: () {
+                    Get.back();
+                    actions[i].onPressed?.call();
+                  },
+                ),
         ],
       ],
     );
   }
+
+  Widget _solidButton({
+    required String label,
+    required Color color,
+    required VoidCallback onPressed,
+  }) =>
+      SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: onPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: color,
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(vertical: 13),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
+          ),
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      );
+
+  Widget _outlinedButton({
+    required String label,
+    required Color color,
+    required VoidCallback onPressed,
+  }) =>
+      SizedBox(
+        width: double.infinity,
+        child: OutlinedButton(
+          onPressed: onPressed,
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(color: Colors.grey.shade300),
+            padding: const EdgeInsets.symmetric(vertical: 13),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ),
+      );
 }
 
-class _DialogActionButton extends StatelessWidget {
-  const _DialogActionButton({
-    required this.label,
-    required this.onPressed,
-    required this.textColor,
+class _IconTheme {
+  final Color bg;
+  final Color icon;
+  const _IconTheme({required this.bg, required this.icon});
+}
+
+class _AppRejectDialog extends StatelessWidget {
+  const _AppRejectDialog({
+    required this.iconPath,
+    required this.title,
+    required this.controller,
+    required this.onReject,
+    this.message,
+    this.hintText = 'Enter reason...',
+    this.rejectText = 'Reject',
   });
 
-  final String label;
-  final VoidCallback onPressed;
-  final Color textColor;
+  final String iconPath;
+  final String title;
+  final String? message;
+  final String hintText;
+  final String rejectText;
+  final TextEditingController controller;
+  final ValueChanged<String> onReject;
 
   @override
   Widget build(BuildContext context) {
-    return TextButton(
-      onPressed: onPressed,
-      style: TextButton.styleFrom(
-        foregroundColor: textColor,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: textColor,
+    return Dialog(
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 32),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 320),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon
+              Container(
+                width: 64,
+                height: 64,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFFEBEE),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: SvgPicture.asset(iconPath, width: 30, height: 30),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1A1A2E),
+                ),
+              ),
+              if (message != null && message!.trim().isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  message!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey.shade500,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 18),
+              // Input field
+              TextField(
+                controller: controller,
+                minLines: 2,
+                maxLines: 4,
+                style: const TextStyle(fontSize: 13),
+                decoration: InputDecoration(
+                  hintText: hintText,
+                  hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                  filled: true,
+                  fillColor: const Color(0xFFF7F7F7),
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade200),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade200),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE53935)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Get.back(),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.grey.shade300),
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        final String reason = controller.text.trim();
+                        if (reason.isEmpty) return;
+                        Get.back();
+                        onReject(reason);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFE53935),
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text(
+                        rejectText,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -65,6 +65,16 @@ import 'package:bizly/modules/reports/bindings/balance_sheet_binding.dart';
 import 'package:bizly/modules/reports/bindings/trial_balance_binding.dart';
 import 'package:bizly/modules/reports/screens/balance_sheet_screen.dart';
 import 'package:bizly/modules/reports/screens/trial_balance_screen.dart';
+import 'package:bizly/modules/chart_of_accounts/screens/coa_screen.dart';
+import 'package:bizly/modules/chart_of_accounts/bindings/coa_binding.dart';
+import 'package:bizly/modules/accounting_periods/screens/accounting_periods_screen.dart';
+import 'package:bizly/modules/accounting_periods/bindings/accounting_period_binding.dart';
+import 'package:bizly/modules/vouchers/screens/vouchers_screen.dart';
+import 'package:bizly/modules/vouchers/bindings/voucher_binding.dart';
+import 'package:bizly/modules/ledger/screens/ledger_screen.dart';
+import 'package:bizly/modules/ledger/bindings/ledger_binding.dart';
+import 'package:bizly/modules/reports/screens/income_statement_screen.dart';
+import 'package:bizly/modules/reports/bindings/income_statement_binding.dart';
 import 'routes.dart';
 
 class AppPages {
@@ -240,6 +250,12 @@ class AppPages {
       binding: BusinessActivityBinding(),
     ),
     GetPage(
+      name: Routes.chartOfAccountsScreen,
+      page: () => const ChartOfAccountsScreen(),
+      binding: CoaBinding(),
+      transition: Transition.fadeIn,
+    ),
+    GetPage(
       name: Routes.teamScreen,
       page: () => TeamEmployeesScreen(),
       binding: TeamScreenBinding(),
@@ -253,6 +269,28 @@ class AppPages {
       name: Routes.homeScreen,
       page: () => HomeScreen(),
       binding: HomeBinding(),
+    ),
+    GetPage(
+      name: Routes.accountingPeriodsScreen,
+      page: () => const AccountingPeriodsScreen(),
+      binding: AccountingPeriodBinding(),
+    ),
+    GetPage(
+      name: Routes.vouchersScreen,
+      page: () => const VouchersScreen(),
+      binding: VoucherBinding(),
+    ),
+    GetPage(
+      name: Routes.ledgerScreen,
+      page: () => const LedgerScreen(),
+      binding: LedgerBinding(),
+      transition: Transition.fadeIn,
+    ),
+    GetPage(
+      name: Routes.incomeStatementScreen,
+      page: () => const IncomeStatementScreen(),
+      binding: IncomeStatementBinding(),
+      transition: Transition.fadeIn,
     ),
   ];
 }

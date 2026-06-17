@@ -2,6 +2,7 @@ class EmployeeModel {
   EmployeeModel({
     this.id,
     this.userId,
+    this.businessId,
     required this.fullName,
     required this.email,
     required this.phoneNumber,
@@ -16,6 +17,7 @@ class EmployeeModel {
 
   final int? id;
   final int? userId;
+  final int? businessId;
   final String fullName;
   final String email;
   final String phoneNumber;
@@ -34,6 +36,7 @@ class EmployeeModel {
     return EmployeeModel(
       id: _toInt(payload['id']),
       userId: _toInt(payload['user_id']),
+      businessId: _toInt(payload['business_id']),
       fullName: payload['full_name']?.toString() ?? '',
       email: payload['email']?.toString() ?? '',
       phoneNumber: payload['phone_number']?.toString() ?? '',
@@ -57,6 +60,7 @@ class EmployeeModel {
       'salary': salary?.toString(),
       'status': status,
       'notes': notes?.trim().isNotEmpty == true ? notes : null,
+      if (businessId != null) 'business_id': businessId.toString(),
     };
   }
 

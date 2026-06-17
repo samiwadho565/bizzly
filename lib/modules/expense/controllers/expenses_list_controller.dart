@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import 'package:bizly/app/constants/app_urls.dart';
 import 'package:bizly/models/api_response.dart';
+import 'package:bizly/modules/business/models/business_model.dart';
 import 'package:bizly/services/api_service.dart';
 import 'package:bizly/modules/expense/models/expense_model.dart';
 
@@ -13,18 +14,36 @@ class ExpensesListController extends GetxController {
   final RxList<Map<String, dynamic>> paymentMethods = <Map<String, dynamic>>[].obs;
   final RxnInt selectedCategoryId = RxnInt();
   final RxnInt selectedPaymentMethodId = RxnInt();
+  final RxnInt scopedBusinessId = RxnInt();
+  final RxString scopedBusinessName = ''.obs;
   final RxBool isLoading = false.obs;
   final RxBool isDropdownsLoading = false.obs;
   final RxString error = ''.obs;
 
+  bool get isBusinessScoped => scopedBusinessId.value != null;
+
   @override
   void onInit() {
     super.onInit();
+    applyScopeFromArgs(Get.arguments);
     fetchDropdowns();
     fetchExpenses();
     searchController.addListener(() {
       expenses.refresh();
     });
+  }
+
+  void applyScopeFromArgs(dynamic args) {
+    final int? previousId = scopedBusinessId.value;
+    final int? nextId = _extractBusinessId(args);
+    final String nextName = _extractBusinessName(args);
+    if (previousId == nextId && scopedBusinessName.value == nextName) return;
+
+    scopedBusinessId.value = nextId;
+    scopedBusinessName.value = nextName;
+
+    if (isLoading.value) return;
+    fetchExpenses();
   }
 
   List<ExpenseModel> get filteredExpenses {
@@ -50,6 +69,8 @@ class ExpensesListController extends GetxController {
           'category_id': selectedCategoryId.value.toString(),
         if (selectedPaymentMethodId.value != null)
           'payment_method_id': selectedPaymentMethodId.value.toString(),
+        if (scopedBusinessId.value != null)
+          'business_id': scopedBusinessId.value.toString(),
       },
       isAuth: true,
     );
@@ -190,6 +211,23 @@ class ExpensesListController extends GetxController {
     if (value is num) return value.toInt();
     if (value is String) return int.tryParse(value);
     return null;
+  }
+
+  int? _extractBusinessId(dynamic args) {
+    if (args is BusinessModel) return args.id;
+    if (args is Map) {
+      return _toInt(args['businessId'] ?? args['business_id'] ?? args['id']);
+    }
+    return null;
+  }
+
+  String _extractBusinessName(dynamic args) {
+    if (args is BusinessModel) return args.businessName;
+    if (args is Map) {
+      final dynamic raw = args['businessName'] ?? args['business_name'];
+      return raw?.toString() ?? '';
+    }
+    return '';
   }
 
   @override

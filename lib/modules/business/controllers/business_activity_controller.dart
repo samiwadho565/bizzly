@@ -41,10 +41,9 @@ class BusinessActivityController extends GetxController {
           phoneNumber: '',
           currency: '',
           businessImageUrl: args['businessImageUrl']?.toString(),
-        );
+          );
       }
     }
-    fetchBusinessActivity();
   }
 
   void changeTab(String tab) {

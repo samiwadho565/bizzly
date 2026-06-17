@@ -209,7 +209,10 @@ class BusinessDetailScreen extends GetView<BusinessDetailController> {
                               title: "Team members",
                               icon: Icons.supervised_user_circle_sharp,
                               onTap: () {
-                                Get.toNamed(Routes.teamScreen);
+                                Get.toNamed(
+                                  Routes.teamScreen,
+                                  arguments: controller.business.value,
+                                );
                               },
                             ),
                           ),
@@ -406,18 +409,10 @@ class BusinessDetailScreen extends GetView<BusinessDetailController> {
 
   void _confirmDelete(BusinessModel? business) {
     if (business?.id == null) return;
-    AppDialogs.showActionDialog(
-      iconPath: AppImages.dialogTrash,
-      title: "Delete Business?",
-      message: "Are you sure you want to delete this business?",
-      actions: [
-        AppDialogAction(
-          label: "Delete",
-          onPressed: controller.deleteBusiness,
-          textColor: Colors.red,
-        ),
-        AppDialogAction(label: "Cancel"),
-      ],
+    AppDialogs.showDeleteDialog(
+      title: 'Delete Business?',
+      message: 'This business and all its data will be permanently removed.',
+      onDelete: controller.deleteBusiness,
     );
   }
 

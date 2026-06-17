@@ -5,7 +5,9 @@ import 'package:get/get.dart';
 import 'package:bizly/app/constants/app_urls.dart';
 import 'package:bizly/assets/images.dart';
 import 'package:bizly/models/api_response.dart';
+import 'package:bizly/modules/business/models/business_model.dart';
 import 'package:bizly/modules/customers/models/customer_model.dart';
+import 'package:bizly/modules/home/controllers/home_controller.dart';
 import 'package:bizly/modules/team/models/employee_model.dart';
 import 'package:bizly/services/api_service.dart';
 import 'package:bizly/utils/app_dialouge.dart';
@@ -20,6 +22,13 @@ class TeamController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxString error = ''.obs;
 
+  // Business selection for employee create/filter
+  final Rxn<BusinessModel> selectedBusiness = Rxn<BusinessModel>();
+  List<BusinessModel> get businesses =>
+      Get.isRegistered<HomeScreenController>()
+          ? Get.find<HomeScreenController>().businesses
+          : <BusinessModel>[];
+
   final GlobalKey<FormState> createFormKey = GlobalKey<FormState>();
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
@@ -31,6 +40,9 @@ class TeamController extends GetxController {
   final RxString status = 'active'.obs;
   final RxBool isSubmitting = false.obs;
   final Rxn<EmployeeModel> editingEmployee = Rxn<EmployeeModel>();
+
+  final GlobalKey businessFieldKey = GlobalKey();
+  final RxString businessError = ''.obs;
 
   final GlobalKey<FormFieldState<String>> nameFieldKey =
       GlobalKey<FormFieldState<String>>();
@@ -58,6 +70,13 @@ class TeamController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    // If navigated from Business Detail, a BusinessModel may be passed as argument
+    final dynamic args = Get.arguments;
+    if (args is BusinessModel) {
+      selectedBusiness.value = args;
+    } else if (args is Map && args['business'] is BusinessModel) {
+      selectedBusiness.value = args['business'] as BusinessModel;
+    }
     fetchEmployees();
   }
 
@@ -77,8 +96,14 @@ class TeamController extends GetxController {
     isLoading.value = true;
     error.value = '';
 
+    final Map<String, dynamic> query = <String, dynamic>{
+      if (selectedBusiness.value?.id != null)
+        'business_id': selectedBusiness.value!.id.toString(),
+    };
+
     final ApiResponse response = await ApiService().get(
       AppUrls.getAllEmployees,
+      queryParameters: query.isEmpty ? null : query,
       isAuth: true,
     );
 
@@ -109,6 +134,12 @@ class TeamController extends GetxController {
       return;
     }
     resetCreateForm();
+    // Pre-select business if one is already selected in the list screen
+    if (selectedBusiness.value != null) return;
+    // Try to pre-select if only one business exists
+    if (businesses.length == 1) {
+      selectedBusiness.value = businesses.first;
+    }
   }
 
   List<TextInputFormatter> get employeeNameInputFormatters =>
@@ -213,9 +244,31 @@ class TeamController extends GetxController {
     if (isSubmitting.value) return;
     final bool wasEdit = isEdit;
     FocusManager.instance.primaryFocus?.unfocus();
+
+    // Validate business selection first
+    if (selectedBusiness.value == null) {
+      businessError.value = 'Business is required';
+    } else {
+      businessError.value = '';
+    }
+
     final bool valid = createFormKey.currentState?.validate() ?? false;
-    if (!valid) {
+
+    if (businessError.value.isNotEmpty || !valid) {
       await Future<void>.delayed(Duration.zero);
+      // Scroll to business field first if that's the error, otherwise scroll to first form error
+      if (businessError.value.isNotEmpty) {
+        final BuildContext? ctx = businessFieldKey.currentContext;
+        if (ctx != null) {
+          await Scrollable.ensureVisible(
+            ctx,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            alignment: 0.15,
+          );
+        }
+        return;
+      }
       await _scrollToFirstError();
       return;
     }
@@ -288,6 +341,7 @@ class TeamController extends GetxController {
       salary: salaryController.text.trim(),
       status: status.value,
       notes: notesController.text.trim(),
+      businessId: selectedBusiness.value?.id,
     );
 
     final bool wasEdit = isEdit;
@@ -300,11 +354,6 @@ class TeamController extends GetxController {
       data: request.toJson(),
       isAuth: true,
     );
-
-    if(!isEdit){
-      isSubmitting.value = false;
-      clearCreateFormAfterSuccess();
-    }
 
     if (!response.success) {
       isSubmitting.value = false;
@@ -349,9 +398,17 @@ class TeamController extends GetxController {
       await fetchEmployees();
     }
 
-    if (!wasEdit) return created;
+    if (!wasEdit) {
+      isSubmitting.value = false;
+      clearCreateFormAfterSuccess();
+      return created;
+    }
     final int? targetId = editedId ?? created?.id;
-    if (targetId == null) return created;
+    if (targetId == null) {
+      isSubmitting.value = false;
+      clearCreateFormAfterSuccess();
+      return created;
+    }
     final EmployeeModel? fresh = await _fetchEmployeeById(targetId);
     isSubmitting.value = false;
     clearCreateFormAfterSuccess();
@@ -452,6 +509,8 @@ class TeamController extends GetxController {
     salaryController.clear();
     notesController.clear();
     status.value = 'active';
+    businessError.value = '';
+    // Keep selectedBusiness — user likely wants same business for next entry
   }
 
   void clearCreateFormAfterSuccess() {
@@ -483,6 +542,14 @@ class TeamController extends GetxController {
     salaryController.text = employee.salary?.toString() ?? '';
     notesController.text = employee.notes ?? '';
     status.value = employee.status.toLowerCase();
+    // Restore selected business for edit
+    if (employee.businessId != null) {
+      final BusinessModel? match = businesses.cast<BusinessModel?>().firstWhere(
+            (b) => b?.id == employee.businessId,
+            orElse: () => null,
+          );
+      if (match != null) selectedBusiness.value = match;
+    }
   }
 
   @override

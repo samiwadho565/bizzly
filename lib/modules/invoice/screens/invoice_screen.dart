@@ -14,8 +14,9 @@ import 'package:bizly/assets/images.dart';
 
 class InvoiceScreen extends StatelessWidget {
   final VoidCallback? openDrawer;
+  final bool embedded;
 
-  InvoiceScreen({super.key, this.openDrawer});
+  InvoiceScreen({super.key, this.openDrawer, this.embedded = false});
 
   final InvoiceScreenController controller =
       Get.isRegistered<InvoiceScreenController>()
@@ -24,100 +25,114 @@ class InvoiceScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String title = controller.isBusinessScoped &&
+            controller.scopedBusinessName.value.trim().isNotEmpty
+        ? "Invoices - ${controller.scopedBusinessName.value.trim()}"
+        : "Invoices";
+
+    final Widget content = Column(
+      children: [
+        Expanded(
+          child:  TopBorderContainer(
+            child:Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: CustomSearchField(
+                          hintText: 'Search invoice..',
+                          controller: controller.searchController,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      addButton("Create Invoice",onTap: (){
+                        if (controller.isBusinessScoped) {
+                          Get.toNamed(
+                            Routes.createInvoiceScreen,
+                            arguments: <String, dynamic>{
+                              'businessId': controller.scopedBusinessId.value,
+                              'businessName': controller.scopedBusinessName.value,
+                              'lockBusiness': true,
+                            },
+                          );
+                          return;
+                        }
+                          Get.toNamed(Routes.createInvoiceScreen);
+                      }),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+                  Expanded(
+                    child: Obx(() {
+                      if (controller.isLoading.value) {
+                        return const Center(child: FinancePulseLoader());
+                      }
+                      if (controller.error.value.isNotEmpty) {
+                        return Center(child: Text(controller.error.value));
+                      }
+                      if (controller.filteredInvoices.isEmpty) {
+                        return const Center(
+                          child: Text("No invoices found."),
+                        );
+                      }
+                      return RefreshIndicator(
+                        color: AppColors.primary,
+                        onRefresh: controller.fetchInvoices,
+                        child: ListView.builder(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.only(top: 20, bottom: 100),
+                          itemCount: controller.filteredInvoices.length,
+                          itemBuilder: (context, index) {
+                            final invoice = controller.filteredInvoices[index];
+                            final String itemName = invoice.items.isNotEmpty
+                                ? invoice.items.first.itemName
+                                : "-";
+                            return GestureDetector(
+                              onTap: () {
+                                Get.toNamed(
+                                  Routes.invoiceDetailScreen,
+                                  arguments: invoice,
+                                );
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: InvoiceCard(
+                                  clientName: invoice.customerName ?? '-',
+                                  businessName: invoice.businessName ?? '-',
+                                  itemName: itemName,
+                                  amount: invoice.totalAmount?.toString() ?? '-',
+                                  status: invoice.status ?? '-',
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    }),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+
+    if (embedded) return content;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: CustomAppBar(
-        title: "Invoices",
+        title: title,
         leading: Image.asset(AppImages.menu, height: 40),
         onLeadingTap: () {
           openDrawer?.call();
         },
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child:  TopBorderContainer(
-              // padding: const EdgeInsets.symmetric(horizontal: 20),
-              child:Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 20),
-                    /// 🔍 Search + Button
-                    Row(
-                      children: [
-                        Expanded(
-                          child: CustomSearchField(
-                            hintText: 'Search invoice..',
-                            controller: controller.searchController,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        addButton("Create Invoice",onTap: (){
-
-                            Get.toNamed(Routes.createInvoiceScreen);
-                        }),
-                      ],
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    /// Invoice List
-                    Expanded(
-                      child: Obx(() {
-                        if (controller.isLoading.value) {
-                          return const Center(child: FinancePulseLoader());
-                        }
-                        if (controller.error.value.isNotEmpty) {
-                          return Center(child: Text(controller.error.value));
-                        }
-                        if (controller.filteredInvoices.isEmpty) {
-                          return const Center(
-                            child: Text("No invoices found."),
-                          );
-                        }
-                        return RefreshIndicator(
-                          color: AppColors.primary,
-                          onRefresh: controller.fetchInvoices,
-                          child: ListView.builder(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            padding: const EdgeInsets.only(top: 20, bottom: 100),
-                            itemCount: controller.filteredInvoices.length,
-                            itemBuilder: (context, index) {
-                              final invoice = controller.filteredInvoices[index];
-                              final String itemName = invoice.items.isNotEmpty
-                                  ? invoice.items.first.itemName
-                                  : "-";
-                              return GestureDetector(
-                                onTap: () {
-                                  Get.toNamed(
-                                    Routes.invoiceDetailScreen,
-                                    arguments: invoice,
-                                  );
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.only(bottom: 12),
-                                  child: InvoiceCard(
-                                    clientName: invoice.customerName ?? '-',
-                                    businessName: invoice.businessName ?? '-',
-                                    itemName: itemName,
-                                    amount: invoice.totalAmount?.toString() ?? '-',
-                                    status: invoice.status ?? '-',
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        );
-                      }),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+      body: content,
     );
   }
 }

@@ -7,6 +7,8 @@ import 'package:bizly/utils/form_validations.dart';
 import 'package:bizly/components/common/custom_button.dart';
 import 'package:bizly/components/common/custom_text_field.dart';
 
+import '../../../assets/images.dart';
+
 class LoginScreen extends GetView<SignInController> {
   const LoginScreen({super.key});
 
@@ -226,13 +228,13 @@ class LoginScreen extends GetView<SignInController> {
                             ),
                             child: Padding(
                               padding: const EdgeInsets.all(12.0),
-                              child: Image.network(
-                                'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png',
+                              child: Image.asset(
+                                AppImages.googleLogo,
                               ),
                             ),
                           ),
                         ),
-                        SizedBox(height: screenHeight * 0.03), // Bottom padding
+                        //SizedBox(height: screenHeight * 0.03), // Bottom padding
                       ],
                     ),
                   ),

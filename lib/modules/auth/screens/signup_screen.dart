@@ -1,3 +1,4 @@
+import 'package:bizly/assets/images.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bizly/modules/auth/controllers/signup_controller.dart';
@@ -184,13 +185,13 @@ class SignUpScreen extends GetView<SignupController> {
                             ),
                             child: Padding(
                               padding: const EdgeInsets.all(12.0),
-                              child: Image.network(
-                                'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png',
+                              child: Image.asset(
+                                AppImages.googleLogo,
                               ),
                             ),
                           ),
                         ),
-                        SizedBox(height: screenHeight * 0.03), // Bottom padding
+                       // SizedBox(height: screenHeight * 0.03), // Bottom padding
                       ],
                     ),
                   ),

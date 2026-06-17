@@ -43,4 +43,13 @@ class AppUrls {
   static const String deleteAsset = '/api/assets';
   static const String balanceSheet = '/api/reports/balance-sheet';
   static const String trialBalance = '/api/reports/trial-balance';
+  static const String chartOfAccounts = '/api/chart-of-accounts';
+  static const String chartOfAccountsDropdown = '/api/dropdowns/chart-of-accounts';
+  static const String accountingPeriods = '/api/accounting-periods';
+  static const String accountingPeriodsCurrent = '/api/accounting-periods/current';
+  static const String vouchers = '/api/vouchers';
+  static const String vouchersPendingApprovals = '/api/vouchers/pending-approvals';
+  static const String dashboard = '/api/dashboard';
+  static const String ledger = '/api/ledger';
+  static const String incomeStatement = '/api/reports/income-statement';
 }

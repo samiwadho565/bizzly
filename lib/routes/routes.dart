@@ -42,4 +42,11 @@ class Routes {
   static const notificationScreen = '/notification_screen';
   static const otpVerificationScreen = '/OtpVerificationScreen';
   static const businessTabsScreen = '/business_tabs_screen';
+  static const chartOfAccountsScreen = '/chart_of_accounts_screen';
+  static const createCoaScreen = '/create_coa_screen';
+  static const coaDetailScreen = '/coa_detail_screen';
+  static const accountingPeriodsScreen = '/accounting_periods_screen';
+  static const vouchersScreen = '/vouchers_screen';
+  static const ledgerScreen = '/ledger_screen';
+  static const incomeStatementScreen = '/income_statement_screen';
 }

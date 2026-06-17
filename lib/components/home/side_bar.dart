@@ -123,6 +123,42 @@ class CustomSideBar extends StatelessWidget {
                         Get.toNamed(Routes.trialBalanceScreen);
                       },
                     ),
+                    const Padding(
+                      padding: EdgeInsets.only(left: 15, top: 10, bottom: 4),
+                      child: Text(
+                        "ACCOUNTING",
+                        style: TextStyle(
+                          color: Colors.white54,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ),
+                    _drawerItem(
+                      icon: AppImages.bill,
+                      title: "Chart of Accounts",
+                      onTap: () {
+                        Get.back();
+                        Get.toNamed(Routes.chartOfAccountsScreen);
+                      },
+                    ),
+                    _drawerItem(
+                      icon: AppImages.bill,
+                      title: "Accounting Periods",
+                      onTap: () {
+                        Get.back();
+                        Get.toNamed(Routes.accountingPeriodsScreen);
+                      },
+                    ),
+                    _drawerItem(
+                      icon: AppImages.bill,
+                      title: "Vouchers",
+                      onTap: () {
+                        Get.back();
+                        Get.toNamed(Routes.vouchersScreen);
+                      },
+                    ),
                   ],
                 ),
               ),

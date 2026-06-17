@@ -356,8 +356,10 @@ class CreateInvoiceController extends GetxController {
       items: items.toList(),
     );
     final Map<String, dynamic> requestPayload = model.toJson();
-    if (!isEdit) {
-      requestPayload.remove('invoice_number');
+    if (isEdit) {
+      _removeServerManagedFieldsForUpdate(requestPayload);
+    } else {
+      _removeServerManagedFieldsForCreate(requestPayload);
     }
     debugPrint(
       '[Invoice ${isEdit ? "Update" : "Create"}] '
@@ -482,6 +484,23 @@ class CreateInvoiceController extends GetxController {
         actions: [AppDialogAction(label: "Ok")],
       );
     }
+  }
+
+  void _removeServerManagedFieldsForCreate(Map<String, dynamic> payload) {
+    payload.remove('id');
+    payload.remove('user_id');
+    payload.remove('invoice_number');
+    payload.remove('paid_amount');
+    payload.remove('remaining_amount');
+    payload.remove('created_at');
+    payload.remove('updated_at');
+  }
+
+  void _removeServerManagedFieldsForUpdate(Map<String, dynamic> payload) {
+    payload.remove('id');
+    payload.remove('user_id');
+    payload.remove('created_at');
+    payload.remove('updated_at');
   }
 
   Future<void> submitInvoiceFromForm() async {

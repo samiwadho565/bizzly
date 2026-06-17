@@ -1,4 +1,5 @@
 import 'package:bizly/models/api_response.dart';
+import 'package:bizly/routes/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bizly/modules/auth/models/user_model.dart';
@@ -6,6 +7,9 @@ import 'package:bizly/services/api_service.dart';
 import 'package:bizly/services/local_storage.dart';
 import 'package:bizly/app/constants/app_urls.dart';
 import 'package:bizly/utils/app_utils.dart';
+
+import '../../../assets/images.dart';
+import '../../../utils/app_dialouge.dart';
 
 class SignupController extends GetxController {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
@@ -48,14 +52,47 @@ class SignupController extends GetxController {
       }
     }
 
+    if(response.success){
+      clearFormAndNavigate();
+    }
+
     AppUtils.showAppSnackbar(
       response.success ? 'Success' : 'Error',
       response.message,
       type: response.success ? AppSnackType.success : AppSnackType.error,
     );
+
+
+
     isLoading.value = false;
     return user;
   }
+
+
+  clearFormAndNavigate() async {
+    nameController.clear();
+    emailController.clear();
+    passwordController.clear();
+    confirmPasswordController.clear();
+    
+    await Future.delayed(Duration(seconds: 1));
+    Get.offAllNamed(Routes.loginScreen);
+    
+  }
+  //   AppDialogs.showActionDialog(
+  //     iconPath: AppImages.dialogSuccess,
+  //     title:"Success!",
+  //     message:"Account created successfully!",
+  //     actions: [
+  //       AppDialogAction(label: "Done", onPressed: () {
+  //         Get.back();
+  //       }),
+  //     ],
+  //   );
+  // }
+
+
+
 
   @override
   void onClose() {

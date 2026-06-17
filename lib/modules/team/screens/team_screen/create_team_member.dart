@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:bizly/components/common/business_picker_bottom_sheet.dart';
 import 'package:bizly/components/common/custom_app_bar_2.dart';
 import 'package:bizly/components/common/custom_button.dart';
 import 'package:bizly/components/common/custom_drop_down.dart';
 import 'package:bizly/components/common/custom_text_field.dart';
+import 'package:bizly/modules/business/models/business_model.dart';
 import 'package:bizly/modules/team/controllers/team_controller.dart';
 import 'package:bizly/utils/app_colors.dart';
 
@@ -57,6 +59,88 @@ class AddEmployeeScreen extends GetView<TeamController> {
                         "Required Details",
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        "Business",
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Obx(() {
+                        final BusinessModel? selected =
+                            controller.selectedBusiness.value;
+                        final String error = controller.businessError.value;
+                        return Column(
+                          key: controller.businessFieldKey,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            GestureDetector(
+                              onTap: () async {
+                                final businesses = controller.businesses;
+                                if (businesses.isEmpty) return;
+                                final BusinessModel? picked =
+                                    await showBusinessPickerBottomSheet(
+                                  context,
+                                  businesses: businesses,
+                                  selectedBusinessId: selected?.id,
+                                  title: 'Select Business',
+                                );
+                                if (picked != null) {
+                                  controller.selectedBusiness.value = picked;
+                                  controller.businessError.value = '';
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 15),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: error.isNotEmpty
+                                        ? Colors.red
+                                        : Colors.grey.withOpacity(0.2),
+                                    width: 1,
+                                  ),
+                                  borderRadius: BorderRadius.circular(15),
+                                  color: AppColors.textField,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        selected?.businessName ??
+                                            'Select a business',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: selected == null
+                                              ? Colors.grey
+                                              : Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                    const Icon(Icons.keyboard_arrow_down,
+                                        color: Colors.grey),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            if (error.isNotEmpty)
+                              Padding(
+                                padding:
+                                    const EdgeInsets.only(top: 6, left: 4),
+                                child: Text(
+                                  error,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Theme.of(context).colorScheme.error,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
+                      }),
                       const SizedBox(height: 12),
                       const Text(
                         "Full Name",

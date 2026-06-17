@@ -5,6 +5,8 @@ import 'package:bizly/app/constants/app_urls.dart';
 import 'package:bizly/models/api_response.dart';
 import 'package:bizly/modules/business/models/business_model.dart';
 import 'package:bizly/modules/auth/models/user_model.dart';
+import 'package:bizly/modules/vouchers/models/voucher_model.dart';
+import 'package:bizly/modules/home/models/dashboard_model.dart';
 import 'package:bizly/services/local_storage.dart';
 import 'package:bizly/services/api_service.dart';
 import 'package:bizly/utils/enum.dart';
@@ -23,6 +25,14 @@ class HomeScreenController extends GetxController {
   final RxString businessesError = ''.obs;
   final Rxn<UserModel> user = Rxn<UserModel>();
   final RxString imageCacheBuster = ''.obs;
+
+  // ── Pending Approvals ─────────────────────────────────────────
+  final RxList<VoucherModel> pendingApprovals = <VoucherModel>[].obs;
+  int get pendingCount => pendingApprovals.length;
+
+  // ── Dashboard ─────────────────────────────────────────────────
+  final Rxn<DashboardModel> dashboard = Rxn<DashboardModel>();
+  final RxBool isDashboardLoading = false.obs;
 
   @override
   void onInit() {
@@ -66,6 +76,8 @@ class HomeScreenController extends GetxController {
 
     _bootstrapUser();
     fetchBusinesses();
+    fetchPendingApprovals();
+    fetchDashboard();
   }
 
   Future<void> _bootstrapUser() async {
@@ -114,6 +126,39 @@ class HomeScreenController extends GetxController {
       case "Yearly":
         viewType.value = RevenueViewType.yearly;
         break;
+    }
+  }
+
+  Future<void> fetchDashboard() async {
+    isDashboardLoading.value = true;
+    final ApiResponse res = await ApiService().get(
+      AppUrls.dashboard,
+      isAuth: true,
+    );
+    isDashboardLoading.value = false;
+    if (res.success && res.data is Map) {
+      dashboard.value = DashboardModel.fromJson(
+        Map<String, dynamic>.from(res.data as Map),
+      );
+    }
+  }
+
+  Future<void> fetchPendingApprovals() async {
+    final ApiResponse res = await ApiService().get(
+      AppUrls.vouchersPendingApprovals,
+      isAuth: true,
+    );
+    if (res.success) {
+      final List<dynamic> raw = res.data is List
+          ? res.data as List
+          : (res.data is Map && res.data['data'] is List
+              ? res.data['data'] as List
+              : []);
+      pendingApprovals.assignAll(
+        raw.whereType<Map>()
+            .map((e) => VoucherModel.fromJson(Map<String, dynamic>.from(e)))
+            .toList(),
+      );
     }
   }
 

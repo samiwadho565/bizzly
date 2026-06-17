@@ -4,9 +4,12 @@ import 'package:get/get.dart';
 import 'package:bizly/components/common/custom_app_bar_2.dart';
 import 'package:bizly/components/common/custom_tab_bar.dart';
 import 'package:bizly/modules/business/controllers/business_activity_controller.dart';
-import 'package:bizly/modules/business/screens/tabs/business_invoices_tab.dart';
-import 'package:bizly/modules/business/screens/tabs/business_expenses_tab.dart';
-import 'package:bizly/modules/business/screens/tabs/business_tasks_tab.dart';
+import 'package:bizly/modules/expense/controllers/expenses_list_controller.dart';
+import 'package:bizly/modules/expense/screens/expense_screen.dart';
+import 'package:bizly/modules/invoice/controllers/invoice_screen_controller.dart';
+import 'package:bizly/modules/invoice/screens/invoice_screen.dart';
+import 'package:bizly/modules/tasks/controllers/tasks_screen_controller.dart';
+import 'package:bizly/modules/tasks/screens/tasks_screen.dart';
 
 class BusinessTabsScreen extends StatefulWidget {
   const BusinessTabsScreen({super.key});
@@ -22,61 +25,92 @@ class _BusinessTabsScreenState extends State<BusinessTabsScreen> {
   void initState() {
     super.initState();
     controller = Get.find<BusinessActivityController>();
+    _syncDashboardScopes();
+  }
+
+  void _syncDashboardScopes() {
+    final Map<String, dynamic> scopedArgs = <String, dynamic>{
+      'businessId': controller.business.value?.id,
+      'businessName': controller.business.value?.businessName,
+    };
+    if (Get.isRegistered<InvoiceScreenController>()) {
+      Get.find<InvoiceScreenController>().applyScopeFromArgs(scopedArgs);
+    }
+    if (Get.isRegistered<ExpensesListController>()) {
+      Get.find<ExpensesListController>().applyScopeFromArgs(scopedArgs);
+    }
+    if (Get.isRegistered<TasksScreenController>()) {
+      Get.find<TasksScreenController>().applyScopeFromArgs(scopedArgs);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final String businessName =
+        controller.business.value?.businessName.toString().trim() ?? '';
+    final String title = businessName.isNotEmpty
+        ? "$businessName Activity"
+        : "Business Activity";
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: CustomAppBar2(
-        title: "Business Details",
+        title: title,
         actions: [
-          IconButton(
-            onPressed: controller.fetchBusinessActivity,
-            icon: const Icon(Icons.refresh, color: Colors.black54),
-          ),
+          Obx(() {
+            final String tab = controller.selectedTab.value;
+            return IconButton(
+              onPressed: () {
+                switch (tab) {
+                  case 'Invoices':
+                    if (Get.isRegistered<InvoiceScreenController>()) {
+                      Get.find<InvoiceScreenController>().fetchInvoices();
+                    }
+                    break;
+                  case 'Expenses':
+                    if (Get.isRegistered<ExpensesListController>()) {
+                      Get.find<ExpensesListController>().fetchExpenses();
+                    }
+                    break;
+                  case 'Tasks':
+                    if (Get.isRegistered<TasksScreenController>()) {
+                      Get.find<TasksScreenController>().fetchTasks();
+                    }
+                    break;
+                }
+              },
+              icon: const Icon(Icons.refresh, color: Colors.black54),
+            );
+          }),
         ],
       ),
-      body: CustomScrollView(
-        slivers: [
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: StickyTabBarDelegate(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Obx(
-                  () => CustomTabBar(
-                    options: const [
-                      "Invoices",
-                      "Expenses",
-                      "Tasks",
-                    ],
-                    selectedOption: controller.selectedTab.value,
-                    onSelect: controller.changeTab,
-                  ),
-                ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Obx(
+              () => CustomTabBar(
+                options: const [
+                  "Invoices",
+                  "Expenses",
+                  "Tasks",
+                ],
+                selectedOption: controller.selectedTab.value,
+                onSelect: controller.changeTab,
               ),
             ),
           ),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-            sliver: Obx(() {
+          Expanded(
+            child: Obx(() {
               switch (controller.selectedTab.value) {
                 case 'Invoices':
-                  return const BusinessInvoicesTab();
+                  return InvoiceScreen(embedded: true);
                 case 'Expenses':
-                  return const BusinessExpensesTab();
+                  return ExpenseScreen(embedded: true);
                 case 'Tasks':
-                  return const BusinessTasksTab();
+                  return TasksScreen(embedded: true);
                 default:
-                  return const SliverToBoxAdapter(
-                    child: Center(
-                      child: Padding(
-                        padding: EdgeInsets.only(top: 40),
-                        child: Text("No data available"),
-                      ),
-                    ),
-                  );
+                  return const Center(child: Text("No data available"));
               }
             }),
           ),
@@ -84,28 +118,4 @@ class _BusinessTabsScreenState extends State<BusinessTabsScreen> {
       ),
     );
   }
-}
-
-class StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
-  final Widget child;
-
-  StickyTabBarDelegate({required this.child});
-
-  @override
-  double get minExtent => 90.0;
-
-  @override
-  double get maxExtent => 90.0;
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(
-      color: Colors.white,
-      alignment: Alignment.center,
-      child: child,
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant StickyTabBarDelegate oldDelegate) => false;
 }

@@ -24,6 +24,7 @@ class AppImages {
   static const String menu = 'assets/icons/menu.png';
   static const String edit = 'assets/icons/edit.png';
   static const String calendar = 'assets/icons/calendar.png';
+  static const String googleLogo = 'assets/images/google-logo.png';
 
   // Dialog box icons (SVG)
   static const String dialogSuccess = 'assets/dialog_box/success.svg';
