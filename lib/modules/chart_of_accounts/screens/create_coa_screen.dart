@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
-import 'package:bizly/components/common/custom_app_bar_2.dart';
+import 'package:bizly/components/common/gradient_screen_header.dart';
 import 'package:bizly/components/common/custom_button.dart';
 import 'package:bizly/components/common/custom_text_field.dart';
 import 'package:bizly/modules/chart_of_accounts/controllers/coa_controller.dart';
@@ -15,40 +15,35 @@ class CreateCoaScreen extends GetView<CoaController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primaryDense,
-      appBar: CustomAppBar2(
-        title: controller.isEdit ? 'Update Account' : 'New Account',
-        backgroundColor: AppColors.primaryDense,
-        textColor: Colors.white,
-      ),
-      body: SafeArea(
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-          child: Container(
-            height: double.infinity,
-            margin: const EdgeInsets.only(top: 10),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(40),
-                topRight: Radius.circular(40),
-              ),
+      backgroundColor: AppColors.background,
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: Column(
+          children: [
+            GradientScreenHeader(
+              title: controller.isEdit ? 'Update Account' : 'New Account',
             ),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
-              child: Form(
-                key: controller.formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Account Details',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 16),
+            Expanded(
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+                  child: Form(
+                    key: controller.formKey,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Account Details',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 16),
 
                       // ── Parent Account (create only) ──────────
                       if (!controller.isEdit) ...[
@@ -141,23 +136,25 @@ class CreateCoaScreen extends GetView<CoaController> {
                       ),
                       const SizedBox(height: 32),
 
-                      // ── Submit ────────────────────────────────
-                      Obx(() => CustomButton(
-                            text: controller.isEdit
-                                ? 'Update Account'
-                                : 'Create Account',
-                            isLoading: controller.isSubmitting.value,
-                            onPressed: controller.isSubmitting.value
-                                ? () {}
-                                : controller.submitForm,
-                          )),
-                      const SizedBox(height: 24),
-                    ],
+                          // ── Submit ────────────────────────────────
+                          Obx(() => CustomButton(
+                                text: controller.isEdit
+                                    ? 'Update Account'
+                                    : 'Create Account',
+                                isLoading: controller.isSubmitting.value,
+                                onPressed: controller.isSubmitting.value
+                                    ? () {}
+                                    : controller.submitForm,
+                              )),
+                          const SizedBox(height: 24),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );

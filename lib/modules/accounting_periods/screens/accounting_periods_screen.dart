@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
-import 'package:bizly/components/common/custom_app_bar_2.dart';
+import 'package:bizly/components/common/gradient_screen_header.dart';
 import 'package:bizly/components/common/loader/loader.dart';
 import 'package:bizly/modules/accounting_periods/controllers/accounting_period_controller.dart';
 import 'package:bizly/modules/accounting_periods/models/accounting_period_model.dart';
@@ -17,20 +17,7 @@ class AccountingPeriodsScreen extends GetView<AccountingPeriodController> {
       backgroundColor: AppColors.background,
       body: Column(
         children: [
-          Container(
-            decoration: const BoxDecoration(
-              color: AppColors.primaryDense,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(24),
-                bottomRight: Radius.circular(24),
-              ),
-            ),
-            child: const CustomAppBar2(
-              title: 'Accounting Periods',
-              backgroundColor: AppColors.primaryDense,
-              textColor: Colors.white,
-            ),
-          ),
+          const GradientScreenHeader(title: 'Accounting Periods'),
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {
@@ -103,57 +90,109 @@ class _CurrentPeriodCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.primaryDense,
-            AppColors.primaryDense.withOpacity(0.8),
-          ],
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0D1B4B), Color(0xFF0D47A1), Color(0xFF1976D2)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.green.shade400,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text(
-                  'Current Period',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0D47A1).withOpacity(0.35),
+            blurRadius: 18,
+            offset: const Offset(0, 7),
           ),
-          const SizedBox(height: 12),
-          Text(
-            period.name,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+        ],
+      ),
+      child: Stack(
+        children: [
+          // Decorative circles
+          Positioned(
+            top: -30,
+            right: -30,
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.07),
+              ),
             ),
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(Icons.date_range_outlined, size: 14, color: Colors.white70),
-              const SizedBox(width: 6),
-              Text(
-                '${_fmt(period.startDate)}  →  ${_fmt(period.endDate)}',
-                style: const TextStyle(fontSize: 13, color: Colors.white70),
+          Positioned(
+            bottom: -20,
+            left: -20,
+            child: Container(
+              width: 90,
+              height: 90,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.05),
               ),
-            ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.white.withOpacity(0.25)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(0xFF69F0AE),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          const Text(
+                            'Active Period',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  period.name,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.date_range_outlined, size: 14, color: Colors.white70),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${_fmt(period.startDate)}  →  ${_fmt(period.endDate)}',
+                      style: const TextStyle(fontSize: 13, color: Colors.white70),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),

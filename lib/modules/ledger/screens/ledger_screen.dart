@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:bizly/modules/ledger/controllers/ledger_controller.dart';
 import 'package:bizly/modules/ledger/models/ledger_model.dart';
 import 'package:bizly/utils/app_colors.dart';
-import 'package:bizly/components/home/custom_app_bar.dart';
+import 'package:bizly/components/common/gradient_screen_header.dart';
 
 class LedgerScreen extends GetView<LedgerController> {
   const LedgerScreen({super.key});
@@ -14,8 +14,10 @@ class LedgerScreen extends GetView<LedgerController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: CustomAppBar(title: 'General Ledger'),
-      body: Obx(() {
+      body: Column(
+        children: [
+          const GradientScreenHeader(title: 'General Ledger'),
+          Expanded(child: Obx(() {
         if (controller.isLoading.value && controller.entries.isEmpty) {
           return const Center(
             child: CircularProgressIndicator(color: AppColors.primary),
@@ -68,7 +70,9 @@ class LedgerScreen extends GetView<LedgerController> {
             },
           ),
         );
-      }),
+      })),
+        ],
+      ),
     );
   }
 }

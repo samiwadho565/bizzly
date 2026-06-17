@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
-import 'package:bizly/components/common/custom_app_bar_2.dart';
+import 'package:bizly/components/common/gradient_screen_header.dart';
 import 'package:bizly/components/common/custom_button.dart';
 import 'package:bizly/components/common/loader/loader.dart';
 import 'package:bizly/modules/chart_of_accounts/models/coa_model.dart';
@@ -63,33 +63,28 @@ class _CreateVoucherScreenState extends State<CreateVoucherScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primaryDense,
-      appBar: CustomAppBar2(
-        title: _c.isEdit ? 'Update Voucher' : 'New Voucher',
-        backgroundColor: AppColors.primaryDense,
-        textColor: Colors.white,
-      ),
-      body: SafeArea(
-        child: Container(
-          height: double.infinity,
-          margin: const EdgeInsets.only(top: 10),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(40),
-              topRight: Radius.circular(40),
-            ),
+      backgroundColor: AppColors.background,
+      body: Column(
+        children: [
+          GradientScreenHeader(
+            title: _c.isEdit ? 'Update Voucher' : 'New Voucher',
           ),
-          child: Obx(() {
-            if (_c.isLoadingInitial) {
-              return const Center(child: FinancePulseLoader());
-            }
-            return Form(
-              key: _c.formKey,
-              child: SingleChildScrollView(
-                controller: _scroll,
-                padding: const EdgeInsets.fromLTRB(20, 28, 20, 40),
-                child: Column(
+          Expanded(
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              child: Obx(() {
+                if (_c.isLoadingInitial) {
+                  return const Center(child: FinancePulseLoader());
+                }
+                return Form(
+                  key: _c.formKey,
+                  child: SingleChildScrollView(
+                    controller: _scroll,
+                    padding: const EdgeInsets.fromLTRB(20, 28, 20, 40),
+                    child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // ── Voucher Type ──────────────────────────────
@@ -286,6 +281,8 @@ class _CreateVoucherScreenState extends State<CreateVoucherScreen> {
             );
           }),
         ),
+          ),
+        ],
       ),
     );
   }
@@ -306,18 +303,34 @@ class _TypeSelector extends StatelessWidget {
         final bool isSelected = t == selected;
         return GestureDetector(
           onTap: () => onChanged(t),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.primaryDense : Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(20),
+              gradient: isSelected
+                  ? const LinearGradient(
+                      colors: [Color(0xFF0D1B4B), Color(0xFF1565C0)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    )
+                  : null,
+              color: isSelected ? null : const Color(0xFF0D47A1).withOpacity(0.07),
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: isSelected
+                  ? [const BoxShadow(
+                      color: Color(0x440D47A1),
+                      blurRadius: 8,
+                      offset: Offset(0, 3),
+                    )]
+                  : [],
             ),
             child: Text(
               t.capitalize!,
               style: TextStyle(
                 fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.white : Colors.black54,
+                fontWeight: FontWeight.w700,
+                color: isSelected ? Colors.white : const Color(0xFF0D47A1),
               ),
             ),
           ),
@@ -722,10 +735,17 @@ class _Btn extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 9),
         decoration: BoxDecoration(
-          color: active ? AppColors.primaryDense : Colors.transparent,
+          gradient: active
+              ? const LinearGradient(
+                  colors: [Color(0xFF0D47A1), Color(0xFF1565C0)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          color: active ? null : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
@@ -733,7 +753,7 @@ class _Btn extends StatelessWidget {
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w700,
-            color: active ? Colors.white : Colors.grey,
+            color: active ? Colors.white : Colors.grey.shade500,
           ),
         ),
       ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
-import 'package:bizly/components/common/custom_app_bar_2.dart';
+import 'package:bizly/components/common/gradient_screen_header.dart';
 import 'package:bizly/components/common/loader/loader.dart';
 import 'package:bizly/modules/vouchers/controllers/voucher_controller.dart';
 import 'package:bizly/modules/vouchers/models/voucher_model.dart';
@@ -14,12 +14,12 @@ class VouchersScreen extends GetView<VoucherController> {
   const VouchersScreen({super.key});
 
   static const List<_VoucherTypeItem> _types = [
-    _VoucherTypeItem(key: 'all',        label: 'All',        icon: Icons.grid_view_rounded,       color: Color(0xFF5C6BC0)),
-    _VoucherTypeItem(key: 'receipt',    label: 'Receipt',    icon: Icons.arrow_downward_rounded,  color: Color(0xFF388E3C)),
-    _VoucherTypeItem(key: 'payment',    label: 'Payment',    icon: Icons.arrow_upward_rounded,    color: Color(0xFFE53935)),
-    _VoucherTypeItem(key: 'journal',    label: 'Journal',    icon: Icons.receipt_long_rounded,    color: Color(0xFF1976D2)),
-    _VoucherTypeItem(key: 'contra',     label: 'Contra',     icon: Icons.swap_horiz_rounded,      color: Color(0xFF7B1FA2)),
-    _VoucherTypeItem(key: 'adjustment', label: 'Adjustment', icon: Icons.tune_rounded,            color: Color(0xFFF57C00)),
+    _VoucherTypeItem(key: 'all',        label: 'All',        icon: Icons.grid_view_rounded,       color: Color(0xFF5C6BC0), gradientEnd: Color(0xFF3949AB)),
+    _VoucherTypeItem(key: 'receipt',    label: 'Receipt',    icon: Icons.arrow_downward_rounded,  color: Color(0xFF43A047), gradientEnd: Color(0xFF1B5E20)),
+    _VoucherTypeItem(key: 'payment',    label: 'Payment',    icon: Icons.arrow_upward_rounded,    color: Color(0xFFE53935), gradientEnd: Color(0xFFB71C1C)),
+    _VoucherTypeItem(key: 'journal',    label: 'Journal',    icon: Icons.receipt_long_rounded,    color: Color(0xFF1976D2), gradientEnd: Color(0xFF0D47A1)),
+    _VoucherTypeItem(key: 'contra',     label: 'Contra',     icon: Icons.swap_horiz_rounded,      color: Color(0xFF8E24AA), gradientEnd: Color(0xFF4A148C)),
+    _VoucherTypeItem(key: 'adjustment', label: 'Adjustment', icon: Icons.tune_rounded,            color: Color(0xFFF57C00), gradientEnd: Color(0xFFE65100)),
   ];
 
   @override
@@ -29,50 +29,33 @@ class VouchersScreen extends GetView<VoucherController> {
       body: Column(
         children: [
           // ── Header ──────────────────────────────────────────
-          Container(
-            decoration: const BoxDecoration(
-              color: AppColors.primaryDense,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(24),
-                bottomRight: Radius.circular(24),
-              ),
-            ),
-            child: Column(
-              children: [
-                // App bar with filter icon
-                Obx(() => CustomAppBar2(
-                      title: 'Vouchers',
-                      backgroundColor: AppColors.primaryDense,
-                      textColor: Colors.white,
-                      actions: [
-                        Stack(
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.filter_list_rounded,
-                                  color: Colors.white),
-                              onPressed: () =>
-                                  _showFilterSheet(context),
+          Obx(() => GradientScreenHeader(
+                title: 'Vouchers',
+                actions: [
+                  Stack(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.filter_list_rounded,
+                            color: Colors.white),
+                        onPressed: () => _showFilterSheet(context),
+                      ),
+                      if (controller.hasActiveFilters)
+                        Positioned(
+                          right: 10,
+                          top: 10,
+                          child: Container(
+                            width: 7,
+                            height: 7,
+                            decoration: const BoxDecoration(
+                              color: Colors.amber,
+                              shape: BoxShape.circle,
                             ),
-                            if (controller.hasActiveFilters)
-                              Positioned(
-                                right: 10,
-                                top: 10,
-                                child: Container(
-                                  width: 7,
-                                  height: 7,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.amber,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                              ),
-                          ],
+                          ),
                         ),
-                      ],
-                    )),
-              ],
-            ),
-          ),
+                    ],
+                  ),
+                ],
+              )),
 
           // ── Type Chips ──────────────────────────────────────
           const _VoucherTypeChips(),
@@ -316,46 +299,89 @@ class _PendingApprovalsBanner extends GetView<VoucherController> {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFFFFF3E0), Color(0xFFFFFDE7)],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
+              colors: [Color(0xFFE65100), Color(0xFFF57C00), Color(0xFFFB8C00)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFFFCC80), width: 1),
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFE65100).withOpacity(0.30),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          child: Row(
+          child: Stack(
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFB8C00).withOpacity(0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.pending_actions_rounded,
-                    size: 17, color: Color(0xFFFB8C00)),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '$count voucher${count > 1 ? 's' : ''} awaiting your approval',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFFE65100),
-                      ),
-                    ),
-                    const Text(
-                      'Tap to review',
-                      style: TextStyle(fontSize: 11, color: Color(0xFFFB8C00)),
-                    ),
-                  ],
+              Positioned(
+                top: -18,
+                right: -18,
+                child: Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.08),
+                  ),
                 ),
               ),
-              const Icon(Icons.chevron_right, color: Color(0xFFFB8C00), size: 20),
+              Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.20),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.pending_actions_rounded,
+                        size: 18, color: Colors.white),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '$count voucher${count > 1 ? 's' : ''} awaiting approval',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const Text(
+                          'Tap to review',
+                          style: TextStyle(fontSize: 11, color: Colors.white70),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.20),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '$count',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.chevron_right, color: Colors.white, size: 16),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -592,51 +618,72 @@ class _VoucherTypeChips extends GetView<VoucherController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final String selected = controller.filterType.value;
-      return SizedBox(
-        height: 52,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          itemCount: VouchersScreen._types.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 8),
-          itemBuilder: (_, i) {
-            final _VoucherTypeItem item = VouchersScreen._types[i];
-            final bool isSelected = selected == item.key;
-            return GestureDetector(
-              onTap: () => controller.applyType(item.key),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeInOut,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                decoration: BoxDecoration(
-                  color: isSelected ? item.color : Colors.white,
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(
-                    color: isSelected ? item.color : Colors.grey.shade200,
-                    width: 1.5,
+      return Container(
+        color: Colors.white,
+        child: SizedBox(
+          height: 58,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+            itemCount: VouchersScreen._types.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (_, i) {
+              final _VoucherTypeItem item = VouchersScreen._types[i];
+              final bool isSelected = selected == item.key;
+              return GestureDetector(
+                onTap: () => controller.applyType(item.key),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOutCubic,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
+                  decoration: BoxDecoration(
+                    gradient: isSelected
+                        ? LinearGradient(
+                            colors: [item.color, item.gradientEnd],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
+                    color: isSelected ? null : item.color.withOpacity(0.07),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: isSelected
+                        ? [BoxShadow(color: item.gradientEnd.withOpacity(0.38), blurRadius: 10, offset: const Offset(0, 4))]
+                        : [],
                   ),
-                  boxShadow: isSelected
-                      ? [BoxShadow(color: item.color.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 3))]
-                      : [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 1))],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(item.icon, size: 14, color: isSelected ? Colors.white : item.color),
-                    const SizedBox(width: 6),
-                    Text(
-                      item.label,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: isSelected ? Colors.white : Colors.grey.shade700,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 22,
+                        height: 22,
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? Colors.white.withOpacity(0.20)
+                              : item.color.withOpacity(0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          item.icon,
+                          size: 12,
+                          color: isSelected ? Colors.white : item.color,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 7),
+                      Text(
+                        item.label,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: isSelected ? Colors.white : item.color,
+                          letterSpacing: 0.1,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       );
     });
@@ -648,7 +695,8 @@ class _VoucherTypeItem {
   final String label;
   final IconData icon;
   final Color color;
-  const _VoucherTypeItem({required this.key, required this.label, required this.icon, required this.color});
+  final Color gradientEnd;
+  const _VoucherTypeItem({required this.key, required this.label, required this.icon, required this.color, required this.gradientEnd});
 }
 
 // ── Filter Bottom Sheet ───────────────────────────────────────────
@@ -665,12 +713,12 @@ class _FilterSheetState extends State<_FilterSheet> {
   late DateTime? _from;
   late DateTime? _to;
 
-  static const List<Map<String, String>> _statuses = [
-    {'key': 'all', 'label': 'All'},
-    {'key': 'draft', 'label': 'Draft'},
-    {'key': 'submitted', 'label': 'Submitted'},
-    {'key': 'posted', 'label': 'Posted'},
-    {'key': 'rejected', 'label': 'Rejected'},
+  static const List<_StatusItem> _statuses = [
+    _StatusItem(key: 'all',       label: 'All',       icon: Icons.grid_view_rounded,        color: Color(0xFF5C6BC0), gradientEnd: Color(0xFF3949AB)),
+    _StatusItem(key: 'draft',     label: 'Draft',     icon: Icons.edit_note_rounded,        color: Color(0xFF78909C), gradientEnd: Color(0xFF455A64)),
+    _StatusItem(key: 'submitted', label: 'Submitted', icon: Icons.send_rounded,             color: Color(0xFFF57C00), gradientEnd: Color(0xFFE65100)),
+    _StatusItem(key: 'posted',    label: 'Posted',    icon: Icons.check_circle_rounded,     color: Color(0xFF43A047), gradientEnd: Color(0xFF1B5E20)),
+    _StatusItem(key: 'rejected',  label: 'Rejected',  icon: Icons.cancel_rounded,           color: Color(0xFFE53935), gradientEnd: Color(0xFFB71C1C)),
   ];
 
   @override
@@ -726,135 +774,331 @@ class _FilterSheetState extends State<_FilterSheet> {
   @override
   Widget build(BuildContext context) {
     final String fmt = 'MMM d, yyyy';
-    return Padding(
+    final bool hasFilters = widget.controller.hasActiveServerFilters ||
+        _status != 'all' || _from != null || _to != null;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 28,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Handle
+          // ── Handle ─────────────────────────────────────────
           Center(
             child: Container(
-              width: 40, height: 4,
+              margin: const EdgeInsets.only(top: 12),
+              width: 36,
+              height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: Colors.grey.shade200,
                 borderRadius: BorderRadius.circular(20),
               ),
             ),
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              const Expanded(
-                child: Text('Filter Vouchers',
-                    style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              ),
-              if (widget.controller.hasActiveServerFilters)
-                TextButton(
-                  onPressed: _clear,
-                  child: Text('Clear all',
-                      style: TextStyle(color: Colors.red.shade400)),
-                ),
-            ],
-          ),
-          const SizedBox(height: 16),
 
-          // ── Status ─────────────────────────────────────────
-          const Text('Status',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _statuses.map((s) {
-              final bool sel = _status == s['key'];
-              return GestureDetector(
-                onTap: () => setState(() => _status = s['key']!),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: sel
-                        ? AppColors.primaryDense
-                        : Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(20),
+          // ── Header ─────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF0D1B4B), Color(0xFF1565C0)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    shape: BoxShape.circle,
                   ),
-                  child: Text(
-                    s['label']!,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: sel ? Colors.white : Colors.black54,
+                  child: const Icon(Icons.filter_list_rounded,
+                      color: Colors.white, size: 18),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Filter Vouchers',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF1A1A2E),
+                        ),
+                      ),
+                      Text(
+                        'Narrow results by status or date',
+                        style: TextStyle(fontSize: 11, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+                if (hasFilters)
+                  GestureDetector(
+                    onTap: _clear,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFEBEE),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: const Color(0xFFE53935).withOpacity(0.25)),
+                      ),
+                      child: const Text(
+                        'Clear all',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFFE53935),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              );
-            }).toList(),
+              ],
+            ),
           ),
           const SizedBox(height: 20),
 
-          // ── Date Range ─────────────────────────────────────
-          const Text('Date Range',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: _DateTile(
-                  label: 'From',
-                  value: _from != null
-                      ? DateFormat(fmt).format(_from!)
-                      : null,
-                  onTap: () => _pickDate(isFrom: true),
-                  onClear: _from != null
-                      ? () => setState(() => _from = null)
-                      : null,
+          // Divider
+          Container(
+            height: 1,
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            color: Colors.grey.shade100,
+          ),
+          const SizedBox(height: 20),
+
+          // ── Status section label ───────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Container(
+                  width: 3,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF0D47A1), Color(0xFF1565C0)],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _DateTile(
-                  label: 'To',
-                  value: _to != null
-                      ? DateFormat(fmt).format(_to!)
-                      : null,
-                  onTap: () => _pickDate(isFrom: false),
-                  onClear: _to != null
-                      ? () => setState(() => _to = null)
-                      : null,
+                const SizedBox(width: 8),
+                const Text(
+                  'Status',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1A1A2E),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // ── Status chips ──────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _statuses.map((s) {
+                final bool sel = _status == s.key;
+                return GestureDetector(
+                  onTap: () => setState(() => _status = s.key),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOutCubic,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 9),
+                    decoration: BoxDecoration(
+                      gradient: sel
+                          ? LinearGradient(
+                              colors: [s.color, s.gradientEnd],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : null,
+                      color: sel ? null : s.color.withOpacity(0.07),
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: sel
+                          ? [
+                              BoxShadow(
+                                color: s.gradientEnd.withOpacity(0.32),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              )
+                            ]
+                          : [],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 20,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: sel
+                                ? Colors.white.withOpacity(0.20)
+                                : s.color.withOpacity(0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(s.icon,
+                              size: 11,
+                              color: sel ? Colors.white : s.color),
+                        ),
+                        const SizedBox(width: 7),
+                        Text(
+                          s.label,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: sel ? Colors.white : s.color,
+                            letterSpacing: 0.1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 22),
+
+          // ── Date Range section label ───────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Container(
+                  width: 3,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF0D47A1), Color(0xFF1565C0)],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Date Range',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1A1A2E),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // ── Date tiles ────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _DateTile(
+                    label: 'From',
+                    value: _from != null ? DateFormat(fmt).format(_from!) : null,
+                    onTap: () => _pickDate(isFrom: true),
+                    onClear:
+                        _from != null ? () => setState(() => _from = null) : null,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _DateTile(
+                    label: 'To',
+                    value: _to != null ? DateFormat(fmt).format(_to!) : null,
+                    onTap: () => _pickDate(isFrom: false),
+                    onClear:
+                        _to != null ? () => setState(() => _to = null) : null,
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 24),
 
-          // ── Apply ──────────────────────────────────────────
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _apply,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryDense,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+          // ── Apply button ──────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: GestureDetector(
+              onTap: _apply,
+              child: Container(
+                height: 54,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF0D1B4B), Color(0xFF1565C0)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF0D47A1).withOpacity(0.32),
+                      blurRadius: 14,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check_rounded, color: Colors.white, size: 18),
+                    SizedBox(width: 8),
+                    Text(
+                      'Apply Filters',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              child: const Text('Apply Filters',
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.w600)),
             ),
           ),
         ],
       ),
     );
   }
+}
+
+class _StatusItem {
+  final String key;
+  final String label;
+  final IconData icon;
+  final Color color;
+  final Color gradientEnd;
+  const _StatusItem({
+    required this.key,
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.gradientEnd,
+  });
 }
 
 class _DateTile extends StatelessWidget {
@@ -872,33 +1116,71 @@ class _DateTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool hasValue = value != null;
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade300),
+          color: hasValue
+              ? const Color(0xFF0D47A1).withOpacity(0.05)
+              : Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: hasValue
+                ? const Color(0xFF1565C0).withOpacity(0.30)
+                : Colors.grey.shade200,
+            width: 1.5,
+          ),
         ),
         child: Row(
           children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                gradient: hasValue
+                    ? const LinearGradient(
+                        colors: [Color(0xFF0D1B4B), Color(0xFF1565C0)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : null,
+                color: hasValue ? null : Colors.grey.shade200,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.calendar_today_rounded,
+                size: 13,
+                color: hasValue ? Colors.white : Colors.grey.shade500,
+              ),
+            ),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label,
-                      style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primaryDense)),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: hasValue
+                          ? const Color(0xFF0D47A1)
+                          : Colors.grey.shade400,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
                   const SizedBox(height: 2),
                   Text(
                     value ?? 'Select date',
                     style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: value != null ? Colors.black87 : Colors.black54,
+                      fontSize: 12,
+                      fontWeight:
+                          hasValue ? FontWeight.w600 : FontWeight.w400,
+                      color:
+                          hasValue ? const Color(0xFF1A1A2E) : Colors.grey.shade400,
                     ),
                   ),
                 ],
@@ -907,11 +1189,17 @@ class _DateTile extends StatelessWidget {
             if (onClear != null)
               GestureDetector(
                 onTap: onClear,
-                child: const Icon(Icons.close, size: 16, color: AppColors.primaryDense),
-              )
-            else
-              const Icon(Icons.calendar_today_outlined,
-                  size: 16, color: AppColors.primaryDense),
+                child: Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE53935).withOpacity(0.10),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.close,
+                      size: 12, color: Color(0xFFE53935)),
+                ),
+              ),
           ],
         ),
       ),

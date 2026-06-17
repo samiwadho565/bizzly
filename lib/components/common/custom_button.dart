@@ -13,6 +13,8 @@ class CustomButton extends StatelessWidget {
   final Color textColor;
   final Color borderColor;
   final double borderWidth;
+  /// Optional gradient override. If null, derives a gradient from [color].
+  final Gradient? gradient;
 
   const CustomButton({
     super.key,
@@ -23,8 +25,27 @@ class CustomButton extends StatelessWidget {
     this.isLoading = false,
     this.textColor = Colors.white,
     this.borderColor = Colors.transparent,
-    this.borderWidth = 1.2,
+    this.borderWidth = 0,
+    this.gradient,
   });
+
+  Gradient get _effectiveGradient {
+    if (gradient != null) return gradient!;
+    // Default primary → deep navy-to-blue gradient
+    if (color == AppColors.primary || color == const Color(0xFF0D47A1)) {
+      return const LinearGradient(
+        colors: [Color(0xFF0D1B4B), Color(0xFF1565C0)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+    }
+    // For other colors, derive a subtle gradient (color → slightly lighter)
+    return LinearGradient(
+      colors: [color, Color.lerp(color, Colors.white, 0.18)!],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,14 +54,23 @@ class CustomButton extends StatelessWidget {
       height: height,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: borderColor, width: borderWidth),
+          gradient: _effectiveGradient,
+          borderRadius: BorderRadius.circular(16),
+          border: borderColor != Colors.transparent
+              ? Border.all(color: borderColor, width: borderWidth)
+              : null,
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.28),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
+            ),
+          ],
         ),
         child: CupertinoButton(
           padding: EdgeInsets.zero,
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(16),
           onPressed: onPressed,
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
@@ -58,7 +88,8 @@ class CustomButton extends StatelessWidget {
                     style: TextStyle(
                       color: textColor,
                       fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.2,
                     ),
                   ),
           ),

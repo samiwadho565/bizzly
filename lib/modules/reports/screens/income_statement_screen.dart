@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
-import 'package:bizly/components/common/custom_app_bar_2.dart';
+import 'package:bizly/components/common/gradient_screen_header.dart';
 import 'package:bizly/components/common/top_border_ccontainer.dart';
 import 'package:bizly/modules/reports/controllers/income_statement_controller.dart';
 import 'package:bizly/modules/reports/models/income_statement_model.dart';
@@ -15,17 +15,11 @@ class IncomeStatementScreen extends GetView<IncomeStatementController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const CustomAppBar2(
-        title: 'Income Statement',
-        backgroundColor: AppColors.primaryDense,
-        textColor: Colors.white,
-      ),
       body: Column(
         children: [
-          Container(height: 16, color: AppColors.primaryDense),
+          const GradientScreenHeader(title: 'Income Statement'),
           Expanded(
-            child: TopBorderContainer(
-              child: Obx(() {
+            child: Obx(() {
                 if (controller.isLoading.value &&
                     controller.report.value == null) {
                   return const Center(
@@ -109,8 +103,7 @@ class IncomeStatementScreen extends GetView<IncomeStatementController> {
                     ],
                   ),
                 );
-              }),
-            ),
+            }),
           ),
         ],
       ),
@@ -215,53 +208,106 @@ class _SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isProfit = report.netIncome >= 0;
+    final List<Color> colors = isProfit
+        ? [const Color(0xFF00897B), const Color(0xFF004D40)]
+        : [const Color(0xFFE53935), const Color(0xFFB71C1C)];
+
     return Container(
-      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: isProfit
-              ? [const Color(0xFF1B5E20), const Color(0xFF2E7D32)]
-              : [const Color(0xFFB71C1C), const Color(0xFFC62828)],
+          colors: colors,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: colors.last.withOpacity(0.35),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
-      child: Row(
+      child: Stack(
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          // Decorative circle
+          Positioned(
+            top: -20,
+            right: -20,
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.07),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -30,
+            left: -10,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.05),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
               children: [
-                Text(
-                  isProfit ? 'Net Profit' : 'Net Loss',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withOpacity(0.8),
-                    fontWeight: FontWeight.w500,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          isProfit ? 'Net Profit' : 'Net Loss',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        _fmt(report.netIncome.abs()),
+                        style: const TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  _fmt(report.netIncome.abs()),
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    _MiniStat(
+                        label: 'Revenue',
+                        value: _fmt(report.totalRevenue),
+                        positive: true),
+                    const SizedBox(height: 8),
+                    _MiniStat(
+                        label: 'Expenses',
+                        value: _fmt(report.totalExpenses),
+                        positive: false),
+                  ],
                 ),
               ],
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              _MiniStat(
-                  label: 'Revenue', value: _fmt(report.totalRevenue), positive: true),
-              const SizedBox(height: 4),
-              _MiniStat(
-                  label: 'Expenses', value: _fmt(report.totalExpenses), positive: false),
-            ],
           ),
         ],
       ),

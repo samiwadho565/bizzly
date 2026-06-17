@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:bizly/components/common/custom_app_bar_2.dart';
+import 'package:bizly/components/common/gradient_screen_header.dart';
 import 'package:bizly/components/common/top_border_ccontainer.dart';
 import 'package:bizly/modules/reports/controllers/balance_sheet_controller.dart';
 import 'package:bizly/modules/reports/models/balance_sheet_model.dart';
@@ -15,20 +15,11 @@ class BalanceSheetScreen extends GetView<BalanceSheetController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const CustomAppBar2(
-        title: 'Balance Sheet',
-        backgroundColor: AppColors.primaryDense,
-        textColor: Colors.white,
-      ),
       body: Column(
         children: [
-          Container(
-            height: 16,
-            color: AppColors.primaryDense,
-          ),
+          const GradientScreenHeader(title: 'Balance Sheet'),
           Expanded(
-            child: TopBorderContainer(
-              child: Obx(() {
+            child: Obx(() {
                 if (controller.isLoading.value && controller.report.value == null) {
                   return const Center(
                     child: CircularProgressIndicator(color: AppColors.primary),
@@ -119,8 +110,7 @@ class BalanceSheetScreen extends GetView<BalanceSheetController> {
                     ),
                   ),
                 );
-              }),
-            ),
+            }),
           ),
         ],
       ),
@@ -129,48 +119,80 @@ class BalanceSheetScreen extends GetView<BalanceSheetController> {
 
   Widget _reportHeader(BalanceSheetModel report) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.primaryDense,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0D1B4B), Color(0xFF0D47A1), Color(0xFF1565C0)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0D47A1).withOpacity(0.35),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
-      child: Row(
+      child: Stack(
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'As Of Date',
-                  style: TextStyle(color: Colors.white70, fontSize: 12),
+          Positioned(
+            top: -25,
+            right: -25,
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.07),
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'As Of Date',
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _formatDate(report.asOfDate),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  _formatDate(report.asOfDate),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: report.isBalanced
+                      ? Colors.green.withOpacity(0.20)
+                      : Colors.red.withOpacity(0.20),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: report.isBalanced
+                        ? Colors.greenAccent.withOpacity(0.40)
+                        : Colors.redAccent.withOpacity(0.40),
+                  ),
+                ),
+                child: Text(
+                  report.isBalanced ? 'Balanced' : 'Unbalanced',
+                  style: TextStyle(
+                    color: report.isBalanced ? Colors.greenAccent : Colors.redAccent,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: report.isBalanced
-                  ? Colors.green.withOpacity(0.18)
-                  : Colors.red.withOpacity(0.18),
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Text(
-              report.isBalanced ? 'Balanced' : 'Unbalanced',
-              style: TextStyle(
-                color: report.isBalanced ? Colors.greenAccent : Colors.redAccent,
-                fontWeight: FontWeight.w700,
               ),
-            ),
+            ],
           ),
         ],
       ),

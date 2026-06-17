@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:bizly/components/common/custom_app_bar_2.dart';
 import 'package:bizly/components/common/custom_search_field.dart';
+import 'package:bizly/components/common/gradient_screen_header.dart';
 import 'package:bizly/components/common/loader/loader.dart';
 import 'package:bizly/modules/chart_of_accounts/controllers/coa_controller.dart';
 import 'package:bizly/modules/chart_of_accounts/models/coa_model.dart';
@@ -20,34 +20,20 @@ class ChartOfAccountsScreen extends GetView<CoaController> {
       body: Column(
         children: [
           // ── Header ──────────────────────────────────────────
-          Container(
-            decoration: const BoxDecoration(
-              color: AppColors.primaryDense,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(24),
-                bottomRight: Radius.circular(24),
+          GradientScreenHeader(
+            title: 'Chart of Accounts',
+            bottom: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+              child: CustomSearchField(
+                hintText: 'Search accounts...',
+                controller: controller.searchController,
+                onChanged: (v) => controller.searchQuery.value = v,
+                isDark: true,
+                onClear: () {
+                  controller.searchController.clear();
+                  controller.searchQuery.value = '';
+                },
               ),
-            ),
-            child: Column(
-              children: [
-                const CustomAppBar2(
-                  title: 'Chart of Accounts',
-                  backgroundColor: AppColors.primaryDense,
-                  textColor: Colors.white,
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 0, 10, 12),
-                  child: CustomSearchField(
-                        hintText: 'Search accounts...',
-                        controller: controller.searchController,
-                        onChanged: (v) => controller.searchQuery.value = v,
-                        onClear: () {
-                          controller.searchController.clear();
-                          controller.searchQuery.value = '';
-                        },
-                      ),
-                ),
-              ],
             ),
           ),
 
@@ -322,67 +308,84 @@ class _NatureChips extends GetView<CoaController> {
   const _NatureChips();
 
   static const List<_NatureItem> _natures = [
-    _NatureItem(key: 'all',       label: 'All',       icon: Icons.grid_view_rounded,        color: Color(0xFF5C6BC0)),
-    _NatureItem(key: 'asset',     label: 'Asset',     icon: Icons.account_balance_rounded,  color: Color(0xFF1976D2)),
-    _NatureItem(key: 'liability', label: 'Liability', icon: Icons.trending_down_rounded,    color: Color(0xFFE53935)),
-    _NatureItem(key: 'equity',    label: 'Equity',    icon: Icons.pie_chart_rounded,        color: Color(0xFF7B1FA2)),
-    _NatureItem(key: 'income',    label: 'Income',    icon: Icons.trending_up_rounded,      color: Color(0xFF388E3C)),
-    _NatureItem(key: 'expense',   label: 'Expense',   icon: Icons.receipt_long_rounded,     color: Color(0xFFF57C00)),
+    _NatureItem(key: 'all',       label: 'All',       icon: Icons.grid_view_rounded,        color: Color(0xFF5C6BC0), gradientEnd: Color(0xFF3949AB)),
+    _NatureItem(key: 'asset',     label: 'Asset',     icon: Icons.account_balance_rounded,  color: Color(0xFF1976D2), gradientEnd: Color(0xFF0D47A1)),
+    _NatureItem(key: 'liability', label: 'Liability', icon: Icons.trending_down_rounded,    color: Color(0xFFE53935), gradientEnd: Color(0xFFB71C1C)),
+    _NatureItem(key: 'equity',    label: 'Equity',    icon: Icons.pie_chart_rounded,        color: Color(0xFF8E24AA), gradientEnd: Color(0xFF4A148C)),
+    _NatureItem(key: 'income',    label: 'Income',    icon: Icons.trending_up_rounded,      color: Color(0xFF43A047), gradientEnd: Color(0xFF1B5E20)),
+    _NatureItem(key: 'expense',   label: 'Expense',   icon: Icons.receipt_long_rounded,     color: Color(0xFFF57C00), gradientEnd: Color(0xFFE65100)),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
       final String selected = controller.selectedNature.value;
-      return SizedBox(
-        height: 52,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          itemCount: _natures.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 8),
-          itemBuilder: (_, i) {
-            final _NatureItem item = _natures[i];
-            final bool isSelected = selected == item.key;
-            return GestureDetector(
-              onTap: () => controller.selectedNature.value = item.key,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeInOut,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                decoration: BoxDecoration(
-                  color: isSelected ? item.color : Colors.white,
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(
-                    color: isSelected ? item.color : Colors.grey.shade200,
-                    width: 1.5,
+      return Container(
+        color: Colors.white,
+        child: SizedBox(
+          height: 58,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+            itemCount: _natures.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (_, i) {
+              final _NatureItem item = _natures[i];
+              final bool isSelected = selected == item.key;
+              return GestureDetector(
+                onTap: () => controller.selectedNature.value = item.key,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOutCubic,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
+                  decoration: BoxDecoration(
+                    gradient: isSelected
+                        ? LinearGradient(
+                            colors: [item.color, item.gradientEnd],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
+                    color: isSelected ? null : item.color.withOpacity(0.07),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: isSelected
+                        ? [BoxShadow(color: item.gradientEnd.withOpacity(0.38), blurRadius: 10, offset: const Offset(0, 4))]
+                        : [],
                   ),
-                  boxShadow: isSelected
-                      ? [BoxShadow(color: item.color.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 3))]
-                      : [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 1))],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      item.icon,
-                      size: 14,
-                      color: isSelected ? Colors.white : item.color,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      item.label,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: isSelected ? Colors.white : Colors.grey.shade700,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 22,
+                        height: 22,
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? Colors.white.withOpacity(0.20)
+                              : item.color.withOpacity(0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          item.icon,
+                          size: 12,
+                          color: isSelected ? Colors.white : item.color,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 7),
+                      Text(
+                        item.label,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: isSelected ? Colors.white : item.color,
+                          letterSpacing: 0.1,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       );
     });
@@ -394,7 +397,8 @@ class _NatureItem {
   final String label;
   final IconData icon;
   final Color color;
-  const _NatureItem({required this.key, required this.label, required this.icon, required this.color});
+  final Color gradientEnd;
+  const _NatureItem({required this.key, required this.label, required this.icon, required this.color, required this.gradientEnd});
 }
 
 // ── Helpers ─────────────────────────────────────────────────────

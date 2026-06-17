@@ -3,13 +3,13 @@ import 'package:bizly/modules/home/controllers/home_controller.dart';
 import 'package:bizly/modules/business/models/business_model.dart';
 import 'package:bizly/modules/vouchers/models/voucher_model.dart';
 import 'package:bizly/utils/app_colors.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import 'package:bizly/routes/routes.dart';
 import 'package:bizly/components/home/bussiness_card.dart';
-import 'package:bizly/components/home/custom_app_bar.dart';
 
 class HomeScreen extends GetView<HomeScreenController> {
   final VoidCallback? openDrawer;
@@ -19,243 +19,216 @@ class HomeScreen extends GetView<HomeScreenController> {
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
-        statusBarColor: AppColors.background,
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
       ),
       child: Scaffold(
         backgroundColor: AppColors.background,
-        extendBody: true,
-        appBar: CustomAppBar(
-          title: "Dashboard",
-          leading: Image.asset(AppImages.menu, height: 40),
-          onLeadingTap: () => openDrawer?.call(),
-        ),
         body: RefreshIndicator(
-          color: AppColors.primary,
+          color: Colors.white,
+          displacement: 80,
           onRefresh: controller.fetchBusinesses,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // ── Gradient Hero ──────────────────────────────────
+                _HeroSection(openDrawer: openDrawer),
 
-                // ── Greeting ──────────────────────────────────────
-                Obx(() {
-                  final String name =
-                      controller.user.value?.name?.split(' ').first ?? 'there';
-                  return Text(
-                    'Hello, $name 👋',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  );
-                }),
-                const SizedBox(height: 3),
-                Text(
-                  'Here\'s your accounting overview',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
-                ),
-                const SizedBox(height: 12),
+                // ── Body ──────────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Stats
+                      const _DashboardSummary(),
+                      const SizedBox(height: 22),
 
-                // ── Pending Approvals Card ────────────────────────
-                const _PendingApprovalsCard(),
+                      // Recent Vouchers
+                      const _RecentVouchers(),
+                      const SizedBox(height: 22),
 
-                // ── Current Period Banner ─────────────────────────
-                const _PeriodBanner(),
-                const SizedBox(height: 14),
-
-                // ── Dashboard Summary ─────────────────────────────
-                const _DashboardSummary(),
-                const SizedBox(height: 16),
-
-                // ── Recent Vouchers ───────────────────────────────
-                const _RecentVouchers(),
-                const SizedBox(height: 16),
-
-                // ── Accounting Quick Access ────────────────────────
-                const Text(
-                  'Accounting',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _QuickCard(
-                        icon: Icons.account_tree_outlined,
-                        label: 'Chart of Accounts',
-                        onTap: () => Get.toNamed(Routes.chartOfAccountsScreen),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _QuickCard(
-                        icon: Icons.date_range_outlined,
-                        label: 'Accounting Periods',
-                        onTap: () => Get.toNamed(Routes.accountingPeriodsScreen),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _QuickCard(
-                        icon: Icons.receipt_long_outlined,
-                        label: 'Vouchers',
-                        onTap: () => Get.toNamed(Routes.vouchersScreen),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _QuickCard(
-                        icon: Icons.menu_book_outlined,
-                        label: 'Ledger',
-                        onTap: () => Get.toNamed(Routes.ledgerScreen),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-
-                // ── Reports Quick Access ───────────────────────────
-                const Text(
-                  'Reports',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _QuickCard(
-                        icon: Icons.bar_chart_rounded,
-                        label: 'Income Statement',
-                        onTap: () => Get.toNamed(Routes.incomeStatementScreen),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _QuickCard(
-                        icon: Icons.account_balance_outlined,
-                        label: 'Balance Sheet',
-                        onTap: () => Get.toNamed(Routes.balanceSheetScreen),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _QuickCard(
-                        icon: Icons.balance_outlined,
-                        label: 'Trial Balance',
-                        onTap: () => Get.toNamed(Routes.trialBalanceScreen),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Expanded(child: SizedBox()),
-                  ],
-                ),
-                const SizedBox(height: 20),
-
-                // ── All Businesses ─────────────────────────────────
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'All Businesses',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    TextButton.icon(
-                      onPressed: () => Get.toNamed(Routes.addNewBusiness),
-                      icon: const Icon(Icons.add, size: 16),
-                      label: const Text('Add'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: AppColors.primary,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                Obx(() {
-                  if (controller.isBusinessesLoading.value) {
-                    return const Padding(
-                      padding: EdgeInsets.only(top: 20),
-                      child: Center(
-                        child: CircularProgressIndicator(
-                            color: AppColors.primary),
-                      ),
-                    );
-                  }
-                  if (controller.businesses.isEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 20),
-                      child: Center(
-                        child: Text(
-                          controller.businessesError.value.isNotEmpty
-                              ? controller.businessesError.value
-                              : 'No businesses found.',
-                          style: const TextStyle(
-                              color: AppColors.textSecondary),
+                      // Accounting Quick Access
+                      const _SectionLabel(title: 'Accounting'),
+                      const SizedBox(height: 12),
+                      Row(children: [
+                        Expanded(
+                          child: _ModernQuickCard(
+                            icon: Icons.account_tree_outlined,
+                            label: 'Chart of Accounts',
+                            from: const Color(0xFF3949AB),
+                            to: const Color(0xFF1A237E),
+                            onTap: () =>
+                                Get.toNamed(Routes.chartOfAccountsScreen),
+                          ),
                         ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _ModernQuickCard(
+                            icon: Icons.date_range_outlined,
+                            label: 'Accounting Periods',
+                            from: const Color(0xFF039BE5),
+                            to: const Color(0xFF01579B),
+                            onTap: () =>
+                                Get.toNamed(Routes.accountingPeriodsScreen),
+                          ),
+                        ),
+                      ]),
+                      const SizedBox(height: 10),
+                      Row(children: [
+                        Expanded(
+                          child: _ModernQuickCard(
+                            icon: Icons.receipt_long_outlined,
+                            label: 'Vouchers',
+                            from: const Color(0xFF00897B),
+                            to: const Color(0xFF004D40),
+                            onTap: () => Get.toNamed(Routes.vouchersScreen),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _ModernQuickCard(
+                            icon: Icons.menu_book_outlined,
+                            label: 'Ledger',
+                            from: const Color(0xFF7B1FA2),
+                            to: const Color(0xFF4A148C),
+                            onTap: () => Get.toNamed(Routes.ledgerScreen),
+                          ),
+                        ),
+                      ]),
+                      const SizedBox(height: 22),
+
+                      // Reports Quick Access
+                      const _SectionLabel(title: 'Reports'),
+                      const SizedBox(height: 12),
+                      Row(children: [
+                        Expanded(
+                          child: _ModernQuickCard(
+                            icon: Icons.bar_chart_rounded,
+                            label: 'Income Statement',
+                            from: const Color(0xFF43A047),
+                            to: const Color(0xFF1B5E20),
+                            onTap: () =>
+                                Get.toNamed(Routes.incomeStatementScreen),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _ModernQuickCard(
+                            icon: Icons.account_balance_outlined,
+                            label: 'Balance Sheet',
+                            from: const Color(0xFF1E88E5),
+                            to: const Color(0xFF0D47A1),
+                            onTap: () =>
+                                Get.toNamed(Routes.balanceSheetScreen),
+                          ),
+                        ),
+                      ]),
+                      const SizedBox(height: 10),
+                      Row(children: [
+                        Expanded(
+                          child: _ModernQuickCard(
+                            icon: Icons.balance_outlined,
+                            label: 'Trial Balance',
+                            from: const Color(0xFFFF7043),
+                            to: const Color(0xFFBF360C),
+                            onTap: () =>
+                                Get.toNamed(Routes.trialBalanceScreen),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(child: SizedBox()),
+                      ]),
+                      const SizedBox(height: 22),
+
+                      // All Businesses
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const _SectionLabel(title: 'All Businesses'),
+                          TextButton.icon(
+                            onPressed: () =>
+                                Get.toNamed(Routes.addNewBusiness),
+                            icon: const Icon(Icons.add, size: 16),
+                            label: const Text('Add'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppColors.primary,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                            ),
+                          ),
+                        ],
                       ),
-                    );
-                  }
-                  return GridView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    itemCount: controller.businesses.length,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      mainAxisSpacing: 0,
-                      childAspectRatio: 1,
-                    ),
-                    itemBuilder: (context, index) {
-                      final BusinessModel business =
-                          controller.businesses[index];
-                      return CategoryCard(
-                        title: business.businessName,
-                        imageUrl: business.businessImageUrl,
-                        heroTag: 'business_image_${business.id ?? index}',
-                        onTap: () async {
-                          final dynamic updated = await Get.toNamed(
-                            Routes.businessDetailScreen,
-                            arguments: business,
+                      const SizedBox(height: 12),
+
+                      Obx(() {
+                        if (controller.isBusinessesLoading.value) {
+                          return const Padding(
+                            padding: EdgeInsets.only(top: 20),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                  color: AppColors.primary),
+                            ),
                           );
-                          if (updated is BusinessModel) {
-                            final int idx = controller.businesses
-                                .indexWhere((b) => b.id == updated.id);
-                            if (idx >= 0) {
-                              controller.businesses[idx] = updated;
-                            }
-                          }
-                        },
-                      );
-                    },
-                  );
-                }),
+                        }
+                        if (controller.businesses.isEmpty) {
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 20),
+                            child: Center(
+                              child: Text(
+                                controller.businessesError.value.isNotEmpty
+                                    ? controller.businessesError.value
+                                    : 'No businesses found.',
+                                style: const TextStyle(
+                                    color: AppColors.textSecondary),
+                              ),
+                            ),
+                          );
+                        }
+                        return GridView.builder(
+                          physics: const NeverScrollableScrollPhysics(),
+                          shrinkWrap: true,
+                          itemCount: controller.businesses.length,
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            mainAxisSpacing: 0,
+                            childAspectRatio: 1,
+                          ),
+                          itemBuilder: (context, index) {
+                            final BusinessModel business =
+                                controller.businesses[index];
+                            return CategoryCard(
+                              title: business.businessName,
+                              imageUrl: business.businessImageUrl,
+                              heroTag:
+                                  'business_image_${business.id ?? index}',
+                              onTap: () async {
+                                final dynamic updated = await Get.toNamed(
+                                  Routes.businessDetailScreen,
+                                  arguments: business,
+                                );
+                                if (updated is BusinessModel) {
+                                  final int idx = controller.businesses
+                                      .indexWhere(
+                                          (b) => b.id == updated.id);
+                                  if (idx >= 0) {
+                                    controller.businesses[idx] = updated;
+                                  }
+                                }
+                              },
+                            );
+                          },
+                        );
+                      }),
+
+                      const SizedBox(height: 120),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -265,7 +238,198 @@ class HomeScreen extends GetView<HomeScreenController> {
   }
 }
 
-// ── Period Banner ─────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+// HERO SECTION
+// ═══════════════════════════════════════════════════════════════════
+
+class _HeroSection extends GetView<HomeScreenController> {
+  final VoidCallback? openDrawer;
+  const _HeroSection({this.openDrawer});
+
+  @override
+  Widget build(BuildContext context) {
+    final double top = MediaQuery.of(context).padding.top;
+
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF0D1B4B), Color(0xFF0D47A1), Color(0xFF1565C0)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(36),
+          bottomRight: Radius.circular(36),
+        ),
+      ),
+      child: Stack(
+        children: [
+          // Decorative circles
+          Positioned(
+            top: -50,
+            right: -50,
+            child: _HeroCircle(size: 200, opacity: 0.06),
+          ),
+          Positioned(
+            bottom: 30,
+            left: -60,
+            child: _HeroCircle(size: 180, opacity: 0.05),
+          ),
+          Positioned(
+            top: top + 40,
+            right: 60,
+            child: _HeroCircle(size: 80, opacity: 0.04),
+          ),
+
+          // Content
+          Padding(
+            padding:
+                EdgeInsets.fromLTRB(20, top + 14, 20, 26),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── AppBar row ───────────────────────────────────
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: openDrawer,
+                      child: Image.asset(
+                        AppImages.menu,
+                        height: 34,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Text(
+                        'Dashboard',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                    ),
+                    // Notification bell
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.12),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: Colors.white.withOpacity(0.22), width: 1),
+                      ),
+                      child: const Icon(Icons.notifications_outlined,
+                          color: Colors.white, size: 20),
+                    ),
+                    const SizedBox(width: 10),
+                    // Avatar
+                    GestureDetector(
+                      onTap: () => Get.toNamed(Routes.profileScreen),
+                      child: Obx(() {
+                        final String? url = controller.displayImageUrl;
+                        return Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                                color: Colors.white.withOpacity(0.40),
+                                width: 2),
+                          ),
+                          child: ClipOval(
+                            child: url != null && url.isNotEmpty
+                                ? CachedNetworkImage(
+                                    imageUrl: url,
+                                    fit: BoxFit.cover,
+                                    placeholder: (_, __) => Image.asset(
+                                        AppImages.bizzlyLogo,
+                                        fit: BoxFit.cover),
+                                    errorWidget: (_, __, ___) => Image.asset(
+                                        AppImages.bizzlyLogo,
+                                        fit: BoxFit.cover),
+                                  )
+                                : Image.asset(AppImages.bizzlyLogo,
+                                    fit: BoxFit.cover),
+                          ),
+                        );
+                      }),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 22),
+
+                // ── Greeting ─────────────────────────────────────
+                Obx(() {
+                  final String name =
+                      controller.user.value?.name?.split(' ').first ??
+                          'there';
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Hello, $name 👋',
+                        style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "Here's your accounting overview",
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.white.withOpacity(0.60),
+                        ),
+                      ),
+                    ],
+                  );
+                }),
+                const SizedBox(height: 18),
+
+                // ── Pending Approvals (glass) ─────────────────────
+                const _PendingApprovalsCard(),
+
+                // ── Period Banner (glass) ─────────────────────────
+                const _PeriodBanner(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroCircle extends StatelessWidget {
+  final double size;
+  final double opacity;
+  const _HeroCircle({required this.size, required this.opacity});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white.withOpacity(opacity),
+        border:
+            Border.all(color: Colors.white.withOpacity(opacity * 1.8), width: 1),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// PERIOD BANNER  (glass card inside hero)
+// ═══════════════════════════════════════════════════════════════════
+
 class _PeriodBanner extends GetView<HomeScreenController> {
   const _PeriodBanner();
 
@@ -282,37 +446,25 @@ class _PeriodBanner extends GetView<HomeScreenController> {
         onTap: () => Get.toNamed(Routes.accountingPeriodsScreen),
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Colors.white.withOpacity(0.10),
             borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            border: Border.all(
+                color: Colors.white.withOpacity(0.20), width: 1),
           ),
           child: Row(
             children: [
-              // Gradient icon box
               Container(
-                width: 42,
-                height: 42,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF3949AB), Color(0xFF1A237E)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  color: Colors.white.withOpacity(0.16),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
-                  Icons.calendar_month_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
+                child: const Icon(Icons.calendar_month_rounded,
+                    color: Colors.white, size: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -324,35 +476,37 @@ class _PeriodBanner extends GetView<HomeScreenController> {
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF1A1A2E),
+                        color: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       sub,
                       style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey.shade500,
-                      ),
+                          fontSize: 11,
+                          color: Colors.white.withOpacity(0.60)),
                     ),
                   ],
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 9, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF00C853).withOpacity(0.12),
+                  color: const Color(0xFF00E676).withOpacity(0.18),
                   borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                      color: const Color(0xFF00E676).withOpacity(0.35),
+                      width: 1),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      width: 6,
-                      height: 6,
+                      width: 5,
+                      height: 5,
                       decoration: const BoxDecoration(
-                        color: Color(0xFF00C853),
+                        color: Color(0xFF00E676),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -362,7 +516,7 @@ class _PeriodBanner extends GetView<HomeScreenController> {
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF00A040),
+                        color: Color(0xFF00E676),
                       ),
                     ),
                   ],
@@ -376,7 +530,75 @@ class _PeriodBanner extends GetView<HomeScreenController> {
   }
 }
 
-// ── Dashboard Summary ─────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+// PENDING APPROVALS  (amber glass card inside hero)
+// ═══════════════════════════════════════════════════════════════════
+
+class _PendingApprovalsCard extends GetView<HomeScreenController> {
+  const _PendingApprovalsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final List<VoucherModel> list = controller.pendingApprovals;
+      if (list.isEmpty) return const SizedBox.shrink();
+
+      return GestureDetector(
+        onTap: () => Get.toNamed(Routes.vouchersScreen),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFF6F00).withOpacity(0.18),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+                color: const Color(0xFFFFAB40).withOpacity(0.45), width: 1),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF6F00).withOpacity(0.35),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '${list.length}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  'Vouchers pending your approval',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              Icon(Icons.arrow_forward_ios_rounded,
+                  size: 12, color: Colors.white.withOpacity(0.60)),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// DASHBOARD SUMMARY
+// ═══════════════════════════════════════════════════════════════════
+
 class _DashboardSummary extends GetView<HomeScreenController> {
   const _DashboardSummary();
 
@@ -393,8 +615,8 @@ class _DashboardSummary extends GetView<HomeScreenController> {
       final dashboard = controller.dashboard.value;
 
       if (loading && dashboard == null) {
-        return SizedBox(
-          height: 130,
+        return const SizedBox(
+          height: 108,
           child: Center(
             child: CircularProgressIndicator(
                 color: AppColors.primary, strokeWidth: 2),
@@ -473,21 +695,15 @@ class _DashboardSummary extends GetView<HomeScreenController> {
         ),
       ];
 
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Scrollable Stat Cards ──────────────────────────────
-          SizedBox(
-            height: 108,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              itemCount: stats.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
-              itemBuilder: (_, i) => _GradientStatCard(data: stats[i]),
-            ),
-          ),
-        ],
+      return SizedBox(
+        height: 108,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          itemCount: stats.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 12),
+          itemBuilder: (_, i) => _GradientStatCard(data: stats[i]),
+        ),
       );
     });
   }
@@ -535,7 +751,6 @@ class _GradientStatCard extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          // Subtle circle decoration top-right
           Positioned(
             top: -14,
             right: -14,
@@ -561,7 +776,8 @@ class _GradientStatCard extends StatelessWidget {
                     color: Colors.white.withOpacity(0.18),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(data.icon, color: Colors.white, size: 18),
+                  child:
+                      Icon(data.icon, color: Colors.white, size: 18),
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -595,8 +811,10 @@ class _GradientStatCard extends StatelessWidget {
   }
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// RECENT VOUCHERS
+// ═══════════════════════════════════════════════════════════════════
 
-// ── Recent Vouchers ───────────────────────────────────────────────
 class _RecentVouchers extends GetView<HomeScreenController> {
   const _RecentVouchers();
 
@@ -658,18 +876,10 @@ class _RecentVouchers extends GetView<HomeScreenController> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Header ──────────────────────────────────────────────
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Recent Vouchers',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
+              const _SectionLabel(title: 'Recent Vouchers'),
               GestureDetector(
                 onTap: () => Get.toNamed(Routes.vouchersScreen),
                 child: Text(
@@ -685,12 +895,17 @@ class _RecentVouchers extends GetView<HomeScreenController> {
           ),
           const SizedBox(height: 12),
 
-          // ── Compact Voucher List ──────────────────────────────────
           Container(
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFEEEEEE), width: 1),
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -720,7 +935,7 @@ class _RecentVouchers extends GetView<HomeScreenController> {
                     onTap: () => Get.toNamed(Routes.vouchersScreen),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 10),
+                          horizontal: 14, vertical: 12),
                       child: Row(
                         children: [
                           Container(
@@ -777,7 +992,7 @@ class _RecentVouchers extends GetView<HomeScreenController> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 7, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: statusC.withOpacity(0.1),
+                                  color: statusC.withOpacity(0.10),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
@@ -806,128 +1021,114 @@ class _RecentVouchers extends GetView<HomeScreenController> {
   }
 }
 
-// ── Pending Approvals Card ────────────────────────────────────────
-class _PendingApprovalsCard extends GetView<HomeScreenController> {
-  const _PendingApprovalsCard();
+// ═══════════════════════════════════════════════════════════════════
+// MODERN QUICK CARD
+// ═══════════════════════════════════════════════════════════════════
 
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final List<VoucherModel> list = controller.pendingApprovals;
-      if (list.isEmpty) return const SizedBox.shrink();
-
-      return GestureDetector(
-        onTap: () => Get.toNamed(Routes.vouchersScreen),
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFFF6F00), Color(0xFFE65100)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFE65100).withOpacity(0.30),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-            child: Row(
-              children: [
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.22),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    '${list.length}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                const Expanded(
-                  child: Text(
-                    'Vouchers pending your approval',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                const Icon(Icons.arrow_forward_ios_rounded,
-                    size: 12, color: Colors.white70),
-              ],
-            ),
-          ),
-        ),
-      );
-    });
-  }
-}
-
-
-// ── Quick Access Card ─────────────────────────────────────────────
-class _QuickCard extends StatelessWidget {
-  const _QuickCard({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
+class _ModernQuickCard extends StatelessWidget {
   final IconData icon;
   final String label;
+  final Color from;
+  final Color to;
   final VoidCallback onTap;
+
+  const _ModernQuickCard({
+    required this.icon,
+    required this.label,
+    required this.from,
+    required this.to,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 64,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        height: 68,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.08),
-              blurRadius: 6,
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
               offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: AppColors.primaryDense),
-            const SizedBox(width: 8),
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [from, to],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
                 label,
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+                  color: Color(0xFF1A1A2E),
                 ),
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            const Icon(Icons.arrow_forward_ios_rounded,
+                size: 10, color: Color(0xFFBBBBBB)),
           ],
         ),
       ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SECTION LABEL
+// ═══════════════════════════════════════════════════════════════════
+
+class _SectionLabel extends StatelessWidget {
+  final String title;
+  const _SectionLabel({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 18,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF0D47A1), Color(0xFF1565C0)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF1A1A2E),
+          ),
+        ),
+      ],
     );
   }
 }

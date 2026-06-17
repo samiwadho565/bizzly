@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:bizly/components/common/custom_app_bar_2.dart';
+import 'package:bizly/components/common/gradient_screen_header.dart';
 import 'package:bizly/components/common/top_border_ccontainer.dart';
 import 'package:bizly/modules/reports/controllers/trial_balance_controller.dart';
 import 'package:bizly/modules/reports/models/trial_balance_model.dart';
@@ -15,20 +15,11 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const CustomAppBar2(
-        title: 'Trial Balance',
-        backgroundColor: AppColors.primaryDense,
-        textColor: Colors.white,
-      ),
       body: Column(
         children: [
-          Container(
-            height: 16,
-            color: AppColors.primaryDense,
-          ),
+          const GradientScreenHeader(title: 'Trial Balance'),
           Expanded(
-            child: TopBorderContainer(
-              child: Obx(() {
+            child: Obx(() {
                 if (controller.isLoading.value && controller.report.value == null) {
                   return const Center(
                     child: CircularProgressIndicator(color: AppColors.primary),
@@ -92,8 +83,7 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
                     ),
                   ),
                 );
-              }),
-            ),
+            }),
           ),
         ],
       ),
@@ -104,8 +94,19 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primaryDense,
-        borderRadius: BorderRadius.circular(20),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0D47A1), Color(0xFF1565C0)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0D47A1).withOpacity(0.30),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Row(
         children: [
