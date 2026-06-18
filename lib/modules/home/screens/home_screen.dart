@@ -25,21 +25,21 @@ class HomeScreen extends GetView<HomeScreenController> {
       ),
       child: Scaffold(
         backgroundColor: AppColors.background,
-        body: RefreshIndicator(
-          color: Colors.white,
-          displacement: 80,
-          onRefresh: controller.fetchBusinesses,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── Gradient Hero ──────────────────────────────────
-                _HeroSection(openDrawer: openDrawer),
+        body: Column(
+          children: [
+            // ── Fixed Gradient Hero ────────────────────────────────
+            _HeroSection(openDrawer: openDrawer),
 
-                // ── Body ──────────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
+            // ── Scrollable Body ────────────────────────────────────
+            Expanded(
+              child: RefreshIndicator(
+                color: AppColors.primary,
+                displacement: 40,
+                onRefresh: controller.fetchBusinesses,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -229,9 +229,9 @@ class HomeScreen extends GetView<HomeScreenController> {
                     ],
                   ),
                 ),
-              ],
-            ),
-          ),
+              ),
+            )),
+          ],
         ),
       ),
     );

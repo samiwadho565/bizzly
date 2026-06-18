@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 import 'package:bizly/components/common/gradient_screen_header.dart';
-import 'package:bizly/components/common/top_border_ccontainer.dart';
 import 'package:bizly/modules/reports/controllers/trial_balance_controller.dart';
 import 'package:bizly/modules/reports/models/trial_balance_model.dart';
+import 'package:bizly/modules/reports/screens/report_date_filter.dart';
 import 'package:bizly/utils/app_colors.dart';
 import 'package:bizly/utils/date_formats.dart';
 
@@ -18,71 +19,80 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
       body: Column(
         children: [
           const GradientScreenHeader(title: 'Trial Balance'),
+          // ── Date Chips ─────────────────────────────────────────
+          ReportRangeChips(
+            selectedPreset: controller.selectedPreset,
+            onPresetSelected: controller.applyPreset,
+            onCustom: () => _showCustomRangeSheet(context),
+          ),
+          // ── Content ────────────────────────────────────────────
           Expanded(
             child: Obx(() {
-                if (controller.isLoading.value && controller.report.value == null) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
-                  );
-                }
-                if (controller.report.value == null) {
-                  return RefreshIndicator(
-                    onRefresh: controller.fetchReport,
-                    child: ListView(
-                      physics: const AlwaysScrollableScrollPhysics(),
+              if (controller.isLoading.value &&
+                  controller.report.value == null) {
+                return const Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                );
+              }
+              if (controller.report.value == null) {
+                return RefreshIndicator(
+                  onRefresh: controller.fetchReport,
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      const SizedBox(height: 140),
+                      Center(
+                        child: Text(
+                          controller.error.value.isNotEmpty
+                              ? controller.error.value
+                              : 'No trial balance data found.',
+                          style:
+                              TextStyle(color: Colors.grey.shade500),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              final TrialBalanceModel report = controller.report.value!;
+              return RefreshIndicator(
+                color: AppColors.primary,
+                onRefresh: controller.fetchReport,
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
+                  children: [
+                    _header(report),
+                    const SizedBox(height: 16),
+                    Row(
                       children: [
-                        const SizedBox(height: 140),
-                        Center(
-                          child: Text(
-                            controller.error.value.isNotEmpty
-                                ? controller.error.value
-                                : 'No trial balance data found.',
+                        Expanded(
+                          child: _summaryCard(
+                            label: 'Total Debit',
+                            value: report.totalDebit,
+                            color: const Color(0xFF2E7D32),
+                            icon: Icons.arrow_circle_down_rounded,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _summaryCard(
+                            label: 'Total Credit',
+                            value: report.totalCredit,
+                            color: AppColors.primary,
+                            icon: Icons.arrow_circle_up_rounded,
                           ),
                         ),
                       ],
                     ),
-                  );
-                }
-
-                final TrialBalanceModel report = controller.report.value!;
-                return RefreshIndicator(
-                  color: AppColors.primary,
-                  onRefresh: controller.fetchReport,
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 5.0),
-                    child: ListView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-                      children: [
-                        _header(report),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _summaryCard(
-                                label: 'Debit',
-                                value: report.totalDebit,
-                                color: Colors.green,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _summaryCard(
-                                label: 'Credit',
-                                value: report.totalCredit,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        _accountsSection(report.accounts),
-                        const SizedBox(height: 16),
-                        _transactionsSection(report.transactions),
-                      ],
-                    ),
-                  ),
-                );
+                    const SizedBox(height: 16),
+                    _accountsSection(report.accounts),
+                    const SizedBox(height: 16),
+                    _transactionsSection(report.transactions),
+                  ],
+                ),
+              );
             }),
           ),
         ],
@@ -90,78 +100,135 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
     );
   }
 
-  Widget _header(TrialBalanceModel report) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0D47A1), Color(0xFF1565C0)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0D47A1).withOpacity(0.30),
-            blurRadius: 12,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Date Range',
-                  style: TextStyle(color: Colors.white70, fontSize: 12),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${_formatDate(report.fromDate)} to ${_formatDate(report.toDate)}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: report.isBalanced
-                  ? Colors.green.withOpacity(0.18)
-                  : Colors.red.withOpacity(0.18),
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Text(
-              report.isBalanced ? 'Balanced' : 'Unbalanced',
-              style: TextStyle(
-                color: report.isBalanced ? Colors.greenAccent : Colors.redAccent,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
+  void _showCustomRangeSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => CustomRangeSheet(
+        initialFrom: controller.fromDate.value,
+        initialTo: controller.toDate.value,
+        onApply: controller.applyCustomRange,
       ),
     );
+  }
+
+  Widget _header(TrialBalanceModel report) {
+    return Obx(() {
+      final String from =
+          DateFormat('dd MMM yyyy').format(controller.fromDate.value);
+      final String to =
+          DateFormat('dd MMM yyyy').format(controller.toDate.value);
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF0D47A1), Color(0xFF1565C0)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0D47A1).withOpacity(0.28),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.14),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.balance_rounded,
+                  color: Colors.white, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$from  →  $to',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  if (controller.isLoading.value)
+                    const Text(
+                      'Refreshing...',
+                      style: TextStyle(
+                          color: Colors.white60, fontSize: 11),
+                    ),
+                ],
+              ),
+            ),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: report.isBalanced
+                    ? const Color(0xFF00E676).withOpacity(0.18)
+                    : Colors.red.withOpacity(0.18),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: report.isBalanced
+                      ? const Color(0xFF00E676).withOpacity(0.40)
+                      : Colors.red.withOpacity(0.40),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: report.isBalanced
+                          ? const Color(0xFF00E676)
+                          : Colors.redAccent,
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    report.isBalanced ? 'Balanced' : 'Unbalanced',
+                    style: TextStyle(
+                      color: report.isBalanced
+                          ? const Color(0xFF00E676)
+                          : Colors.redAccent,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   Widget _summaryCard({
     required String label,
     required num value,
     required Color color,
+    required IconData icon,
   }) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: color.withOpacity(0.2)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -170,23 +237,40 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.10),
+              borderRadius: BorderRadius.circular(10),
             ),
+            child: Icon(icon, color: color, size: 18),
           ),
-          const SizedBox(height: 6),
-          Text(
-            _formatMoney(value),
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.w800,
-              fontSize: 17,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 11,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  _formatMoney(value),
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -217,10 +301,11 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
           ),
           const SizedBox(height: 12),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: AppColors.background,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: const Row(
               children: [
@@ -230,6 +315,7 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       color: AppColors.textSecondary,
+                      fontSize: 12,
                     ),
                   ),
                 ),
@@ -241,6 +327,7 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       color: AppColors.textSecondary,
+                      fontSize: 12,
                     ),
                   ),
                 ),
@@ -253,6 +340,7 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       color: AppColors.textSecondary,
+                      fontSize: 12,
                     ),
                   ),
                 ),
@@ -261,9 +349,12 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
           ),
           const SizedBox(height: 10),
           if (accounts.isEmpty)
-            const Text(
-              'No accounts found.',
-              style: TextStyle(color: AppColors.textSecondary),
+            const Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: Text(
+                'No accounts found.',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
             )
           else
             ...accounts.map(_accountRow),
@@ -280,7 +371,8 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
           Expanded(
             child: Text(
               account.accountName,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                  fontWeight: FontWeight.w600, fontSize: 13),
             ),
           ),
           SizedBox(
@@ -288,7 +380,10 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
             child: Text(
               _compactMoney(account.debit),
               textAlign: TextAlign.right,
-              style: const TextStyle(fontWeight: FontWeight.w700),
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF2E7D32),
+              ),
             ),
           ),
           const SizedBox(width: 10),
@@ -297,7 +392,10 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
             child: Text(
               _compactMoney(account.credit),
               textAlign: TextAlign.right,
-              style: const TextStyle(fontWeight: FontWeight.w700),
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                color: AppColors.primary,
+              ),
             ),
           ),
         ],
@@ -387,7 +485,8 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
                   children: [
                     Text(
                       item.description,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      style:
+                          const TextStyle(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -407,7 +506,7 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
                   Text(
                     'D ${_compactMoney(item.debit)}',
                     style: const TextStyle(
-                      color: Colors.green,
+                      color: Color(0xFF2E7D32),
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -425,11 +524,12 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
           ),
           const SizedBox(height: 8),
           Wrap(
-            spacing: 10,
+            spacing: 8,
             runSpacing: 6,
             children: [
               if (item.date.isNotEmpty) _metaChip(_formatDate(item.date)),
-              if ((item.category ?? '').isNotEmpty) _metaChip(item.category!),
+              if ((item.category ?? '').isNotEmpty)
+                _metaChip(item.category!),
               if ((item.referenceNumber ?? '').isNotEmpty)
                 _metaChip('Ref: ${item.referenceNumber}'),
             ],
@@ -462,7 +562,9 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
 
   String _formatMoney(num value) {
     final bool isWhole = value % 1 == 0;
-    final String text = isWhole ? value.toStringAsFixed(0) : value.toStringAsFixed(2);
+    final String text = isWhole
+        ? value.toStringAsFixed(0)
+        : value.toStringAsFixed(2);
     return 'PKR $text';
   }
 
@@ -471,3 +573,5 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
     return isWhole ? value.toStringAsFixed(0) : value.toStringAsFixed(2);
   }
 }
+
+

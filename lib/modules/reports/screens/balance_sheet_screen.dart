@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 import 'package:bizly/components/common/gradient_screen_header.dart';
-import 'package:bizly/components/common/top_border_ccontainer.dart';
 import 'package:bizly/modules/reports/controllers/balance_sheet_controller.dart';
 import 'package:bizly/modules/reports/models/balance_sheet_model.dart';
 import 'package:bizly/utils/app_colors.dart';
@@ -18,6 +18,12 @@ class BalanceSheetScreen extends GetView<BalanceSheetController> {
       body: Column(
         children: [
           const GradientScreenHeader(title: 'Balance Sheet'),
+          // ── As-Of Date Chips ─────────────────────────────────
+          _AsOfDateChips(
+            selectedPreset: controller.selectedPreset,
+            onPresetSelected: controller.applyPreset,
+            onCustom: () => _showCustomDateSheet(context),
+          ),
           Expanded(
             child: Obx(() {
                 if (controller.isLoading.value && controller.report.value == null) {
@@ -544,5 +550,367 @@ class BalanceSheetScreen extends GetView<BalanceSheetController> {
           (word) => '${word[0].toUpperCase()}${word.substring(1)}',
         )
         .join(' ');
+  }
+
+  void _showCustomDateSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _AsOfCustomDateSheet(
+        initialDate: controller.asOfDate.value,
+        onApply: controller.applyCustomDate,
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// As-Of Date Chip Data
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _AsOfChip {
+  const _AsOfChip({
+    required this.key,
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.gradientEnd,
+  });
+  final String key;
+  final String label;
+  final IconData icon;
+  final Color color;
+  final Color gradientEnd;
+}
+
+const List<_AsOfChip> _asOfChips = [
+  _AsOfChip(
+    key: 'today',
+    label: 'Today',
+    icon: Icons.today_rounded,
+    color: Color(0xFF00897B),
+    gradientEnd: Color(0xFF004D40),
+  ),
+  _AsOfChip(
+    key: 'end_of_month',
+    label: 'Month End',
+    icon: Icons.calendar_month_rounded,
+    color: Color(0xFF1E88E5),
+    gradientEnd: Color(0xFF0D47A1),
+  ),
+  _AsOfChip(
+    key: 'end_of_quarter',
+    label: 'Qtr End',
+    icon: Icons.bar_chart_rounded,
+    color: Color(0xFF8E24AA),
+    gradientEnd: Color(0xFF4A148C),
+  ),
+  _AsOfChip(
+    key: 'end_of_year',
+    label: 'Year End',
+    icon: Icons.event_rounded,
+    color: Color(0xFFF57C00),
+    gradientEnd: Color(0xFFE65100),
+  ),
+  _AsOfChip(
+    key: 'custom',
+    label: 'Custom',
+    icon: Icons.tune_rounded,
+    color: Color(0xFF546E7A),
+    gradientEnd: Color(0xFF263238),
+  ),
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// As-Of Date Chips Widget
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _AsOfDateChips extends StatelessWidget {
+  const _AsOfDateChips({
+    required this.selectedPreset,
+    required this.onPresetSelected,
+    required this.onCustom,
+  });
+
+  final RxString selectedPreset;
+  final void Function(String) onPresetSelected;
+  final VoidCallback onCustom;
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final String current = selectedPreset.value;
+      return Container(
+        color: Colors.white,
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: _asOfChips.map((chip) {
+              final bool selected = current == chip.key;
+              return Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: GestureDetector(
+                  onTap: () {
+                    if (chip.key == 'custom') {
+                      onCustom();
+                    } else {
+                      onPresetSelected(chip.key);
+                    }
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeOut,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 9,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: selected
+                          ? LinearGradient(
+                              colors: [chip.color, chip.gradientEnd],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : null,
+                      color: selected ? null : Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: selected
+                          ? [
+                              BoxShadow(
+                                color: chip.color.withOpacity(0.35),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ]
+                          : [],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? Colors.white.withOpacity(0.20)
+                                : chip.color.withOpacity(0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            chip.icon,
+                            size: 14,
+                            color: selected ? Colors.white : chip.color,
+                          ),
+                        ),
+                        const SizedBox(width: 7),
+                        Text(
+                          chip.label,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: selected
+                                ? Colors.white
+                                : const Color(0xFF3D3D3D),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      );
+    });
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Custom As-Of Date Bottom Sheet
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _AsOfCustomDateSheet extends StatefulWidget {
+  const _AsOfCustomDateSheet({
+    required this.initialDate,
+    required this.onApply,
+  });
+
+  final DateTime initialDate;
+  final void Function(DateTime) onApply;
+
+  @override
+  State<_AsOfCustomDateSheet> createState() => _AsOfCustomDateSheetState();
+}
+
+class _AsOfCustomDateSheetState extends State<_AsOfCustomDateSheet> {
+  late DateTime _selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDate = widget.initialDate;
+  }
+
+  String _fmtDisplay(DateTime d) => DateFormat('d MMM yyyy').format(d);
+
+  Future<void> _pickDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: Color(0xFF0D47A1),
+            onPrimary: Colors.white,
+            surface: Colors.white,
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) setState(() => _selectedDate = picked);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+        24,
+        16,
+        24,
+        MediaQuery.of(context).viewInsets.bottom + 28,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle bar
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Select As-Of Date',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 20),
+          // Date tile
+          GestureDetector(
+            onTap: _pickDate,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF0F4FF),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: const Color(0xFF0D47A1).withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0D47A1).withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.calendar_today_rounded,
+                      color: Color(0xFF0D47A1),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'As Of Date',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFF0D47A1),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _fmtDisplay(_selectedDate),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF0D47A1),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.edit_calendar_rounded,
+                    color: Color(0xFF0D47A1),
+                    size: 18,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF0D47A1), Color(0xFF1565C0)],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF0D47A1).withOpacity(0.35),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                  widget.onApply(_selectedDate);
+                },
+                child: const Text(
+                  'Apply Date',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

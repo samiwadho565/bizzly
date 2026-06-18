@@ -542,14 +542,102 @@ class TeamController extends GetxController {
     salaryController.text = employee.salary?.toString() ?? '';
     notesController.text = employee.notes ?? '';
     status.value = employee.status.toLowerCase();
-    // Restore selected business for edit
-    if (employee.businessId != null) {
-      final BusinessModel? match = businesses.cast<BusinessModel?>().firstWhere(
-            (b) => b?.id == employee.businessId,
-            orElse: () => null,
-          );
-      if (match != null) selectedBusiness.value = match;
+    _restoreBusinessForEmployee(employee);
+    // If business still not resolved (list API doesn't return business_id),
+    // fetch the single-employee endpoint which usually has the full data.
+    if (selectedBusiness.value == null && employee.id != null) {
+      _enrichBusinessFromApi(employee.id!);
     }
+  }
+
+  Future<void> _enrichBusinessFromApi(int employeeId) async {
+    final EmployeeModel? fresh = await _fetchEmployeeById(employeeId);
+    if (fresh == null) return;
+    // Don't overwrite if user already picked something manually
+    if (selectedBusiness.value != null) return;
+    final int? bizId = fresh.businessId;
+    if (bizId == null) return;
+    final BusinessModel? match = _findBusinessById(bizId);
+    if (match != null) {
+      selectedBusiness.value = match;
+      return;
+    }
+    // businesses list may still be loading — watch for it
+    if (Get.isRegistered<HomeScreenController>()) {
+      Worker? worker;
+      worker = ever<List<BusinessModel>>(
+        Get.find<HomeScreenController>().businesses,
+        (list) {
+          if (selectedBusiness.value != null) { worker?.dispose(); return; }
+          for (final BusinessModel b in list) {
+            if (b.id == bizId) { selectedBusiness.value = b; break; }
+          }
+          if (list.isNotEmpty) worker?.dispose();
+        },
+      );
+    }
+  }
+
+  void _restoreBusinessForEmployee(EmployeeModel employee) {
+    final int? bizId = employee.businessId;
+
+    if (bizId != null) {
+      // Try immediately if businesses already loaded
+      final BusinessModel? match = _findBusinessById(bizId);
+      if (match != null) {
+        selectedBusiness.value = match;
+        return;
+      }
+      // Businesses might not be loaded yet — react when they do
+      if (Get.isRegistered<HomeScreenController>()) {
+        Worker? worker;
+        worker = ever<List<BusinessModel>>(
+          Get.find<HomeScreenController>().businesses,
+          (list) {
+            if (list.isEmpty) return;
+            for (final BusinessModel b in list) {
+              if (b.id == bizId) {
+                selectedBusiness.value = b;
+                break;
+              }
+            }
+            worker?.dispose();
+          },
+        );
+      }
+      return;
+    }
+
+    // businessId is null (API doesn't return it) — use best available fallback:
+    // 1. If selectedBusiness is already set (e.g. came from business-filtered list), keep it
+    if (selectedBusiness.value != null) return;
+
+    // 2. If only one business exists, it must be the employee's business
+    final List<BusinessModel> biz = businesses;
+    if (biz.length == 1) {
+      selectedBusiness.value = biz.first;
+      return;
+    }
+
+    // 3. Businesses not loaded yet — wait and retry once
+    if (biz.isEmpty && Get.isRegistered<HomeScreenController>()) {
+      Worker? worker;
+      worker = ever<List<BusinessModel>>(
+        Get.find<HomeScreenController>().businesses,
+        (list) {
+          worker?.dispose();
+          if (selectedBusiness.value != null) return;
+          if (list.length == 1) selectedBusiness.value = list.first;
+        },
+      );
+    }
+  }
+
+  BusinessModel? _findBusinessById(int id) {
+    for (final BusinessModel b in businesses) {
+      if (b.id == id) return b;
+    }
+    return null;
   }
 
   @override

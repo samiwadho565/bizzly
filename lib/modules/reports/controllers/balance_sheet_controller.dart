@@ -10,9 +10,44 @@ class BalanceSheetController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxString error = ''.obs;
 
+  // ── Date Filter (single as_of_date) ──────────────────────────
+  final RxString selectedPreset = 'today'.obs;
+  late Rx<DateTime> asOfDate;
+
   @override
   void onInit() {
     super.onInit();
+    asOfDate = DateTime.now().obs;
+    fetchReport();
+  }
+
+  void applyPreset(String preset) {
+    final DateTime now = DateTime.now();
+    switch (preset) {
+      case 'today':
+        asOfDate.value = now;
+        break;
+      case 'end_of_month':
+        asOfDate.value = DateTime(now.year, now.month + 1, 0);
+        break;
+      case 'end_of_quarter':
+        final int q = ((now.month - 1) ~/ 3);
+        asOfDate.value = DateTime(now.year, (q + 1) * 3 + 1, 0);
+        break;
+      case 'end_of_year':
+        asOfDate.value = DateTime(now.year, 12, 31);
+        break;
+      case 'custom':
+        selectedPreset.value = 'custom';
+        return;
+    }
+    selectedPreset.value = preset;
+    fetchReport();
+  }
+
+  void applyCustomDate(DateTime date) {
+    asOfDate.value = date;
+    selectedPreset.value = 'custom';
     fetchReport();
   }
 
@@ -22,7 +57,7 @@ class BalanceSheetController extends GetxController {
     error.value = '';
 
     final ApiResponse response = await ApiService().get(
-      AppUrls.balanceSheet,
+      '${AppUrls.balanceSheet}?as_of_date=${_fmt(asOfDate.value)}',
       isAuth: true,
     );
 
@@ -37,4 +72,7 @@ class BalanceSheetController extends GetxController {
 
     isLoading.value = false;
   }
+
+  String _fmt(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 }

@@ -154,180 +154,288 @@ class AppUtils {
     required String? imageUrl,
   }) {
     final TextEditingController nameController =
-    TextEditingController(text: currentName);
+        TextEditingController(text: currentName);
     final TextEditingController emailController =
-    TextEditingController(text: currentEmail);
+        TextEditingController(text: currentEmail);
     final TextEditingController phoneController =
-    TextEditingController(text: currentPhone);
+        TextEditingController(text: currentPhone);
 
     Get.bottomSheet(
       Container(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        padding: EdgeInsets.fromLTRB(
+          24,
+          16,
+          24,
+          MediaQuery.of(Get.context!).viewInsets.bottom + 32,
         ),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              /// Drag handle
+              // Handle bar
               Container(
                 height: 4,
                 width: 40,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade400,
-                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(4),
                 ),
               ),
               const SizedBox(height: 20),
 
-              /// Title
-              // const Text(
-              //   "Edit Profile",
-              //   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              // ),
-              // const SizedBox(height: 20),
+              // Title
+              const Text(
+                'Edit Profile',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF111827),
+                ),
+              ),
+              const SizedBox(height: 24),
 
-              /// Profile Image
-              Obx(
-                () => Stack(
-                  children: [
-                    CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Colors.grey.shade400,
-                      child: ClipOval(
-                        child: avatarFile.value != null
-                            ? Image.file(
-                                avatarFile.value!,
-                                width: 80,
-                                height: 80,
-                                fit: BoxFit.cover,
-                              )
-                            : (imageUrl != null && imageUrl!.isNotEmpty
-                                ? CachedNetworkImage(
-                                    imageUrl: imageUrl!,
-                                    width: 80,
-                                    height: 80,
-                                    fit: BoxFit.cover,
-                                    placeholder: (_, __) => const Image(
-                                      image: AssetImage(
-                                          AppImages.profilePlaceholder),
-                                      fit: BoxFit.cover,
-                                    ),
-                                    errorWidget: (_, __, ___) => const Image(
-                                      image: AssetImage(
-                                          AppImages.profilePlaceholder),
-                                      fit: BoxFit.cover,
-                                    ),
-                                  )
-                                : const Image(
-                                    image: AssetImage(
-                                        AppImages.profilePlaceholder),
-                                    fit: BoxFit.cover,
-                                  )),
-                      ),
-                    ),
-                    // Edit icon
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: GestureDetector(
-                        onTap: onPickImage,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
+              // Avatar picker
+              Obx(() => GestureDetector(
+                    onTap: onPickImage,
+                    child: Stack(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: const BoxDecoration(
                             shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
+                            gradient: LinearGradient(
+                              colors: [Color(0xFF1565C0), Color(0xFF0A2472)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
                           ),
-                          padding: const EdgeInsets.all(4),
-                          child: const Icon(
-                            Icons.camera_alt,
-                            size: 18,
-                            color: Colors.blue, // primary color
+                          child: CircleAvatar(
+                            radius: 46,
+                            backgroundColor: Colors.grey.shade300,
+                            child: ClipOval(
+                              child: avatarFile.value != null
+                                  ? Image.file(avatarFile.value!,
+                                      width: 92, height: 92, fit: BoxFit.cover)
+                                  : (imageUrl != null && imageUrl.isNotEmpty
+                                      ? CachedNetworkImage(
+                                          imageUrl: imageUrl,
+                                          width: 92,
+                                          height: 92,
+                                          fit: BoxFit.cover,
+                                          placeholder: (_, __) => const Image(
+                                            image: AssetImage(
+                                                AppImages.profilePlaceholder),
+                                            fit: BoxFit.cover,
+                                          ),
+                                          errorWidget: (_, __, ___) =>
+                                              const Image(
+                                            image: AssetImage(
+                                                AppImages.profilePlaceholder),
+                                            fit: BoxFit.cover,
+                                          ),
+                                        )
+                                      : const Image(
+                                          image: AssetImage(
+                                              AppImages.profilePlaceholder),
+                                          fit: BoxFit.cover,
+                                        )),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              /// Name Field
-              CustomTextField(
-                controller: nameController,
-               hintText: 'Name',
-              ),
-              const SizedBox(height: 15),
-
-              /// Email Field
-              CustomTextField(
-                controller: emailController,
-          hintText: "Email",
-                enabled: false,
-                // keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 15),
-
-              /// Phone Number Field
-              CustomTextField(
-                controller: phoneController,
-
-          hintText: 'Phone Number',
-              ),
-              const SizedBox(height: 25),
-
-              /// Save Button
-              Obx(
-                () => SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    onPressed: isSaving.value
-                        ? null
-                        : () async {
-                            await onSave(
-                              nameController.text.trim(),
-                              phoneController.text.trim(),
-                            );
-                            Get.back();
-                          },
-                    child: isSaving.value
-                        ? const SizedBox(
-                            height: 18,
-                            width: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF1565C0), Color(0xFF0A2472)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              border: Border.all(
+                                  color: Colors.white, width: 2.5),
                             ),
-                          )
-                        : const Text(
-                            "Save Changes",
-                            style: TextStyle(color: Colors.white, fontSize: 16),
+                            child: const Icon(Icons.camera_alt_rounded,
+                                size: 15, color: Colors.white),
                           ),
-                  ),
-                ),
+                        ),
+                      ],
+                    ),
+                  )),
+              const SizedBox(height: 28),
+
+              // Name field
+              _buildEditField(
+                controller: nameController,
+                label: 'Full Name',
+                hint: 'Enter your name',
+                icon: Icons.person_outline_rounded,
               ),
+              const SizedBox(height: 14),
+
+              // Email (disabled)
+              _buildEditField(
+                controller: emailController,
+                label: 'Email',
+                hint: 'Email address',
+                icon: Icons.email_outlined,
+                enabled: false,
+              ),
+              const SizedBox(height: 14),
+
+              // Phone
+              _buildEditField(
+                controller: phoneController,
+                label: 'Phone Number',
+                hint: 'Enter phone number',
+                icon: Icons.phone_outlined,
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 28),
+
+              // Save button
+              Obx(() => SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: isSaving.value
+                            ? null
+                            : const LinearGradient(
+                                colors: [
+                                  Color(0xFF1565C0),
+                                  Color(0xFF0A2472),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                        color: isSaving.value
+                            ? Colors.grey.shade300
+                            : null,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: isSaving.value
+                            ? []
+                            : [
+                                BoxShadow(
+                                  color: const Color(0xFF1565C0)
+                                      .withOpacity(0.35),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                      ),
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        onPressed: isSaving.value
+                            ? null
+                            : () async {
+                                await onSave(
+                                  nameController.text.trim(),
+                                  phoneController.text.trim(),
+                                );
+                                Get.back();
+                              },
+                        child: isSaving.value
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                                ),
+                              )
+                            : const Text(
+                                'Save Changes',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                      ),
+                    ),
+                  )),
             ],
           ),
         ),
       ),
       isScrollControlled: true,
       enableDrag: true,
+      backgroundColor: Colors.transparent,
+    );
+  }
+
+  static Widget _buildEditField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    bool enabled = true,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF6B7280),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          decoration: BoxDecoration(
+            color: enabled ? const Color(0xFFF7FAFC) : const Color(0xFFF3F4F6),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: enabled
+                  ? const Color(0xFFE5E7EB)
+                  : const Color(0xFFE5E7EB),
+            ),
+          ),
+          child: TextField(
+            controller: controller,
+            enabled: enabled,
+            keyboardType: keyboardType,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: enabled
+                  ? const Color(0xFF111827)
+                  : const Color(0xFF9CA3AF),
+            ),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: const TextStyle(
+                  color: Color(0xFF9CA3AF), fontWeight: FontWeight.w400),
+              prefixIcon: Icon(icon,
+                  size: 18,
+                  color: enabled
+                      ? const Color(0xFF1565C0)
+                      : const Color(0xFF9CA3AF)),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16, vertical: 14),
+            ),
+          ),
+        ),
+      ],
     );
   }
   void openFilterBottomSheet() {

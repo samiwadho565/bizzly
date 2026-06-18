@@ -125,8 +125,8 @@ class _NavBarItem extends StatelessWidget {
         gradient: isSelected
             ? const LinearGradient(
                 colors: <Color>[
-                  AppColors.primary,
-                  AppColors.primaryDense,
+                  Color(0xFF1565C0),  // lighter blue top-left
+                  Color(0xFF0A2472),  // deep navy bottom-right
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,

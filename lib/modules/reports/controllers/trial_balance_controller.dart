@@ -11,9 +11,52 @@ class TrialBalanceController extends GetxController {
   final RxString error = ''.obs;
   final RxBool showAllTransactions = false.obs;
 
+  // ── Date Filter ───────────────────────────────────────────────
+  final RxString selectedPreset = 'this_year'.obs;
+  late Rx<DateTime> fromDate;
+  late Rx<DateTime> toDate;
+
   @override
   void onInit() {
     super.onInit();
+    final DateTime now = DateTime.now();
+    fromDate = DateTime(now.year, 1, 1).obs;
+    toDate = now.obs;
+    fetchReport();
+  }
+
+  void applyPreset(String preset) {
+    final DateTime now = DateTime.now();
+    switch (preset) {
+      case 'this_month':
+        fromDate.value = DateTime(now.year, now.month, 1);
+        toDate.value = now;
+        break;
+      case 'last_month':
+        fromDate.value = DateTime(now.year, now.month - 1, 1);
+        toDate.value = DateTime(now.year, now.month, 0);
+        break;
+      case 'this_quarter':
+        final int q = ((now.month - 1) ~/ 3);
+        fromDate.value = DateTime(now.year, q * 3 + 1, 1);
+        toDate.value = now;
+        break;
+      case 'this_year':
+        fromDate.value = DateTime(now.year, 1, 1);
+        toDate.value = now;
+        break;
+      case 'custom':
+        selectedPreset.value = 'custom';
+        return;
+    }
+    selectedPreset.value = preset;
+    fetchReport();
+  }
+
+  void applyCustomRange(DateTime from, DateTime to) {
+    fromDate.value = from;
+    toDate.value = to;
+    selectedPreset.value = 'custom';
     fetchReport();
   }
 
@@ -24,7 +67,7 @@ class TrialBalanceController extends GetxController {
     showAllTransactions.value = false;
 
     final ApiResponse response = await ApiService().get(
-      AppUrls.trialBalance,
+      '${AppUrls.trialBalance}?from_date=${_fmt(fromDate.value)}&to_date=${_fmt(toDate.value)}',
       isAuth: true,
     );
 
@@ -43,4 +86,7 @@ class TrialBalanceController extends GetxController {
   void toggleTransactionsVisibility() {
     showAllTransactions.value = !showAllTransactions.value;
   }
+
+  String _fmt(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 }
