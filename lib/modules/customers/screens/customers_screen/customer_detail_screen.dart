@@ -138,63 +138,63 @@ class CustomerDetailScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  // Create Invoice (gradient)
-                  Expanded(
-                    flex: 2,
-                    child: SizedBox(
-                      height: 50,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: <Color>[
-                              Color(0xFF1565C0),
-                              Color(0xFF0A2472),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(14),
-                          boxShadow: <BoxShadow>[
-                            BoxShadow(
-                              color:
-                                  const Color(0xFF1565C0).withOpacity(0.30),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            shadowColor: Colors.transparent,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14)),
-                          ),
-                          icon: const Icon(Icons.receipt_long_rounded,
-                              color: Colors.white, size: 18),
-                          label: const Text(
-                            'Create Invoice',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15,
-                            ),
-                          ),
-                          onPressed: () {
-                            Get.toNamed(
-                              Routes.createInvoiceScreen,
-                              arguments: <String, dynamic>{
-                                'customerId': customer.id,
-                                'customerName': customer.customerName,
-                                'lockCustomer': true,
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
+                  // const SizedBox(width: 12),
+                  // // Create Invoice (gradient)
+                  // Expanded(
+                  //   flex: 2,
+                  //   child: SizedBox(
+                  //     height: 50,
+                  //     child: DecoratedBox(
+                  //       decoration: BoxDecoration(
+                  //         gradient: const LinearGradient(
+                  //           colors: <Color>[
+                  //             Color(0xFF1565C0),
+                  //             Color(0xFF0A2472),
+                  //           ],
+                  //           begin: Alignment.topLeft,
+                  //           end: Alignment.bottomRight,
+                  //         ),
+                  //         borderRadius: BorderRadius.circular(14),
+                  //         boxShadow: <BoxShadow>[
+                  //           BoxShadow(
+                  //             color:
+                  //                 const Color(0xFF1565C0).withOpacity(0.30),
+                  //             blurRadius: 10,
+                  //             offset: const Offset(0, 4),
+                  //           ),
+                  //         ],
+                  //       ),
+                  //       child: ElevatedButton.icon(
+                  //         style: ElevatedButton.styleFrom(
+                  //           backgroundColor: Colors.transparent,
+                  //           shadowColor: Colors.transparent,
+                  //           shape: RoundedRectangleBorder(
+                  //               borderRadius: BorderRadius.circular(14)),
+                  //         ),
+                  //         icon: const Icon(Icons.receipt_long_rounded,
+                  //             color: Colors.white, size: 18),
+                  //         label: const Text(
+                  //           'Create Invoice',
+                  //           style: TextStyle(
+                  //             color: Colors.white,
+                  //             fontWeight: FontWeight.w700,
+                  //             fontSize: 15,
+                  //           ),
+                  //         ),
+                  //         onPressed: () {
+                  //           Get.toNamed(
+                  //             Routes.createInvoiceScreen,
+                  //             arguments: <String, dynamic>{
+                  //               'customerId': customer.id,
+                  //               'customerName': customer.customerName,
+                  //               'lockCustomer': true,
+                  //             },
+                  //           );
+                  //         },
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
             ),

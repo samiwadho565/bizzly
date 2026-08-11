@@ -403,14 +403,16 @@ class _NatureItem {
 
 // ── Helpers ─────────────────────────────────────────────────────
 Color _natureColor(String nature) {
-  switch (nature.toLowerCase()) {
+  switch (nature.toLowerCase().trim()) {
     case 'asset':
       return const Color(0xFF1976D2);
     case 'liability':
       return const Color(0xFFE53935);
     case 'equity':
+    case 'capital':
       return const Color(0xFF7B1FA2);
     case 'income':
+    case 'revenue':
       return const Color(0xFF388E3C);
     case 'expense':
       return const Color(0xFFF57C00);

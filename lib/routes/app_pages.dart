@@ -75,6 +75,9 @@ import 'package:bizly/modules/ledger/screens/ledger_screen.dart';
 import 'package:bizly/modules/ledger/bindings/ledger_binding.dart';
 import 'package:bizly/modules/reports/screens/income_statement_screen.dart';
 import 'package:bizly/modules/reports/bindings/income_statement_binding.dart';
+import 'package:bizly/modules/team_members/bindings/team_members_binding.dart';
+import 'package:bizly/modules/team_members/screens/team_members_screen.dart';
+import 'package:bizly/modules/team_members/screens/add_team_member_screen.dart';
 import 'routes.dart';
 
 class AppPages {
@@ -290,6 +293,18 @@ class AppPages {
       name: Routes.incomeStatementScreen,
       page: () => const IncomeStatementScreen(),
       binding: IncomeStatementBinding(),
+      transition: Transition.fadeIn,
+    ),
+    GetPage(
+      name: Routes.teamMembersScreen,
+      page: () => TeamMembersScreen(),
+      binding: TeamMembersBinding(),
+      transition: Transition.fadeIn,
+    ),
+    GetPage(
+      name: Routes.addTeamMemberScreen,
+      page: () => AddTeamMemberScreen(),
+      binding: TeamMembersBinding(),
       transition: Transition.fadeIn,
     ),
   ];

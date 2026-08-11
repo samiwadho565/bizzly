@@ -56,10 +56,24 @@ class CoaController extends GetxController {
     final String q = searchQuery.value.toLowerCase().trim();
 
     return allAccounts.where((l1) {
-      if (nature != 'all' && l1.nature.toLowerCase() != nature) return false;
+      if (nature != 'all' && !_matchesNature(l1.nature, nature)) return false;
       if (q.isEmpty) return true;
       return _l1MatchesQuery(l1, q);
     }).toList();
+  }
+
+  /// Backend sometimes uses different labels for the same nature
+  /// (e.g. "revenue" instead of "income", "capital" instead of "equity").
+  /// This keeps the filter working regardless of which label the API sends.
+  static const Map<String, List<String>> _natureSynonyms = {
+    'income': ['income', 'revenue'],
+    'equity': ['equity', 'capital'],
+  };
+
+  bool _matchesNature(String accountNature, String selected) {
+    final String value = accountNature.toLowerCase().trim();
+    final List<String> accepted = _natureSynonyms[selected] ?? [selected];
+    return accepted.contains(value);
   }
 
   bool _l1MatchesQuery(CoaModel l1, String q) {

@@ -250,12 +250,13 @@ class DraftLine {
   String amount;
 
   DraftLine({
+    int? uid,                 // pass existing uid to preserve widget key
     this.accountId,
     this.accountCode,
     this.accountName,
     this.lineType = 'debit',
     this.amount = '',
-  }) : uid = ++_uidCounter;
+  }) : uid = uid ?? ++_uidCounter;
 
   bool get isDebit => lineType == 'debit';
   double get parsedAmount => double.tryParse(amount) ?? 0.0;

@@ -5,6 +5,7 @@ import 'package:bizly/components/common/gradient_screen_header.dart';
 import 'package:bizly/modules/chart_of_accounts/controllers/coa_controller.dart';
 import 'package:bizly/modules/chart_of_accounts/models/coa_model.dart';
 import 'package:bizly/modules/chart_of_accounts/screens/create_coa_screen.dart';
+import 'package:bizly/modules/ledger/screens/account_ledger_screen.dart';
 import 'package:bizly/utils/app_colors.dart';
 
 class CoaDetailScreen extends StatelessWidget {
@@ -125,6 +126,43 @@ class CoaDetailScreen extends StatelessWidget {
                       const SizedBox(height: 8),
                     ],
 
+                    // ── View Ledger Button ───────────────────────
+                    GestureDetector(
+                      onTap: () => Get.to(() => AccountLedgerScreen(
+                            accountId: current.id,
+                            accountCode: current.accountCode,
+                            accountName: current.accountName,
+                          )),
+                      child: Container(
+                        height: 54,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.07),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: AppColors.primary.withOpacity(0.35),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.receipt_long_rounded,
+                                size: 18, color: AppColors.primary),
+                            SizedBox(width: 10),
+                            Text(
+                              'View Ledger',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
                     // ── Toggle Active Button ─────────────────────
                     if (canEdit)
                       Builder(builder: (_) {
@@ -209,7 +247,7 @@ class _AccountHeroCard extends StatelessWidget {
   final CoaModel account;
 
   static _NatureTheme _theme(String nature) {
-    switch (nature.toLowerCase()) {
+    switch (nature.toLowerCase().trim()) {
       case 'asset':
         return const _NatureTheme(
           start: Color(0xFF0D47A1),
@@ -223,12 +261,14 @@ class _AccountHeroCard extends StatelessWidget {
           icon: Icons.trending_down_rounded,
         );
       case 'equity':
+      case 'capital':
         return const _NatureTheme(
           start: Color(0xFF4A148C),
           end: Color(0xFF8E24AA),
           icon: Icons.pie_chart_rounded,
         );
       case 'income':
+      case 'revenue':
         return const _NatureTheme(
           start: Color(0xFF1B5E20),
           end: Color(0xFF43A047),

@@ -100,6 +100,8 @@ class CoaDropdownItem {
     required this.label,
     required this.nature,
     required this.isGlobal,
+    this.normalBalance,
+    this.level = 3,
   });
 
   final int id;
@@ -108,6 +110,8 @@ class CoaDropdownItem {
   final String label; // "A1001 - Cash"
   final String nature;
   final bool isGlobal;
+  final String? normalBalance; // debit | credit
+  final int level;             // 1 | 2 | 3
 
   factory CoaDropdownItem.fromJson(Map<String, dynamic> json) {
     return CoaDropdownItem(
@@ -117,6 +121,10 @@ class CoaDropdownItem {
       label: json['label']?.toString() ?? '',
       nature: json['nature']?.toString() ?? '',
       isGlobal: json['is_global'] == true || json['is_global'] == 1,
+      normalBalance: json['normal_balance']?.toString(),
+      level: json['level'] is int
+          ? json['level'] as int
+          : int.tryParse(json['level']?.toString() ?? '') ?? 3,
     );
   }
 }

@@ -161,54 +161,54 @@ class VendorDetailScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  //const SizedBox(width: 12),
                   // Add Bill (gradient)
-                  Expanded(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: _gradient,
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: <BoxShadow>[
-                          BoxShadow(
-                            color:
-                                const Color(0xFF1565C0).withOpacity(0.35),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Get.toNamed(
-                            Routes.addExpenseScreen,
-                            arguments: <String, dynamic>{
-                              'vendorId': vendorRx.value.id,
-                              'vendorName': vendorRx.value.vendorName,
-                              'lockVendor': true,
-                            },
-                          );
-                        },
-                        icon: const Icon(Icons.receipt_long_rounded,
-                            size: 17, color: Colors.white),
-                        label: const Text(
-                          'Add Bill',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(0, 50),
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  // Expanded(
+                  //   child: DecoratedBox(
+                  //     decoration: BoxDecoration(
+                  //       gradient: _gradient,
+                  //       borderRadius: BorderRadius.circular(14),
+                  //       boxShadow: <BoxShadow>[
+                  //         BoxShadow(
+                  //           color:
+                  //               const Color(0xFF1565C0).withOpacity(0.35),
+                  //           blurRadius: 10,
+                  //           offset: const Offset(0, 4),
+                  //         ),
+                  //       ],
+                  //     ),
+                  //     child: ElevatedButton.icon(
+                  //       onPressed: () {
+                  //         Get.toNamed(
+                  //           Routes.addExpenseScreen,
+                  //           arguments: <String, dynamic>{
+                  //             'vendorId': vendorRx.value.id,
+                  //             'vendorName': vendorRx.value.vendorName,
+                  //             'lockVendor': true,
+                  //           },
+                  //         );
+                  //       },
+                  //       icon: const Icon(Icons.receipt_long_rounded,
+                  //           size: 17, color: Colors.white),
+                  //       label: const Text(
+                  //         'Add Bill',
+                  //         style: TextStyle(
+                  //           color: Colors.white,
+                  //           fontSize: 14,
+                  //           fontWeight: FontWeight.w600,
+                  //         ),
+                  //       ),
+                  //       style: ElevatedButton.styleFrom(
+                  //         minimumSize: const Size(0, 50),
+                  //         backgroundColor: Colors.transparent,
+                  //         shadowColor: Colors.transparent,
+                  //         shape: RoundedRectangleBorder(
+                  //           borderRadius: BorderRadius.circular(14),
+                  //         ),
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
             ),

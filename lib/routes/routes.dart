@@ -49,4 +49,6 @@ class Routes {
   static const vouchersScreen = '/vouchers_screen';
   static const ledgerScreen = '/ledger_screen';
   static const incomeStatementScreen = '/income_statement_screen';
+  static const teamMembersScreen = '/team_members_screen';
+  static const addTeamMemberScreen = '/add_team_member_screen';
 }

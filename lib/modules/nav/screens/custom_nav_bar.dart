@@ -26,16 +26,6 @@ class CustomBottomNavBar extends StatelessWidget {
         activeIcon: AppImages.homeFill,
       ),
       const _NavItemData(
-        label: 'Expenses',
-        icon: AppImages.expense,
-        activeIcon: AppImages.expenseFill,
-      ),
-      const _NavItemData(
-        label: 'Invoices',
-        icon: AppImages.bill,
-        activeIcon: AppImages.billFill,
-      ),
-      const _NavItemData(
         label: 'Tasks',
         icon: AppImages.task,
         activeIcon: AppImages.taskFill,

@@ -92,7 +92,7 @@ class _CreateVoucherScreenState extends State<CreateVoucherScreen> {
                     const SizedBox(height: 8),
                     Obx(() => _TypeSelector(
                           selected: _c.selectedType.value,
-                          onChanged: (v) => _c.selectedType.value = v,
+                          onChanged: (v) => _c.changeVoucherType(v),
                         )),
                     const SizedBox(height: 16),
 
@@ -197,6 +197,9 @@ class _CreateVoucherScreenState extends State<CreateVoucherScreen> {
                               showError: _c.showLineErrors.value,
                               canRemove: _c.lines.length > 2,
                               coaList: _c.coaDropdown,
+                              filteredCoaList: _c.filteredCoaFor(
+                                  _c.selectedType.value, line.lineType),
+                              voucherType: _c.selectedType.value,
                               isLoadingCoa: _c.isLoadingCoa.value,
                               disabledAccountIds: const <int>{},
                               onUpdate: (updated) => _c.updateLine(i, updated),
@@ -397,6 +400,8 @@ class _LineRow extends StatefulWidget {
     required this.showError,
     required this.canRemove,
     required this.coaList,
+    required this.filteredCoaList,
+    required this.voucherType,
     required this.isLoadingCoa,
     required this.disabledAccountIds,
     required this.onUpdate,
@@ -408,6 +413,8 @@ class _LineRow extends StatefulWidget {
   final bool showError;
   final bool canRemove;
   final List<CoaDropdownItem> coaList;
+  final List<CoaDropdownItem> filteredCoaList; // filtered by type + dr/cr
+  final String voucherType;
   final bool isLoadingCoa;
   final Set<int> disabledAccountIds;
   final ValueChanged<DraftLine> onUpdate;
@@ -433,10 +440,13 @@ class _LineRowState extends State<_LineRow> {
   }
 
   void _update({int? accountId, String? accountCode, String? accountName, String? lineType, String? amount}) {
+    // Clear account selection when Dr/Cr side changes (different filter applies)
+    final bool sideChanged = lineType != null && lineType != widget.line.lineType;
     widget.onUpdate(DraftLine(
-      accountId: accountId ?? widget.line.accountId,
-      accountCode: accountCode ?? widget.line.accountCode,
-      accountName: accountName ?? widget.line.accountName,
+      uid: widget.line.uid,  // preserve uid so ValueKey stays same → no focus loss
+      accountId: sideChanged ? null : (accountId ?? widget.line.accountId),
+      accountCode: sideChanged ? null : (accountCode ?? widget.line.accountCode),
+      accountName: sideChanged ? null : (accountName ?? widget.line.accountName),
       lineType: lineType ?? widget.line.lineType,
       amount: amount ?? widget.line.amount,
     ));
@@ -601,100 +611,20 @@ class _LineRowState extends State<_LineRow> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
       ),
-      builder: (_) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Center(
-                child: Container(
-                  width: 40, height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text('Select Account',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close),
-                    splashRadius: 18,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              if (widget.isLoadingCoa)
-                const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              else
-                ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(context).size.height * 0.5,
-                  ),
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    itemCount: widget.coaList.length,
-                    separatorBuilder: (_, __) =>
-                        const Divider(height: 1),
-                    itemBuilder: (_, i) {
-                      final CoaDropdownItem item = widget.coaList[i];
-                      final bool isSelected =
-                          widget.line.accountId == item.id;
-                      final bool isDisabled =
-                          widget.disabledAccountIds.contains(item.id);
-                      return ListTile(
-                        onTap: isDisabled
-                            ? null
-                            : () {
-                                _update(
-                                  accountId: item.id,
-                                  accountCode: item.accountCode,
-                                  accountName: item.accountName,
-                                );
-                                Navigator.pop(context);
-                              },
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(
-                          item.accountName,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: isDisabled
-                                ? Colors.grey.shade400
-                                : Colors.black87,
-                          ),
-                        ),
-                        subtitle: Text(
-                          item.accountCode,
-                          style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade400),
-                        ),
-                        trailing: isSelected
-                            ? const Icon(Icons.check_circle,
-                                color: AppColors.primary)
-                            : isDisabled
-                                ? Icon(Icons.block_outlined,
-                                    size: 16,
-                                    color: Colors.grey.shade300)
-                                : null,
-                      );
-                    },
-                  ),
-                ),
-            ],
-          ),
-        ),
+      builder: (_) => _AccountPickerSheet(
+        isLoading: widget.isLoadingCoa,
+        allItems: widget.filteredCoaList,
+        selectedId: widget.line.accountId,
+        disabledIds: widget.disabledAccountIds,
+        voucherType: widget.voucherType,
+        isDebit: widget.line.isDebit,
+        onSelect: (item) {
+          _update(
+            accountId: item.id,
+            accountCode: item.accountCode,
+            accountName: item.accountName,
+          );
+        },
       ),
     );
   }
@@ -770,6 +700,227 @@ class _Label extends StatelessWidget {
     return Text(text,
         style: const TextStyle(
             fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black));
+  }
+}
+
+// ── Account Picker Bottom Sheet (with search + filter hint) ───────
+class _AccountPickerSheet extends StatefulWidget {
+  const _AccountPickerSheet({
+    required this.isLoading,
+    required this.allItems,
+    required this.selectedId,
+    required this.disabledIds,
+    required this.voucherType,
+    required this.isDebit,
+    required this.onSelect,
+  });
+
+  final bool isLoading;
+  final List<CoaDropdownItem> allItems;
+  final int? selectedId;
+  final Set<int> disabledIds;
+  final String voucherType;
+  final bool isDebit;
+  final ValueChanged<CoaDropdownItem> onSelect;
+
+  @override
+  State<_AccountPickerSheet> createState() => _AccountPickerSheetState();
+}
+
+class _AccountPickerSheetState extends State<_AccountPickerSheet> {
+  final TextEditingController _search = TextEditingController();
+  List<CoaDropdownItem> _visible = [];
+
+  /// Human-readable label for which accounts are shown
+  String get _filterHint {
+    final String side = widget.isDebit ? 'Debit' : 'Credit';
+    switch (widget.voucherType) {
+      case 'receipt':
+        return widget.isDebit
+            ? '$side — Assets (A*)'
+            : '$side — Revenue (G*)';
+      case 'payment':
+        return widget.isDebit
+            ? '$side — Expenses (E*)'
+            : '$side — Assets (A*)';
+      case 'journal':
+      case 'adjustment':
+        return widget.isDebit
+            ? '$side — Normal balance: Debit'
+            : '$side — Normal balance: Credit';
+      case 'contra':
+        return '$side — Current Assets (A10*)';
+      default:
+        return side;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _visible = widget.allItems;
+    _search.addListener(_filter);
+  }
+
+  void _filter() {
+    final String q = _search.text.toLowerCase();
+    setState(() {
+      _visible = q.isEmpty
+          ? widget.allItems
+          : widget.allItems.where((item) {
+              return item.accountName.toLowerCase().contains(q) ||
+                  item.accountCode.toLowerCase().contains(q);
+            }).toList();
+    });
+  }
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+            16, 14, 16, MediaQuery.of(context).viewInsets.bottom + 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Pill
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(20)),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Header
+            Row(
+              children: [
+                const Expanded(
+                  child: Text('Select Account',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close),
+                  splashRadius: 18,
+                ),
+              ],
+            ),
+
+            // Filter hint chip
+            Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                _filterHint,
+                style: TextStyle(
+                    fontSize: 11,
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600),
+              ),
+            ),
+
+            // Search bar
+            TextField(
+              controller: _search,
+              autofocus: false,
+              decoration: InputDecoration(
+                hintText: 'Search by name or code...',
+                prefixIcon:
+                    const Icon(Icons.search, size: 18, color: Colors.grey),
+                filled: true,
+                fillColor: Colors.grey.shade100,
+                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // List
+            if (widget.isLoading)
+              const Padding(
+                padding: EdgeInsets.all(24),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (_visible.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: Text(
+                    'No accounts found',
+                    style: TextStyle(color: Colors.grey.shade500),
+                  ),
+                ),
+              )
+            else
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.45,
+                ),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: _visible.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (_, i) {
+                    final CoaDropdownItem item = _visible[i];
+                    final bool isSelected = widget.selectedId == item.id;
+                    final bool isDisabled = widget.disabledIds.contains(item.id);
+                    return ListTile(
+                      onTap: isDisabled
+                          ? null
+                          : () {
+                              widget.onSelect(item);
+                              Navigator.pop(context);
+                            },
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        item.accountName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: isDisabled
+                              ? Colors.grey.shade400
+                              : Colors.black87,
+                        ),
+                      ),
+                      subtitle: Text(
+                        item.accountCode,
+                        style: TextStyle(
+                            fontSize: 12, color: Colors.grey.shade400),
+                      ),
+                      trailing: isSelected
+                          ? const Icon(Icons.check_circle,
+                              color: AppColors.primary)
+                          : isDisabled
+                              ? Icon(Icons.block_outlined,
+                                  size: 16, color: Colors.grey.shade300)
+                              : null,
+                    );
+                  },
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

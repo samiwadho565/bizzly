@@ -52,4 +52,5 @@ class AppUrls {
   static const String dashboard = '/api/dashboard';
   static const String ledger = '/api/ledger';
   static const String incomeStatement = '/api/reports/income-statement';
+  static const String teamMembers = '/api/team-members';
 }

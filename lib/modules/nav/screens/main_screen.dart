@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:bizly/components/home/side_bar.dart';
-import 'package:bizly/modules/expense/screens/expense_screen.dart';
-import 'package:bizly/modules/invoice/screens/invoice_screen.dart';
 import 'package:bizly/modules/tasks/screens/tasks_screen.dart';
 import 'package:bizly/modules/profile/screens/profile_screen/profile_screen.dart';
 
@@ -39,14 +37,6 @@ class MainScreen extends GetView<MainScreenController> {
           openDrawer: () => controller.scaffoldKey.currentState?.openDrawer(),
         );
       case 1:
-        return ExpenseScreen(
-          openDrawer: () => controller.scaffoldKey.currentState?.openDrawer(),
-        );
-      case 2:
-        return InvoiceScreen(
-          openDrawer: () => controller.scaffoldKey.currentState?.openDrawer(),
-        );
-      case 3:
         return TasksScreen(
           openDrawer: () => controller.scaffoldKey.currentState?.openDrawer(),
         );

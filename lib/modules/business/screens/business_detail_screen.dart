@@ -466,34 +466,34 @@ class BusinessDetailScreen extends GetView<BusinessDetailController> {
                 ),
               ),
               const SizedBox(height: 20),
-              _sheetAction(
-                icon: Icons.receipt_long_outlined,
-                iconColor: const Color(0xFF1565C0),
-                label: 'Tax Settings',
-                onTap: () {
-                  Get.back();
-                  if (business != null) {
-                    Get.toNamed(Routes.taxSettingsScreen, arguments: business);
-                    return;
-                  }
-                  Get.toNamed(Routes.taxSettingsScreen);
-                },
-              ),
-              const SizedBox(height: 8),
-              _sheetAction(
-                icon: Icons.palette_outlined,
-                iconColor: const Color(0xFF8E24AA),
-                label: 'Invoice Customization',
-                onTap: () {
-                  Get.back();
-                  if (business != null) {
-                    Get.toNamed(Routes.invoiceCustomizationScreen,
-                        arguments: business);
-                    return;
-                  }
-                  Get.toNamed(Routes.invoiceCustomizationScreen);
-                },
-              ),
+              // _sheetAction(
+              //   icon: Icons.receipt_long_outlined,
+              //   iconColor: const Color(0xFF1565C0),
+              //   label: 'Tax Settings',
+              //   onTap: () {
+              //     Get.back();
+              //     if (business != null) {
+              //       Get.toNamed(Routes.taxSettingsScreen, arguments: business);
+              //       return;
+              //     }
+              //     Get.toNamed(Routes.taxSettingsScreen);
+              //   },
+              // ),
+              // const SizedBox(height: 8),
+              // _sheetAction(
+              //   icon: Icons.palette_outlined,
+              //   iconColor: const Color(0xFF8E24AA),
+              //   label: 'Invoice Customization',
+              //   onTap: () {
+              //     Get.back();
+              //     if (business != null) {
+              //       Get.toNamed(Routes.invoiceCustomizationScreen,
+              //           arguments: business);
+              //       return;
+              //     }
+              //     Get.toNamed(Routes.invoiceCustomizationScreen);
+              //   },
+              // ),
               const SizedBox(height: 8),
               _sheetAction(
                 icon: Icons.edit_outlined,

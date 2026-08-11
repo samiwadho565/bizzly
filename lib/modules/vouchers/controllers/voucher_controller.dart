@@ -286,6 +286,50 @@ class VoucherController extends GetxController {
     Future.wait([fetchCoaDropdown(), fetchCrmDropdowns()]);
   }
 
+  // ─── Voucher type change ──────────────────────────────────────
+  // Clears all account selections when type changes (accounts differ per type)
+  void changeVoucherType(String type) {
+    selectedType.value = type;
+    lines.assignAll(lines.map((l) => DraftLine(lineType: l.lineType)).toList());
+  }
+
+  /// Returns CoA items filtered by voucher type + line side (debit/credit).
+  ///
+  /// Rules (per screenshot spec):
+  ///   receipt  debit  → code starts with A  (Assets)
+  ///   receipt  credit → code starts with G  (Revenue)
+  ///   payment  debit  → code starts with E  (Expenses)
+  ///   payment  credit → code starts with A  (Assets)
+  ///   journal  debit  → normal_balance = debit
+  ///   journal  credit → normal_balance = credit
+  ///   contra   both   → code starts with A10 (Current Assets)
+  ///   adjust   debit  → normal_balance = debit
+  ///   adjust   credit → normal_balance = credit
+  List<CoaDropdownItem> filteredCoaFor(String voucherType, String lineType) {
+    final bool isDebit = lineType == 'debit';
+    return coaDropdown.where((item) {
+      // Only Level 3 accounts allowed for journal entries
+      if (item.level != 3) return false;
+
+      final String code = item.accountCode.toUpperCase();
+      switch (voucherType) {
+        case 'receipt':
+          return isDebit ? code.startsWith('A') : code.startsWith('G');
+        case 'payment':
+          return isDebit ? code.startsWith('E') : code.startsWith('A');
+        case 'journal':
+        case 'adjustment':
+          return isDebit
+              ? item.normalBalance == 'debit'
+              : item.normalBalance == 'credit';
+        case 'contra':
+          return code.startsWith('A10');
+        default:
+          return true;
+      }
+    }).toList();
+  }
+
   void addLine() {
     lines.add(DraftLine(lineType: 'debit'));
   }

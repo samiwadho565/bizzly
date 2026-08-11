@@ -78,6 +78,12 @@ class CustomSideBar extends StatelessWidget {
                             onTap: () { Get.back(); Get.toNamed(Routes.teamScreen); },
                           ),
                           _DrawerItem(
+                            icon: Icons.manage_accounts_rounded,
+                            iconColor: const Color(0xFF26A69A),
+                            title: 'Business Team',
+                            onTap: () { Get.back(); Get.toNamed(Routes.teamMembersScreen); },
+                          ),
+                          _DrawerItem(
                             icon: Icons.business_center_rounded,
                             iconColor: const Color(0xFF29B6F6),
                             title: 'Company Assets',
