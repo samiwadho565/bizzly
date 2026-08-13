@@ -1,12 +1,19 @@
+double _d(dynamic v) => (v as num?)?.toDouble() ?? 0.0;
+int _i(dynamic v) => (v as num?)?.toInt() ?? 0;
+
 class DashboardModel {
   final DashboardSummary summary;
   final DashboardPeriod? accountingPeriod;
+  final DashboardReportingPeriod? reportingPeriod;
   final List<DashboardVoucher> recentVouchers;
+  final DashboardRevenueCharts revenueCharts;
 
   DashboardModel({
     required this.summary,
     this.accountingPeriod,
+    this.reportingPeriod,
     required this.recentVouchers,
+    required this.revenueCharts,
   });
 
   factory DashboardModel.fromJson(Map<String, dynamic> j) {
@@ -23,6 +30,10 @@ class DashboardModel {
           ? DashboardPeriod.fromJson(
               Map<String, dynamic>.from(data['accounting_period'] as Map))
           : null,
+      reportingPeriod: data['reporting_period'] is Map
+          ? DashboardReportingPeriod.fromJson(
+              Map<String, dynamic>.from(data['reporting_period'] as Map))
+          : null,
       recentVouchers: data['recent_vouchers'] is List
           ? (data['recent_vouchers'] as List)
               .whereType<Map>()
@@ -30,6 +41,11 @@ class DashboardModel {
                   Map<String, dynamic>.from(e)))
               .toList()
           : [],
+      revenueCharts: DashboardRevenueCharts.fromJson(
+        data['revenue_charts'] is Map
+            ? Map<String, dynamic>.from(data['revenue_charts'] as Map)
+            : {},
+      ),
     );
   }
 }
@@ -66,8 +82,6 @@ class DashboardSummary {
   });
 
   factory DashboardSummary.fromJson(Map<String, dynamic> j) {
-    double _d(dynamic v) => (v as num?)?.toDouble() ?? 0.0;
-    int _i(dynamic v) => (v as num?)?.toInt() ?? 0;
     return DashboardSummary(
       totalRevenue: _d(j['total_revenue']),
       totalExpenses: _d(j['total_expenses']),
@@ -101,10 +115,26 @@ class DashboardPeriod {
 
   factory DashboardPeriod.fromJson(Map<String, dynamic> j) {
     return DashboardPeriod(
-      id: (j['id'] as num?)?.toInt() ?? 0,
+      id: _i(j['id']),
       name: j['name']?.toString() ?? '',
       startDate: j['start_date']?.toString() ?? '',
       endDate: j['end_date']?.toString() ?? '',
+    );
+  }
+}
+
+/// The date range the summary figures were computed over (separate from
+/// the accounting period — e.g. year-to-date vs the fiscal year).
+class DashboardReportingPeriod {
+  final String fromDate;
+  final String toDate;
+
+  DashboardReportingPeriod({required this.fromDate, required this.toDate});
+
+  factory DashboardReportingPeriod.fromJson(Map<String, dynamic> j) {
+    return DashboardReportingPeriod(
+      fromDate: j['from_date']?.toString() ?? '',
+      toDate: j['to_date']?.toString() ?? '',
     );
   }
 }
@@ -118,6 +148,8 @@ class DashboardVoucher {
   final String status;
   final double totalDebit;
   final double totalCredit;
+  final String? ledgerEntryNumber;
+  final String? createdAt;
 
   DashboardVoucher({
     required this.id,
@@ -128,18 +160,67 @@ class DashboardVoucher {
     required this.status,
     required this.totalDebit,
     required this.totalCredit,
+    this.ledgerEntryNumber,
+    this.createdAt,
   });
 
   factory DashboardVoucher.fromJson(Map<String, dynamic> j) {
     return DashboardVoucher(
-      id: (j['id'] as num?)?.toInt() ?? 0,
+      id: _i(j['id']),
       voucherNumber: j['voucher_number']?.toString() ?? '',
       voucherType: j['voucher_type']?.toString() ?? '',
       voucherDate: j['voucher_date']?.toString() ?? '',
       narration: j['narration']?.toString() ?? '',
       status: j['status']?.toString() ?? '',
-      totalDebit: (j['total_debit'] as num?)?.toDouble() ?? 0.0,
-      totalCredit: (j['total_credit'] as num?)?.toDouble() ?? 0.0,
+      totalDebit: _d(j['total_debit']),
+      totalCredit: _d(j['total_credit']),
+      ledgerEntryNumber: j['ledger_entry_number']?.toString(),
+      createdAt: j['created_at']?.toString(),
+    );
+  }
+}
+
+/// One point on a revenue trend chart (daily/weekly/monthly/yearly all
+/// share this shape — only the label field differs per granularity).
+class DashboardRevenuePoint {
+  final String label;
+  final double revenue;
+
+  DashboardRevenuePoint({required this.label, required this.revenue});
+
+  factory DashboardRevenuePoint.fromJson(Map<String, dynamic> j) {
+    final String label = (j['date'] ?? j['week'] ?? j['month'] ?? j['year'])?.toString() ?? '';
+    return DashboardRevenuePoint(label: label, revenue: _d(j['revenue']));
+  }
+}
+
+class DashboardRevenueCharts {
+  final List<DashboardRevenuePoint> daily;
+  final List<DashboardRevenuePoint> weekly;
+  final List<DashboardRevenuePoint> monthly;
+  final List<DashboardRevenuePoint> yearly;
+
+  DashboardRevenueCharts({
+    required this.daily,
+    required this.weekly,
+    required this.monthly,
+    required this.yearly,
+  });
+
+  static List<DashboardRevenuePoint> _parse(dynamic v) {
+    if (v is! List) return [];
+    return v
+        .whereType<Map>()
+        .map((e) => DashboardRevenuePoint.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+  }
+
+  factory DashboardRevenueCharts.fromJson(Map<String, dynamic> j) {
+    return DashboardRevenueCharts(
+      daily: _parse(j['daily']),
+      weekly: _parse(j['weekly']),
+      monthly: _parse(j['monthly']),
+      yearly: _parse(j['yearly']),
     );
   }
 }

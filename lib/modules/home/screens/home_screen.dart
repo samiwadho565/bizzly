@@ -43,6 +43,10 @@ class HomeScreen extends GetView<HomeScreenController> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Business filter for dashboard summary/vouchers
+                      const _DashboardBusinessFilter(),
+                      const SizedBox(height: 12),
+
                       // Stats
                       const _DashboardSummary(),
                       const SizedBox(height: 22),
@@ -599,6 +603,220 @@ class _PendingApprovalsCard extends GetView<HomeScreenController> {
 // DASHBOARD SUMMARY
 // ═══════════════════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════════════════
+// DASHBOARD BUSINESS FILTER (confirmed working via ?business_id=)
+// ═══════════════════════════════════════════════════════════════════
+
+class _DashboardBusinessFilter extends GetView<HomeScreenController> {
+  const _DashboardBusinessFilter();
+
+  void _open(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _DashboardBusinessSheet(controller: controller),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final BusinessModel? selected = controller.dashboardFilterBusiness.value;
+      return GestureDetector(
+        onTap: () => _open(context),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppColors.primary.withOpacity(0.08), AppColors.primary.withOpacity(0.03)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.primary.withOpacity(0.16)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF0D1B4B), Color(0xFF1565C0)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.apartment_rounded, size: 14, color: Colors.white),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  selected != null ? selected.businessName : 'All businesses',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary.withOpacity(0.85),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.primary.withOpacity(0.6)),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+}
+
+class _DashboardBusinessSheet extends StatelessWidget {
+  const _DashboardBusinessSheet({required this.controller});
+  final HomeScreenController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 36,
+            height: 4,
+            decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(20)),
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF0D1B4B), Color(0xFF1565C0)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.apartment_rounded, color: Colors.white, size: 18),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Filter Dashboard',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E))),
+                      Text('Show stats for one business',
+                          style: TextStyle(fontSize: 11, color: Colors.grey)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Flexible(
+            child: Obx(() {
+              if (controller.isBusinessesLoading.value && controller.businesses.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 30),
+                  child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                );
+              }
+              final BusinessModel? selected = controller.dashboardFilterBusiness.value;
+              return ListView(
+                shrinkWrap: true,
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                children: [
+                  _option(
+                    context,
+                    label: 'All businesses',
+                    isSelected: selected == null,
+                    onTap: () {
+                      controller.applyDashboardBusiness(null);
+                      Navigator.pop(context);
+                    },
+                  ),
+                  ...controller.businesses.map((b) => _option(
+                        context,
+                        label: b.businessName,
+                        isSelected: selected?.id == b.id,
+                        onTap: () {
+                          controller.applyDashboardBusiness(b);
+                          Navigator.pop(context);
+                        },
+                      )),
+                  if (!controller.isBusinessesLoading.value && controller.businesses.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: Center(
+                        child: Text('No businesses found', style: TextStyle(color: Colors.grey.shade500)),
+                      ),
+                    ),
+                ],
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _option(BuildContext context,
+      {required String label, required bool isSelected, required VoidCallback onTap}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+          decoration: BoxDecoration(
+            gradient: isSelected
+                ? const LinearGradient(
+                    colors: [Color(0xFF0D1B4B), Color(0xFF1565C0)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : null,
+            color: isSelected ? null : AppColors.background,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: isSelected ? Colors.transparent : Colors.grey.shade200),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: isSelected ? Colors.white : const Color(0xFF1A1A2E),
+                  ),
+                ),
+              ),
+              if (isSelected) const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _DashboardSummary extends GetView<HomeScreenController> {
   const _DashboardSummary();
 
@@ -616,7 +834,7 @@ class _DashboardSummary extends GetView<HomeScreenController> {
 
       if (loading && dashboard == null) {
         return const SizedBox(
-          height: 108,
+          height: 116,
           child: Center(
             child: CircularProgressIndicator(
                 color: AppColors.primary, strokeWidth: 2),
@@ -693,10 +911,42 @@ class _DashboardSummary extends GetView<HomeScreenController> {
           bg: const Color(0xFF3949AB),
           gradientEnd: const Color(0xFF1A237E),
         ),
+        _StatData(
+          label: 'Approvals',
+          value: '${s?.pendingVoucherApprovals ?? 0}',
+          icon: Icons.pending_actions_rounded,
+          accent: const Color(0xFFFFCA28),
+          bg: const Color(0xFFF9A825),
+          gradientEnd: const Color(0xFFE65100),
+        ),
+        _StatData(
+          label: 'Posted',
+          value: '${s?.postedVouchers ?? 0}',
+          icon: Icons.receipt_long_rounded,
+          accent: const Color(0xFF4DB6AC),
+          bg: const Color(0xFF00897B),
+          gradientEnd: const Color(0xFF004D40),
+        ),
+        _StatData(
+          label: 'Team',
+          value: '${s?.totalTeamMembers ?? 0}',
+          icon: Icons.groups_rounded,
+          accent: const Color(0xFF64B5F6),
+          bg: const Color(0xFF1976D2),
+          gradientEnd: const Color(0xFF0D47A1),
+        ),
+        _StatData(
+          label: 'Tasks',
+          value: '${s?.pendingTasks ?? 0}',
+          icon: Icons.task_alt_rounded,
+          accent: const Color(0xFFE57373),
+          bg: const Color(0xFFD32F2F),
+          gradientEnd: const Color(0xFFB71C1C),
+        ),
       ];
 
       return SizedBox(
-        height: 108,
+        height: 116,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
@@ -972,6 +1222,16 @@ class _RecentVouchers extends GetView<HomeScreenController> {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
+                                if (v.ledgerEntryNumber != null) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Ledger: ${v.ledgerEntryNumber}',
+                                    style: TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey.shade400),
+                                  ),
+                                ],
                               ],
                             ),
                           ),

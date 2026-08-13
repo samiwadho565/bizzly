@@ -1,6 +1,33 @@
 double _d(dynamic v) => (v as num?)?.toDouble() ?? double.tryParse(v?.toString() ?? '') ?? 0.0;
 int _i(dynamic v) => (v as num?)?.toInt() ?? int.tryParse(v?.toString() ?? '') ?? 0;
 
+/// Lightweight reference to the parent ledger entry — only populated
+/// on GET /api/ledger/account/{id} (the plain list/get-by-id endpoints
+/// always send this as null since the line is already nested under
+/// its entry there).
+class LedgerLineEntryRef {
+  final int id;
+  final String entryNumber;
+  final String entryDate;
+  final int? voucherId;
+
+  LedgerLineEntryRef({
+    required this.id,
+    required this.entryNumber,
+    required this.entryDate,
+    this.voucherId,
+  });
+
+  factory LedgerLineEntryRef.fromJson(Map<String, dynamic> j) {
+    return LedgerLineEntryRef(
+      id: _i(j['id']),
+      entryNumber: j['entry_number']?.toString() ?? '',
+      entryDate: j['entry_date']?.toString() ?? '',
+      voucherId: j['voucher_id'] == null ? null : _i(j['voucher_id']),
+    );
+  }
+}
+
 /// One debit/credit line inside a ledger entry (or account ledger).
 class LedgerLine {
   final int id;
@@ -15,6 +42,7 @@ class LedgerLine {
   final String accountCode;
   final String accountName;
   final String? normalBalance; // debit | credit
+  final LedgerLineEntryRef? entry;
   final String? createdAt;
 
   LedgerLine({
@@ -30,6 +58,7 @@ class LedgerLine {
     required this.accountCode,
     required this.accountName,
     this.normalBalance,
+    this.entry,
     this.createdAt,
   });
 
@@ -50,6 +79,9 @@ class LedgerLine {
       accountCode: acc['account_code']?.toString() ?? '',
       accountName: acc['account_name']?.toString() ?? '',
       normalBalance: acc['normal_balance']?.toString(),
+      entry: j['entry'] is Map
+          ? LedgerLineEntryRef.fromJson(Map<String, dynamic>.from(j['entry'] as Map))
+          : null,
       createdAt: j['created_at']?.toString(),
     );
   }

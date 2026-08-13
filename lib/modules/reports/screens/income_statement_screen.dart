@@ -82,14 +82,19 @@ class IncomeStatementScreen extends GetView<IncomeStatementController> {
                         color: const Color(0xFF2E7D32),
                       ),
                       const SizedBox(height: 8),
-                      ...report.revenueSections.map(
-                        (s) => _LineItem(
-                          name: s.accountName,
-                          code: s.accountCode,
-                          amount: s.amount,
-                          color: const Color(0xFF2E7D32),
-                        ),
-                      ),
+                      ...report.revenueSections
+                          .where((s) => s.accounts.isNotEmpty)
+                          .expand((s) => [
+                                _SubSectionLabel(
+                                  code: s.sectionCode,
+                                  name: s.sectionName,
+                                  total: s.netTotal,
+                                  color: const Color(0xFF2E7D32),
+                                ),
+                                ...s.accounts.map(
+                                  (a) => _LineItem(account: a, color: const Color(0xFF2E7D32)),
+                                ),
+                              ]),
                       const SizedBox(height: 20),
                     ],
 
@@ -101,14 +106,19 @@ class IncomeStatementScreen extends GetView<IncomeStatementController> {
                         color: const Color(0xFFC62828),
                       ),
                       const SizedBox(height: 8),
-                      ...report.expenseSections.map(
-                        (s) => _LineItem(
-                          name: s.accountName,
-                          code: s.accountCode,
-                          amount: s.amount,
-                          color: const Color(0xFFC62828),
-                        ),
-                      ),
+                      ...report.expenseSections
+                          .where((s) => s.accounts.isNotEmpty)
+                          .expand((s) => [
+                                _SubSectionLabel(
+                                  code: s.sectionCode,
+                                  name: s.sectionName,
+                                  total: s.netTotal,
+                                  color: const Color(0xFFC62828),
+                                ),
+                                ...s.accounts.map(
+                                  (a) => _LineItem(account: a, color: const Color(0xFFC62828)),
+                                ),
+                              ]),
                       const SizedBox(height: 20),
                     ],
 
@@ -308,20 +318,53 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-// ── Line Item ─────────────────────────────────────────────────────
-class _LineItem extends StatelessWidget {
-  const _LineItem(
-      {required this.name,
-      required this.code,
-      required this.amount,
-      required this.color});
-  final String name;
+// ── Sub-section label (e.g. "G2000 · Other Misc Revenue") ─────────
+class _SubSectionLabel extends StatelessWidget {
+  const _SubSectionLabel(
+      {required this.code, required this.name, required this.total, required this.color});
   final String code;
-  final double amount;
+  final String name;
+  final double total;
   final Color color;
 
   @override
   Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 8, 4, 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              code.isNotEmpty ? '$code · $name' : name,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.2,
+                color: color.withOpacity(0.75),
+              ),
+            ),
+          ),
+          Text(
+            NumberFormat('#,##0.00').format(total),
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color.withOpacity(0.75)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Line Item ─────────────────────────────────────────────────────
+class _LineItem extends StatelessWidget {
+  const _LineItem({required this.account, required this.color});
+  final IncomeStatementAccount account;
+  final Color color;
+
+  String _fmt(double v) => NumberFormat('#,##0.00').format(v);
+
+  @override
+  Widget build(BuildContext context) {
+    final bool hasContra = account.contraAccounts.isNotEmpty;
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -335,34 +378,70 @@ class _LineItem extends StatelessWidget {
               offset: const Offset(0, 1)),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (code.isNotEmpty) ...[
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(4),
+          Row(
+            children: [
+              if (account.accountCode.isNotEmpty) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(account.accountCode,
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color)),
+                ),
+                const SizedBox(width: 8),
+              ],
+              Expanded(
+                child: Text(account.accountName,
+                    style: const TextStyle(fontSize: 13, color: Color(0xFF3D3D3D))),
               ),
-              child: Text(code,
-                  style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: color)),
+              Text(
+                _fmt(hasContra ? account.grossBalance : account.netBalance),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: color),
+              ),
+            ],
+          ),
+          // Contra accounts (e.g. Sales Return netted against Sales) —
+          // shown as deductions with the final net balance below.
+          if (hasContra) ...[
+            const SizedBox(height: 6),
+            ...account.contraAccounts.map((c) => Padding(
+                  padding: const EdgeInsets.only(left: 8, bottom: 3),
+                  child: Row(
+                    children: [
+                      Icon(Icons.subdirectory_arrow_right_rounded,
+                          size: 13, color: Colors.grey.shade400),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          '${c.accountCode.isNotEmpty ? '${c.accountCode} · ' : ''}${c.accountName} (contra)',
+                          style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                        ),
+                      ),
+                      Text(
+                        '- ${_fmt(c.netBalance)}',
+                        style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                      ),
+                    ],
+                  ),
+                )),
+            const Divider(height: 12),
+            Row(
+              children: [
+                const Spacer(),
+                Text('Net: ',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+                Text(
+                  _fmt(account.netBalance),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: color),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
           ],
-          Expanded(
-            child: Text(name,
-                style: const TextStyle(
-                    fontSize: 13, color: Color(0xFF3D3D3D))),
-          ),
-          Text(
-            NumberFormat('#,##0.00').format(amount),
-            style: TextStyle(
-                fontSize: 13, fontWeight: FontWeight.w600, color: color),
-          ),
         ],
       ),
     );

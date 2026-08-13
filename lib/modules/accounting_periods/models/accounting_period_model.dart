@@ -6,6 +6,13 @@ class AccountingPeriodModel {
     required this.endDate,
     required this.status,
     this.closedAt,
+    this.businessId,
+    this.priorPeriodId,
+    this.closingVoucherId,
+    this.openingVoucherId,
+    this.carryForwards = const [],
+    this.createdAt,
+    this.updatedAt,
   });
 
   final int id;
@@ -14,8 +21,18 @@ class AccountingPeriodModel {
   final DateTime endDate;
   final String status; // open | closed
   final DateTime? closedAt;
+  final int? businessId;
+  final int? priorPeriodId;
+  final int? closingVoucherId;
+  final int? openingVoucherId;
+  final List<dynamic> carryForwards;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   bool get isOpen => status.toLowerCase() == 'open';
+
+  /// null business_id = global/default period (applies across businesses)
+  bool get isGlobal => businessId == null;
 
   factory AccountingPeriodModel.fromJson(Map<String, dynamic> json) {
     return AccountingPeriodModel(
@@ -27,6 +44,23 @@ class AccountingPeriodModel {
       closedAt: json['closed_at'] != null
           ? DateTime.tryParse(json['closed_at'].toString())
           : null,
+      businessId: _toInt(json['business_id']),
+      priorPeriodId: _toInt(json['prior_period_id']),
+      closingVoucherId: _toInt(json['closing_voucher_id']),
+      openingVoucherId: _toInt(json['opening_voucher_id']),
+      carryForwards: json['carry_forwards'] is List ? json['carry_forwards'] as List : const [],
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'].toString())
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.tryParse(json['updated_at'].toString())
+          : null,
     );
+  }
+
+  static int? _toInt(dynamic v) {
+    if (v == null) return null;
+    if (v is int) return v;
+    return int.tryParse(v.toString());
   }
 }

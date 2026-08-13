@@ -191,6 +191,23 @@ class _CurrentPeriodCard extends StatelessWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Icon(
+                      period.isGlobal ? Icons.public : Icons.apartment_rounded,
+                      size: 13,
+                      color: Colors.white60,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      period.isGlobal
+                          ? 'Global period'
+                          : 'Business #${period.businessId}',
+                      style: const TextStyle(fontSize: 12, color: Colors.white60),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -205,61 +222,158 @@ class _PeriodTile extends StatelessWidget {
   const _PeriodTile({required this.period});
   final AccountingPeriodModel period;
 
+  void _showDetail(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _PeriodDetailSheet(period: period),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.07),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () => _showDetail(context),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.07),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    period.name,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${_fmt(period.startDate)} – ${_fmt(period.endDate)}',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    period.isGlobal ? 'Global period' : 'Business #${period.businessId}',
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: period.isOpen
+                    ? Colors.green.shade50
+                    : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                period.isOpen ? 'Open' : 'Closed',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: period.isOpen
+                      ? Colors.green.shade700
+                      : Colors.grey.shade600,
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(Icons.chevron_right, size: 16, color: Colors.grey.shade400),
+          ],
+        ),
       ),
+    );
+  }
+}
+
+// ── Period Detail Bottom Sheet ──────────────────────────────────────
+class _PeriodDetailSheet extends StatelessWidget {
+  const _PeriodDetailSheet({required this.period});
+  final AccountingPeriodModel period;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Text(
+              period.name,
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 14),
+            _row('Status', period.isOpen ? 'Open' : 'Closed'),
+            _row('Start Date', _fmt(period.startDate)),
+            _row('End Date', _fmt(period.endDate)),
+            _row('Scope', period.isGlobal ? 'Global (all businesses)' : 'Business #${period.businessId}'),
+            if (period.closedAt != null)
+              _row('Closed At', _fmt(period.closedAt!)),
+            if (period.priorPeriodId != null)
+              _row('Prior Period ID', '#${period.priorPeriodId}'),
+            if (period.closingVoucherId != null)
+              _row('Closing Voucher ID', '#${period.closingVoucherId}'),
+            if (period.openingVoucherId != null)
+              _row('Opening Voucher ID', '#${period.openingVoucherId}'),
+            if (period.carryForwards.isNotEmpty)
+              _row('Carry Forwards', '${period.carryForwards.length} entries'),
+            if (period.createdAt != null)
+              _row('Created', _fmt(period.createdAt!)),
+            if (period.updatedAt != null)
+              _row('Last Updated', _fmt(period.updatedAt!)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _row(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  period.name,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${_fmt(period.startDate)} – ${_fmt(period.endDate)}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
-                ),
-              ],
-            ),
+          SizedBox(
+            width: 130,
+            child: Text(label, style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: period.isOpen
-                  ? Colors.green.shade50
-                  : Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(20),
-            ),
+          Expanded(
             child: Text(
-              period.isOpen ? 'Open' : 'Closed',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: period.isOpen
-                    ? Colors.green.shade700
-                    : Colors.grey.shade600,
-              ),
+              value,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87),
             ),
           ),
         ],

@@ -6,8 +6,8 @@ import 'package:bizly/components/common/gradient_screen_header.dart';
 import 'package:bizly/modules/reports/controllers/trial_balance_controller.dart';
 import 'package:bizly/modules/reports/models/trial_balance_model.dart';
 import 'package:bizly/modules/reports/screens/report_date_filter.dart';
+import 'package:bizly/modules/vouchers/controllers/voucher_controller.dart' show CrmDropdownItem;
 import 'package:bizly/utils/app_colors.dart';
-import 'package:bizly/utils/date_formats.dart';
 
 class TrialBalanceScreen extends GetView<TrialBalanceController> {
   const TrialBalanceScreen({super.key});
@@ -24,6 +24,12 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
             selectedPreset: controller.selectedPreset,
             onPresetSelected: controller.applyPreset,
             onCustom: () => _showCustomRangeSheet(context),
+          ),
+          // ── Business Filter ─────────────────────────────────────
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+            child: _BusinessFilterButton(controller: controller),
           ),
           // ── Content ────────────────────────────────────────────
           Expanded(
@@ -88,8 +94,6 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
                     ),
                     const SizedBox(height: 16),
                     _accountsSection(report.accounts),
-                    const SizedBox(height: 16),
-                    _transactionsSection(report.transactions),
                   ],
                 ),
               );
@@ -279,6 +283,22 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
   }
 
   Widget _accountsSection(List<TrialBalanceAccount> accounts) {
+    // Group accounts under their parent (e.g. "A1000 · Current Assets"),
+    // preserving first-seen order, so the trial balance reads like a
+    // grouped ledger instead of one flat list.
+    final Map<String, List<TrialBalanceAccount>> groups = {};
+    final Map<String, String> groupLabels = {};
+    for (final a in accounts) {
+      final String key = a.parent != null ? a.parent!.accountCode : '—';
+      final String label = a.parent != null
+          ? (a.parent!.accountCode.isNotEmpty
+              ? '${a.parent!.accountCode} · ${a.parent!.accountName}'
+              : a.parent!.accountName)
+          : 'Ungrouped';
+      groups.putIfAbsent(key, () => []).add(a);
+      groupLabels[key] = label;
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -298,6 +318,11 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
           const Text(
             'Accounts',
             style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${accounts.length} account${accounts.length == 1 ? '' : 's'}',
+            style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
           ),
           const SizedBox(height: 12),
           Container(
@@ -357,181 +382,106 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
               ),
             )
           else
-            ...accounts.map(_accountRow),
+            ...groups.entries.expand((entry) => [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(2, 8, 2, 6),
+                    child: Text(
+                      groupLabels[entry.key] ?? '',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
+                        color: AppColors.primary.withOpacity(0.7),
+                      ),
+                    ),
+                  ),
+                  ...entry.value.map(_accountRow),
+                ]),
         ],
       ),
     );
   }
 
   Widget _accountRow(TrialBalanceAccount account) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              account.accountName,
-              style: const TextStyle(
-                  fontWeight: FontWeight.w600, fontSize: 13),
-            ),
-          ),
-          SizedBox(
-            width: 90,
-            child: Text(
-              _compactMoney(account.debit),
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF2E7D32),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          SizedBox(
-            width: 90,
-            child: Text(
-              _compactMoney(account.credit),
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                color: AppColors.primary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _transactionsSection(List<TrialBalanceTransaction> items) {
-    final bool showAll = controller.showAllTransactions.value;
-    final List<TrialBalanceTransaction> visibleItems =
-        showAll ? items : items.take(12).toList();
-
+    final Color natureColor = _natureColor(account.nature);
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Transactions',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 12),
-          if (items.isEmpty)
-            const Text(
-              'No transactions found.',
-              style: TextStyle(color: AppColors.textSecondary),
-            )
-          else
-            ...visibleItems.map(_transactionTile),
-          if (items.length > 12)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton(
-                  onPressed: controller.toggleTransactionsVisibility,
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: Text(
-                    showAll
-                        ? 'Show Less'
-                        : 'Show More (+${items.length - visibleItems.length})',
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _transactionTile(TrialBalanceTransaction item) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
       decoration: BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (account.accountCode.isNotEmpty) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: natureColor.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(account.accountCode,
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: natureColor)),
+                ),
+                const SizedBox(width: 6),
+              ],
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.description,
-                      style:
-                          const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      item.accountName,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  account.accountName,
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                 ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'D ${_compactMoney(item.debit)}',
-                    style: const TextStyle(
-                      color: Color(0xFF2E7D32),
-                      fontWeight: FontWeight.w700,
-                    ),
+              if (account.isContra) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                  margin: const EdgeInsets.only(right: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(5),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'C ${_compactMoney(item.credit)}',
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
+                  child: const Text('Contra',
+                      style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Colors.black54)),
+                ),
+              ],
             ],
           ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 6,
+          const SizedBox(height: 6),
+          Row(
             children: [
-              if (item.date.isNotEmpty) _metaChip(_formatDate(item.date)),
-              if ((item.category ?? '').isNotEmpty)
-                _metaChip(item.category!),
-              if ((item.referenceNumber ?? '').isNotEmpty)
-                _metaChip('Ref: ${item.referenceNumber}'),
+              Expanded(
+                child: Text(
+                  account.normalBalance != null
+                      ? '${account.nature} · Normal: ${account.normalBalance}'
+                      : account.nature,
+                  style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+                ),
+              ),
+              SizedBox(
+                width: 90,
+                child: Text(
+                  _compactMoney(account.debit),
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF2E7D32),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              SizedBox(
+                width: 90,
+                child: Text(
+                  _compactMoney(account.credit),
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
             ],
           ),
         ],
@@ -539,25 +489,25 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
     );
   }
 
-  Widget _metaChip(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-      ),
-    );
-  }
-
-  String _formatDate(String value) {
-    final DateTime? date = DateTime.tryParse(value);
-    if (date == null) return value;
-    return DateFormats.dMonY(date);
+  Color _natureColor(String nature) {
+    switch (nature.toLowerCase().trim()) {
+      case 'asset':
+        return const Color(0xFF1976D2);
+      case 'liability':
+        return const Color(0xFFE53935);
+      case 'equity':
+      case 'capital':
+        return const Color(0xFF7B1FA2);
+      case 'income':
+      case 'revenue':
+        return const Color(0xFF388E3C);
+      case 'expense':
+        return const Color(0xFFF57C00);
+      case 'contra':
+        return const Color(0xFF6D4C41);
+      default:
+        return Colors.grey;
+    }
   }
 
   String _formatMoney(num value) {
@@ -571,6 +521,219 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
   String _compactMoney(num value) {
     final bool isWhole = value % 1 == 0;
     return isWhole ? value.toStringAsFixed(0) : value.toStringAsFixed(2);
+  }
+}
+
+// ── Business Filter Button + Sheet ──────────────────────────────────
+class _BusinessFilterButton extends StatelessWidget {
+  const _BusinessFilterButton({required this.controller});
+  final TrialBalanceController controller;
+
+  void _open(BuildContext context) {
+    controller.fetchFilterBusinesses();
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _BusinessFilterSheet(controller: controller),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final CrmDropdownItem? selected = controller.filterBusiness.value;
+      return GestureDetector(
+        onTap: () => _open(context),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppColors.primary.withOpacity(0.08), AppColors.primary.withOpacity(0.03)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.primary.withOpacity(0.16)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF0D1B4B), Color(0xFF1565C0)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.apartment_rounded, size: 14, color: Colors.white),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  selected != null ? selected.name : 'All businesses',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary.withOpacity(0.85),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.primary.withOpacity(0.6)),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+}
+
+class _BusinessFilterSheet extends StatelessWidget {
+  const _BusinessFilterSheet({required this.controller});
+  final TrialBalanceController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 36,
+            height: 4,
+            decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(20)),
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF0D1B4B), Color(0xFF1565C0)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.apartment_rounded, color: Colors.white, size: 18),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Filter by Business',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E))),
+                      Text('Restrict the report to one business',
+                          style: TextStyle(fontSize: 11, color: Colors.grey)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Flexible(
+            child: Obx(() {
+              if (controller.isLoadingFilterBusinesses.value && controller.filterBusinessList.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 30),
+                  child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                );
+              }
+              final CrmDropdownItem? selected = controller.filterBusiness.value;
+              return ListView(
+                shrinkWrap: true,
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                children: [
+                  _businessOption(
+                    context,
+                    label: 'All businesses',
+                    isSelected: selected == null,
+                    onTap: () {
+                      controller.applyBusiness(null);
+                      Navigator.pop(context);
+                    },
+                  ),
+                  ...controller.filterBusinessList.map((b) => _businessOption(
+                        context,
+                        label: b.name.isNotEmpty ? b.name : 'Business #${b.id}',
+                        isSelected: selected?.id == b.id,
+                        onTap: () {
+                          controller.applyBusiness(b);
+                          Navigator.pop(context);
+                        },
+                      )),
+                  if (!controller.isLoadingFilterBusinesses.value && controller.filterBusinessList.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: Center(
+                        child: Text('No businesses found', style: TextStyle(color: Colors.grey.shade500)),
+                      ),
+                    ),
+                ],
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _businessOption(BuildContext context,
+      {required String label, required bool isSelected, required VoidCallback onTap}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+          decoration: BoxDecoration(
+            gradient: isSelected
+                ? const LinearGradient(
+                    colors: [Color(0xFF0D1B4B), Color(0xFF1565C0)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : null,
+            color: isSelected ? null : AppColors.background,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: isSelected ? Colors.transparent : Colors.grey.shade200),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: isSelected ? Colors.white : const Color(0xFF1A1A2E),
+                  ),
+                ),
+              ),
+              if (isSelected) const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

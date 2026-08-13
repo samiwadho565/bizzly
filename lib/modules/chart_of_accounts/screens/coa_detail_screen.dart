@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 import 'package:bizly/components/common/gradient_screen_header.dart';
 import 'package:bizly/modules/chart_of_accounts/controllers/coa_controller.dart';
@@ -17,6 +18,11 @@ class CoaDetailScreen extends StatelessWidget {
     final CoaController c = Get.find<CoaController>();
     if (c.currentDetailAccount.value?.id != account.id) {
       c.currentDetailAccount.value = account;
+      // Refresh with live data from GET /api/chart-of-accounts/{id}
+      // instead of relying only on the (possibly stale) list item.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        c.fetchAccountDetail(account.id);
+      });
     }
 
     return Obx(() {
@@ -280,6 +286,12 @@ class _AccountHeroCard extends StatelessWidget {
           end: Color(0xFFF57C00),
           icon: Icons.receipt_long_rounded,
         );
+      case 'contra':
+        return const _NatureTheme(
+          start: Color(0xFF3E2723),
+          end: Color(0xFF6D4C41),
+          icon: Icons.swap_horiz_rounded,
+        );
       default:
         return const _NatureTheme(
           start: Color(0xFF0D1B4B),
@@ -514,12 +526,40 @@ class _DetailInfoCard extends StatelessWidget {
           const SizedBox(height: 14),
           _infoRow('Level', 'Level ${account.level}'),
           if (account.parentName != null)
-            _infoRow('Parent', account.parentName!),
+            _infoRow(
+              'Parent',
+              account.parentAccountCode != null
+                  ? '${account.parentAccountCode} — ${account.parentName!}'
+                  : account.parentName!,
+            ),
           _infoRow('Nature', account.nature.capitalize!),
           _infoRow('Type', account.isGlobal ? 'System' : 'Custom'),
+          if (account.normalBalance != null)
+            _infoRow('Normal Balance', account.normalBalance!.capitalize!),
+          if (account.statementType != null)
+            _infoRow('Statement', _statementLabel(account.statementType!)),
+          if (account.isContra)
+            _infoRow('Contra Account', 'Yes'),
+          if (account.relatedAccountId != null)
+            _infoRow('Related Account ID', '#${account.relatedAccountId}'),
+          if (account.createdAt != null)
+            _infoRow('Created', DateFormat('MMM d, y').format(account.createdAt!)),
+          if (account.updatedAt != null)
+            _infoRow('Last Updated', DateFormat('MMM d, y').format(account.updatedAt!)),
         ],
       ),
     );
+  }
+
+  String _statementLabel(String value) {
+    switch (value) {
+      case 'balance_sheet':
+        return 'Balance Sheet';
+      case 'income_statement':
+        return 'Income Statement';
+      default:
+        return value.capitalize ?? value;
+    }
   }
 
   Widget _infoRow(String label, String value) {

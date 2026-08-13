@@ -1,206 +1,209 @@
+double _d(dynamic v) => (v as num?)?.toDouble() ?? 0.0;
+int? _i(dynamic v) => v == null ? null : ((v as num?)?.toInt() ?? int.tryParse(v.toString()));
+bool _b(dynamic v) {
+  if (v is bool) return v;
+  if (v is num) return v != 0;
+  if (v is String) return v.toLowerCase().trim() == 'true' || v.trim() == '1';
+  return false;
+}
+
+/// Lightweight reference to a parent account (id/code/name only).
+class BalanceSheetParentRef {
+  final int id;
+  final String accountCode;
+  final String accountName;
+
+  BalanceSheetParentRef({
+    required this.id,
+    required this.accountCode,
+    required this.accountName,
+  });
+
+  factory BalanceSheetParentRef.fromJson(Map<String, dynamic> j) {
+    return BalanceSheetParentRef(
+      id: _i(j['id']) ?? 0,
+      accountCode: j['account_code']?.toString() ?? '',
+      accountName: j['account_name']?.toString() ?? '',
+    );
+  }
+}
+
+/// One account line inside a section — carries the full breakdown the
+/// backend sends, including contra accounts netted against it (e.g.
+/// Accumulated Depreciation netted against Building).
+class BalanceSheetAccount {
+  final int id;
+  final String accountCode;
+  final String accountName;
+  final String nature;
+  final String? normalBalance;
+  final String? statementType;
+  final int? level;
+  final bool isContra;
+  final int? relatedAccountId;
+  final double signedBalance;
+  final double debit;
+  final double credit;
+  final String? balanceSide;
+  final BalanceSheetParentRef? parent;
+  final List<BalanceSheetAccount> contraAccounts;
+  final double grossBalance;
+  final double contraTotal;
+  final double netBalance;
+
+  BalanceSheetAccount({
+    required this.id,
+    required this.accountCode,
+    required this.accountName,
+    required this.nature,
+    this.normalBalance,
+    this.statementType,
+    this.level,
+    required this.isContra,
+    this.relatedAccountId,
+    required this.signedBalance,
+    required this.debit,
+    required this.credit,
+    this.balanceSide,
+    this.parent,
+    required this.contraAccounts,
+    required this.grossBalance,
+    required this.contraTotal,
+    required this.netBalance,
+  });
+
+  factory BalanceSheetAccount.fromJson(Map<String, dynamic> j) {
+    final List<dynamic> rawContra =
+        j['contra_accounts'] is List ? j['contra_accounts'] as List : [];
+
+    return BalanceSheetAccount(
+      id: _i(j['id']) ?? 0,
+      accountCode: j['account_code']?.toString() ?? '',
+      accountName: j['account_name']?.toString() ?? '',
+      nature: j['nature']?.toString() ?? '',
+      normalBalance: j['normal_balance']?.toString(),
+      statementType: j['statement_type']?.toString(),
+      level: _i(j['level']),
+      isContra: j['is_contra'] == true,
+      relatedAccountId: _i(j['related_account_id']),
+      signedBalance: _d(j['signed_balance']),
+      debit: _d(j['debit']),
+      credit: _d(j['credit']),
+      balanceSide: j['balance_side']?.toString(),
+      parent: j['parent'] is Map
+          ? BalanceSheetParentRef.fromJson(Map<String, dynamic>.from(j['parent'] as Map))
+          : null,
+      contraAccounts: rawContra
+          .whereType<Map>()
+          .map((e) => BalanceSheetAccount.fromJson(Map<String, dynamic>.from(e)))
+          .toList(),
+      grossBalance: _d(j['gross_balance']),
+      contraTotal: _d(j['contra_total']),
+      netBalance: _d(j['net_balance'] ?? j['signed_balance']),
+    );
+  }
+}
+
+/// A section of the report (e.g. "Current Assets"), with its own
+/// subtotal — sections can be empty (accounts: []).
+class BalanceSheetSection {
+  final String sectionCode;
+  final String sectionName;
+  final List<BalanceSheetAccount> accounts;
+  final double grossTotal;
+  final double netTotal;
+
+  BalanceSheetSection({
+    required this.sectionCode,
+    required this.sectionName,
+    required this.accounts,
+    required this.grossTotal,
+    required this.netTotal,
+  });
+
+  factory BalanceSheetSection.fromJson(Map<String, dynamic> j) {
+    final List<dynamic> rawAccounts = j['accounts'] is List ? j['accounts'] as List : [];
+    return BalanceSheetSection(
+      sectionCode: j['section_code']?.toString() ?? '',
+      sectionName: j['section_name']?.toString() ?? '',
+      accounts: rawAccounts
+          .whereType<Map>()
+          .map((e) => BalanceSheetAccount.fromJson(Map<String, dynamic>.from(e)))
+          .toList(),
+      grossTotal: _d(j['gross_total']),
+      netTotal: _d(j['net_total'] ?? j['gross_total']),
+    );
+  }
+}
+
 class BalanceSheetModel {
+  final String asOfDate;
+  final List<BalanceSheetSection> assetSections;
+  final List<BalanceSheetSection> liabilitySections;
+  final List<BalanceSheetSection> capitalSections;
+  final double totalAssets;
+  final double totalLiabilities;
+  final double totalCapital;
+  final double totalLiabilitiesAndEquity;
+  final bool isBalanced;
+  final String? currentYearEarningsLabel;
+  final double currentYearEarningsAmount;
+
   BalanceSheetModel({
     required this.asOfDate,
-    required this.currentAssets,
-    required this.fixedAssets,
-    required this.currentLiabilities,
-    required this.retainedEarnings,
-    required this.details,
+    required this.assetSections,
+    required this.liabilitySections,
+    required this.capitalSections,
     required this.totalAssets,
     required this.totalLiabilities,
-    required this.totalEquity,
+    required this.totalCapital,
     required this.totalLiabilitiesAndEquity,
     required this.isBalanced,
+    this.currentYearEarningsLabel,
+    required this.currentYearEarningsAmount,
   });
 
-  final String asOfDate;
-  final BalanceSheetValueGroup currentAssets;
-  final BalanceSheetValueGroup fixedAssets;
-  final BalanceSheetValueGroup currentLiabilities;
-  final num retainedEarnings;
-  final BalanceSheetDetails details;
-  final num totalAssets;
-  final num totalLiabilities;
-  final num totalEquity;
-  final num totalLiabilitiesAndEquity;
-  final bool isBalanced;
+  /// Back-compat aliases for older call-sites.
+  double get totalEquity => totalCapital;
 
-  factory BalanceSheetModel.fromJson(Map<String, dynamic> json) {
-    final Map<String, dynamic> payload = json['data'] is Map<String, dynamic>
-        ? Map<String, dynamic>.from(json['data'] as Map<String, dynamic>)
-        : json;
-    final Map<String, dynamic> assets =
-        _toMap(payload['assets']);
-    final Map<String, dynamic> liabilities =
-        _toMap(payload['liabilities']);
-    final Map<String, dynamic> equity =
-        _toMap(payload['equity']);
-    final Map<String, dynamic> totals =
-        _toMap(payload['totals']);
-
-    return BalanceSheetModel(
-      asOfDate: payload['as_of_date']?.toString() ?? '',
-      currentAssets: BalanceSheetValueGroup.fromJson(
-        _toMap(assets['current_assets']),
-      ),
-      fixedAssets: BalanceSheetValueGroup.fromJson(
-        _toMap(assets['fixed_assets']),
-      ),
-      currentLiabilities: BalanceSheetValueGroup.fromJson(
-        _toMap(liabilities['current_liabilities']),
-      ),
-      retainedEarnings: _toNum(equity['retained_earnings']) ?? 0,
-      details: BalanceSheetDetails.fromJson(_toMap(payload['details'])),
-      totalAssets: _toNum(totals['total_assets']) ?? 0,
-      totalLiabilities: _toNum(totals['total_liabilities']) ?? 0,
-      totalEquity: _toNum(totals['total_equity']) ?? 0,
-      totalLiabilitiesAndEquity:
-          _toNum(totals['total_liabilities_and_equity']) ?? 0,
-      isBalanced: _toBool(totals['is_balanced']),
-    );
-  }
-
-  static Map<String, dynamic> _toMap(dynamic value) {
-    if (value is Map<String, dynamic>) return value;
-    if (value is Map) return Map<String, dynamic>.from(value);
-    return <String, dynamic>{};
-  }
-
-  static num? _toNum(dynamic value) {
-    if (value is num) return value;
-    if (value is String) return num.tryParse(value);
-    return null;
-  }
-
-  static bool _toBool(dynamic value) {
-    if (value is bool) return value;
-    if (value is num) return value != 0;
-    if (value is String) {
-      final String normalized = value.toLowerCase().trim();
-      return normalized == 'true' || normalized == '1';
-    }
-    return false;
-  }
-}
-
-class BalanceSheetValueGroup {
-  BalanceSheetValueGroup({
-    required this.values,
-    required this.total,
-  });
-
-  final Map<String, num> values;
-  final num total;
-
-  factory BalanceSheetValueGroup.fromJson(Map<String, dynamic> json) {
-    final Map<String, num> parsed = <String, num>{};
-    num total = 0;
-
-    json.forEach((key, value) {
-      final num? number = BalanceSheetModel._toNum(value);
-      if (number == null) return;
-      if (key == 'total') {
-        total = number;
-        return;
-      }
-      parsed[key] = number;
-    });
-
-    return BalanceSheetValueGroup(
-      values: parsed,
-      total: total,
-    );
-  }
-}
-
-class BalanceSheetDetails {
-  BalanceSheetDetails({
-    required this.cashTransactions,
-    required this.receivablesTransactions,
-    required this.incomeTransactions,
-    required this.expenseTransactions,
-    required this.assetTransactions,
-  });
-
-  final List<BalanceSheetTransaction> cashTransactions;
-  final List<BalanceSheetTransaction> receivablesTransactions;
-  final List<BalanceSheetTransaction> incomeTransactions;
-  final List<BalanceSheetTransaction> expenseTransactions;
-  final List<BalanceSheetTransaction> assetTransactions;
-
-  factory BalanceSheetDetails.fromJson(Map<String, dynamic> json) {
-    return BalanceSheetDetails(
-      cashTransactions: _parseTransactions(json['cash_transactions']),
-      receivablesTransactions:
-          _parseTransactions(json['receivables_transactions']),
-      incomeTransactions: _parseTransactions(json['income_transactions']),
-      expenseTransactions: _parseTransactions(json['expense_transactions']),
-      assetTransactions: _parseTransactions(json['asset_transactions']),
-    );
-  }
-
-  static List<BalanceSheetTransaction> _parseTransactions(dynamic value) {
-    if (value is! List) return <BalanceSheetTransaction>[];
-    return value
+  static List<BalanceSheetSection> _parseSections(dynamic block) {
+    if (block is! Map) return [];
+    final List<dynamic> raw = block['sections'] is List ? block['sections'] as List : [];
+    return raw
         .whereType<Map>()
-        .map((e) => BalanceSheetTransaction.fromJson(
-              Map<String, dynamic>.from(e),
-            ))
+        .map((e) => BalanceSheetSection.fromJson(Map<String, dynamic>.from(e)))
         .toList();
   }
-}
 
-class BalanceSheetTransaction {
-  BalanceSheetTransaction({
-    required this.type,
-    required this.id,
-    required this.date,
-    required this.description,
-    this.referenceNumber,
-    this.invoiceNumber,
-    this.accountName,
-    this.category,
-    this.amount,
-    this.value,
-    this.totalAmount,
-    this.paidAmount,
-    this.remainingAmount,
-    this.status,
-  });
+  factory BalanceSheetModel.fromJson(Map<String, dynamic> json) {
+    final Map<String, dynamic> data =
+        json['data'] is Map ? Map<String, dynamic>.from(json['data'] as Map) : json;
 
-  final String type;
-  final int? id;
-  final String date;
-  final String description;
-  final String? referenceNumber;
-  final String? invoiceNumber;
-  final String? accountName;
-  final String? category;
-  final num? amount;
-  final num? value;
-  final num? totalAmount;
-  final num? paidAmount;
-  final num? remainingAmount;
-  final String? status;
+    final Map<String, dynamic> assets =
+        data['assets'] is Map ? Map<String, dynamic>.from(data['assets'] as Map) : {};
+    final Map<String, dynamic> liabilities =
+        data['liabilities'] is Map ? Map<String, dynamic>.from(data['liabilities'] as Map) : {};
+    final Map<String, dynamic> capital =
+        data['capital'] is Map ? Map<String, dynamic>.from(data['capital'] as Map) : {};
+    final Map<String, dynamic> totals =
+        data['totals'] is Map ? Map<String, dynamic>.from(data['totals'] as Map) : {};
 
-  factory BalanceSheetTransaction.fromJson(Map<String, dynamic> json) {
-    return BalanceSheetTransaction(
-      type: json['type']?.toString() ?? '',
-      id: json['id'] is int
-          ? json['id'] as int
-          : int.tryParse(json['id']?.toString() ?? ''),
-      date: json['date']?.toString() ?? '',
-      description: json['description']?.toString() ?? '',
-      referenceNumber: json['reference_number']?.toString(),
-      invoiceNumber: json['invoice_number']?.toString(),
-      accountName: json['account_name']?.toString(),
-      category: json['category']?.toString(),
-      amount: BalanceSheetModel._toNum(json['amount']),
-      value: BalanceSheetModel._toNum(json['value']),
-      totalAmount: BalanceSheetModel._toNum(json['total_amount']),
-      paidAmount: BalanceSheetModel._toNum(json['paid_amount']),
-      remainingAmount: BalanceSheetModel._toNum(json['remaining_amount']),
-      status: json['status']?.toString(),
+    final Map<String, dynamic> currentYearEarnings = capital['current_year_earnings'] is Map
+        ? Map<String, dynamic>.from(capital['current_year_earnings'] as Map)
+        : {};
+
+    return BalanceSheetModel(
+      asOfDate: data['as_of_date']?.toString() ?? '',
+      assetSections: _parseSections(assets),
+      liabilitySections: _parseSections(liabilities),
+      capitalSections: _parseSections(capital),
+      totalAssets: _d(totals['total_assets'] ?? assets['total']),
+      totalLiabilities: _d(totals['total_liabilities'] ?? liabilities['total']),
+      totalCapital: _d(totals['total_capital'] ?? capital['total']),
+      totalLiabilitiesAndEquity: _d(totals['total_liabilities_and_equity']),
+      isBalanced: _b(totals['is_balanced']),
+      currentYearEarningsLabel: currentYearEarnings['label']?.toString(),
+      currentYearEarningsAmount: _d(currentYearEarnings['amount']),
     );
   }
 }

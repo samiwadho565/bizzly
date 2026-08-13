@@ -712,6 +712,7 @@ class _FilterSheetState extends State<_FilterSheet> {
   late String _status;
   late DateTime? _from;
   late DateTime? _to;
+  late CrmDropdownItem? _business;
 
   static const List<_StatusItem> _statuses = [
     _StatusItem(key: 'all',       label: 'All',       icon: Icons.grid_view_rounded,        color: Color(0xFF5C6BC0), gradientEnd: Color(0xFF3949AB)),
@@ -727,6 +728,8 @@ class _FilterSheetState extends State<_FilterSheet> {
     _status = widget.controller.filterStatus.value;
     _from = widget.controller.fromDate.value;
     _to = widget.controller.toDate.value;
+    _business = widget.controller.filterBusiness.value;
+    widget.controller.fetchFilterBusinesses();
   }
 
   Future<void> _pickDate({required bool isFrom}) async {
@@ -756,8 +759,12 @@ class _FilterSheetState extends State<_FilterSheet> {
   }
 
   void _apply() {
-    widget.controller.filterStatus.value = _status;
-    widget.controller.applyDateRange(_from, _to);
+    widget.controller.applyFilters(
+      status: _status,
+      business: _business,
+      from: _from,
+      to: _to,
+    );
     Navigator.pop(context);
   }
 
@@ -766,6 +773,7 @@ class _FilterSheetState extends State<_FilterSheet> {
       _status = 'all';
       _from = null;
       _to = null;
+      _business = null;
     });
     widget.controller.clearServerFilters();
     Navigator.pop(context);
@@ -775,7 +783,7 @@ class _FilterSheetState extends State<_FilterSheet> {
   Widget build(BuildContext context) {
     final String fmt = 'MMM d, yyyy';
     final bool hasFilters = widget.controller.hasActiveServerFilters ||
-        _status != 'all' || _from != null || _to != null;
+        _status != 'all' || _from != null || _to != null || _business != null;
 
     return Container(
       decoration: const BoxDecoration(
@@ -978,6 +986,78 @@ class _FilterSheetState extends State<_FilterSheet> {
           ),
           const SizedBox(height: 22),
 
+          // ── Business section label ─────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Container(
+                  width: 3,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF0D47A1), Color(0xFF1565C0)],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Business',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1A1A2E),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // ── Business chips ─────────────────────────────────
+          Obx(() {
+            final List<CrmDropdownItem> options = widget.controller.filterBusinessList;
+            if (widget.controller.isLoadingFilterBusinesses.value) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryDense),
+                ),
+              );
+            }
+            if (options.isEmpty) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text('No businesses found', style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+              );
+            }
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _BusinessChip(
+                    label: 'All',
+                    selected: _business == null,
+                    onTap: () => setState(() => _business = null),
+                  ),
+                  ...options.map((b) => _BusinessChip(
+                        label: b.name,
+                        selected: _business?.id == b.id,
+                        onTap: () => setState(() => _business = b),
+                      )),
+                ],
+              ),
+            );
+          }),
+          const SizedBox(height: 22),
+
           // ── Date Range section label ───────────────────────
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -1099,6 +1179,44 @@ class _StatusItem {
     required this.color,
     required this.gradientEnd,
   });
+}
+
+class _BusinessChip extends StatelessWidget {
+  const _BusinessChip({required this.label, required this.selected, required this.onTap});
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        decoration: BoxDecoration(
+          gradient: selected
+              ? const LinearGradient(
+                  colors: [Color(0xFF0D47A1), Color(0xFF1565C0)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          color: selected ? null : AppColors.primaryDense.withOpacity(0.07),
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: selected ? Colors.white : AppColors.primaryDense,
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _DateTile extends StatelessWidget {

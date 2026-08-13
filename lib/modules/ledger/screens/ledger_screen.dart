@@ -45,25 +45,53 @@ class LedgerScreen extends GetView<LedgerController> {
             child: GestureDetector(
               onTap: () => _openAccountPicker(context),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                  gradient: LinearGradient(
+                    colors: [AppColors.primary.withOpacity(0.08), AppColors.primary.withOpacity(0.03)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.primary.withOpacity(0.16)),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.account_balance_wallet_outlined,
-                        size: 18, color: AppColors.primary),
-                    const SizedBox(width: 10),
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFF0D1B4B), Color(0xFF1565C0)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.account_balance_wallet_rounded,
+                          size: 16, color: Colors.white),
+                    ),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'View ledger for an account…',
-                        style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary.withOpacity(0.85),
+                        ),
                       ),
                     ),
-                    Icon(Icons.chevron_right_rounded,
-                        size: 18, color: Colors.grey.shade400),
+                    Container(
+                      width: 26,
+                      height: 26,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.10),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.chevron_right_rounded,
+                          size: 16, color: AppColors.primary),
+                    ),
                   ],
                 ),
               ),
@@ -133,46 +161,148 @@ class LedgerScreen extends GetView<LedgerController> {
   }
 }
 
+// ── Nature → color mapping (matches Chart of Accounts styling) ─────
+class _NatureStyle {
+  static const Map<String, List<Color>> _gradients = {
+    'asset': [Color(0xFF1976D2), Color(0xFF0D47A1)],
+    'liability': [Color(0xFFE53935), Color(0xFFB71C1C)],
+    'equity': [Color(0xFF8E24AA), Color(0xFF4A148C)],
+    'capital': [Color(0xFF8E24AA), Color(0xFF4A148C)],
+    'income': [Color(0xFF43A047), Color(0xFF1B5E20)],
+    'revenue': [Color(0xFF43A047), Color(0xFF1B5E20)],
+    'expense': [Color(0xFFF57C00), Color(0xFFE65100)],
+    'contra': [Color(0xFF6D4C41), Color(0xFF3E2723)],
+  };
+
+  static List<Color> forNature(String nature) =>
+      _gradients[nature.toLowerCase()] ?? const [Color(0xFF5C6BC0), Color(0xFF3949AB)];
+}
+
 // ── Account Picker Sheet (Chart of Accounts dropdown) ──────────────
-class _AccountPickerSheet extends GetView<LedgerController> {
+class _AccountPickerSheet extends StatefulWidget {
   const _AccountPickerSheet({required this.onSelect});
   final ValueChanged<CoaDropdownItem> onSelect;
 
   @override
+  State<_AccountPickerSheet> createState() => _AccountPickerSheetState();
+}
+
+class _AccountPickerSheetState extends State<_AccountPickerSheet> {
+  final LedgerController controller = Get.find<LedgerController>();
+  final TextEditingController _searchCtrl = TextEditingController();
+  final RxString _query = ''.obs;
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  List<CoaDropdownItem> _filtered() {
+    final String q = _query.value.toLowerCase().trim();
+    if (q.isEmpty) return controller.coaDropdown;
+    return controller.coaDropdown.where((item) {
+      final String label = item.label.isNotEmpty
+          ? item.label
+          : '${item.accountCode} ${item.accountName}';
+      return label.toLowerCase().contains(q) ||
+          item.accountCode.toLowerCase().contains(q) ||
+          item.accountName.toLowerCase().contains(q);
+    }).toList();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
-      initialChildSize: 0.75,
+      initialChildSize: 0.8,
       minChildSize: 0.4,
-      maxChildSize: 0.92,
+      maxChildSize: 0.94,
       expand: false,
       builder: (context, scrollController) {
         return Container(
           decoration: const BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: Column(
             children: [
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               Container(
-                width: 40,
+                width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(20),
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(16, 14, 16, 6),
+              const SizedBox(height: 16),
+
+              // ── Header ─────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
                   children: [
-                    Text(
-                      'Select Account',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFF0D1B4B), Color(0xFF1565C0)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.account_balance_wallet_rounded,
+                          color: Colors.white, size: 18),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Select Account',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E)),
+                          ),
+                          Text(
+                            'Choose an account to view its ledger',
+                            style: TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
+              const SizedBox(height: 16),
+
+              // ── Search field ─────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: TextField(
+                    controller: _searchCtrl,
+                    onChanged: (v) => _query.value = v,
+                    style: const TextStyle(fontSize: 13),
+                    decoration: InputDecoration(
+                      hintText: 'Search by name or code…',
+                      hintStyle: TextStyle(fontSize: 13, color: Colors.grey.shade400),
+                      prefixIcon: Icon(Icons.search_rounded, size: 20, color: Colors.grey.shade400),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
               Expanded(
                 child: Obx(() {
                   if (controller.isLoadingCoa.value && controller.coaDropdown.isEmpty) {
@@ -180,32 +310,116 @@ class _AccountPickerSheet extends GetView<LedgerController> {
                       child: CircularProgressIndicator(color: AppColors.primary),
                     );
                   }
-                  if (controller.coaDropdown.isEmpty) {
+                  final List<CoaDropdownItem> list = _filtered();
+                  if (list.isEmpty) {
                     return Center(
-                      child: Text('No accounts found',
-                          style: TextStyle(color: Colors.grey.shade500)),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.search_off_rounded, size: 40, color: Colors.grey.shade300),
+                          const SizedBox(height: 10),
+                          Text('No accounts found',
+                              style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+                        ],
+                      ),
                     );
                   }
                   return ListView.separated(
                     controller: scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    itemCount: controller.coaDropdown.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                    itemCount: list.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
                     itemBuilder: (_, i) {
-                      final CoaDropdownItem item = controller.coaDropdown[i];
-                      return ListTile(
-                        dense: true,
-                        title: Text(
-                          item.label.isNotEmpty
-                              ? item.label
-                              : '${item.accountCode}  ${item.accountName}',
-                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      final CoaDropdownItem item = list[i];
+                      final List<Color> grad = _NatureStyle.forNature(item.nature);
+                      final String initials = item.accountCode.isNotEmpty
+                          ? item.accountCode.substring(0, item.accountCode.length >= 2 ? 2 : 1)
+                          : (item.accountName.isNotEmpty ? item.accountName[0] : '?');
+                      return Material(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(14),
+                          onTap: () => widget.onSelect(item),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: AppColors.background,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: Colors.grey.shade100),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 38,
+                                  height: 38,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: grad,
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      initials.toUpperCase(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item.accountName.isNotEmpty
+                                            ? item.accountName
+                                            : item.label,
+                                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF1A1A2E)),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            item.accountCode,
+                                            style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                                          ),
+                                          if (item.nature.isNotEmpty) ...[
+                                            const SizedBox(width: 6),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                              decoration: BoxDecoration(
+                                                color: grad.first.withOpacity(0.10),
+                                                borderRadius: BorderRadius.circular(5),
+                                              ),
+                                              child: Text(
+                                                item.nature,
+                                                style: TextStyle(
+                                                  fontSize: 9,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: grad.first,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Icon(Icons.chevron_right_rounded, size: 18, color: Colors.grey.shade400),
+                              ],
+                            ),
+                          ),
                         ),
-                        subtitle: Text(
-                          item.nature.isNotEmpty ? item.nature : item.accountCode,
-                          style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
-                        ),
-                        onTap: () => onSelect(item),
                       );
                     },
                   );
@@ -320,6 +534,26 @@ class _LedgerEntryCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (entry.voucherStatus != null &&
+                    entry.voucherStatus!.isNotEmpty) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      entry.voucherStatus!.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.grey.shade700,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
                 Text(
                   _formattedDate,
                   style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
@@ -463,6 +697,20 @@ class _LedgerEntryCard extends StatelessWidget {
                     ),
                   ],
                 ),
+                if (entry.postedAt != null && entry.postedAt!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.check_circle_outline_rounded,
+                          size: 12, color: Colors.grey.shade400),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Posted ${entry.postedAt!.split('T').first}',
+                        style: TextStyle(fontSize: 10, color: Colors.grey.shade400),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),

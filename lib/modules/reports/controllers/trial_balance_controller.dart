@@ -3,18 +3,23 @@ import 'package:get/get.dart';
 import 'package:bizly/app/constants/app_urls.dart';
 import 'package:bizly/models/api_response.dart';
 import 'package:bizly/modules/reports/models/trial_balance_model.dart';
+import 'package:bizly/modules/vouchers/controllers/voucher_controller.dart' show CrmDropdownItem;
 import 'package:bizly/services/api_service.dart';
 
 class TrialBalanceController extends GetxController {
   final Rxn<TrialBalanceModel> report = Rxn<TrialBalanceModel>();
   final RxBool isLoading = false.obs;
   final RxString error = ''.obs;
-  final RxBool showAllTransactions = false.obs;
 
   // ── Date Filter ───────────────────────────────────────────────
   final RxString selectedPreset = 'this_year'.obs;
   late Rx<DateTime> fromDate;
   late Rx<DateTime> toDate;
+
+  // ── Business Filter (confirmed working via ?business_id=) ──────
+  final Rxn<CrmDropdownItem> filterBusiness = Rxn<CrmDropdownItem>();
+  final RxList<CrmDropdownItem> filterBusinessList = <CrmDropdownItem>[].obs;
+  final RxBool isLoadingFilterBusinesses = false.obs;
 
   @override
   void onInit() {
@@ -22,6 +27,35 @@ class TrialBalanceController extends GetxController {
     final DateTime now = DateTime.now();
     fromDate = DateTime(now.year, 1, 1).obs;
     toDate = now.obs;
+    fetchReport();
+  }
+
+  Future<void> fetchFilterBusinesses() async {
+    if (isLoadingFilterBusinesses.value || filterBusinessList.isNotEmpty) return;
+    isLoadingFilterBusinesses.value = true;
+
+    final ApiResponse res = await ApiService().get(AppUrls.getAllBusinesses, isAuth: true);
+
+    if (res.success) {
+      final List<dynamic> raw = res.data is List
+          ? res.data as List
+          : (res.data is Map && res.data['data'] is List ? res.data['data'] as List : []);
+      filterBusinessList.assignAll(
+        raw.whereType<Map>().map((e) {
+          final Map<String, dynamic> m = Map<String, dynamic>.from(e);
+          return CrmDropdownItem(
+            id: m['id'] is int ? m['id'] : int.tryParse(m['id'].toString()) ?? 0,
+            name: m['business_name']?.toString() ?? '',
+          );
+        }).toList(),
+      );
+    }
+
+    isLoadingFilterBusinesses.value = false;
+  }
+
+  void applyBusiness(CrmDropdownItem? business) {
+    filterBusiness.value = business;
     fetchReport();
   }
 
@@ -64,10 +98,16 @@ class TrialBalanceController extends GetxController {
     if (isLoading.value) return;
     isLoading.value = true;
     error.value = '';
-    showAllTransactions.value = false;
+
+    final StringBuffer query = StringBuffer(
+      '${AppUrls.trialBalance}?from_date=${_fmt(fromDate.value)}&to_date=${_fmt(toDate.value)}',
+    );
+    if (filterBusiness.value != null) {
+      query.write('&business_id=${filterBusiness.value!.id}');
+    }
 
     final ApiResponse response = await ApiService().get(
-      '${AppUrls.trialBalance}?from_date=${_fmt(fromDate.value)}&to_date=${_fmt(toDate.value)}',
+      query.toString(),
       isAuth: true,
     );
 
@@ -81,10 +121,6 @@ class TrialBalanceController extends GetxController {
     }
 
     isLoading.value = false;
-  }
-
-  void toggleTransactionsVisibility() {
-    showAllTransactions.value = !showAllTransactions.value;
   }
 
   String _fmt(DateTime d) =>

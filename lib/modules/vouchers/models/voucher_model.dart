@@ -16,13 +16,23 @@ class VoucherBusiness {
   final int id;
   final String businessName;
   final String currency;
+  final String? businessEmail;
+  final String? phoneNumber;
 
-  VoucherBusiness({required this.id, required this.businessName, required this.currency});
+  VoucherBusiness({
+    required this.id,
+    required this.businessName,
+    required this.currency,
+    this.businessEmail,
+    this.phoneNumber,
+  });
 
   factory VoucherBusiness.fromJson(Map<String, dynamic> j) => VoucherBusiness(
         id: j['id'] is int ? j['id'] : int.tryParse(j['id'].toString()) ?? 0,
         businessName: j['business_name']?.toString() ?? '',
         currency: j['currency']?.toString() ?? 'PKR',
+        businessEmail: j['business_email']?.toString(),
+        phoneNumber: j['phone_number']?.toString(),
       );
 }
 
@@ -30,13 +40,23 @@ class VoucherCustomer {
   final int id;
   final String customerName;
   final String? companyName;
+  final String? email;
+  final String? phoneNumber;
 
-  VoucherCustomer({required this.id, required this.customerName, this.companyName});
+  VoucherCustomer({
+    required this.id,
+    required this.customerName,
+    this.companyName,
+    this.email,
+    this.phoneNumber,
+  });
 
   factory VoucherCustomer.fromJson(Map<String, dynamic> j) => VoucherCustomer(
         id: j['id'] is int ? j['id'] : int.tryParse(j['id'].toString()) ?? 0,
         customerName: j['customer_name']?.toString() ?? '',
         companyName: j['company_name']?.toString(),
+        email: j['email']?.toString(),
+        phoneNumber: j['phone_number']?.toString(),
       );
 }
 
@@ -44,13 +64,94 @@ class VoucherVendor {
   final int id;
   final String vendorName;
   final String? companyName;
+  final String? email;
+  final String? phoneNumber;
 
-  VoucherVendor({required this.id, required this.vendorName, this.companyName});
+  VoucherVendor({
+    required this.id,
+    required this.vendorName,
+    this.companyName,
+    this.email,
+    this.phoneNumber,
+  });
 
   factory VoucherVendor.fromJson(Map<String, dynamic> j) => VoucherVendor(
         id: j['id'] is int ? j['id'] : int.tryParse(j['id'].toString()) ?? 0,
         vendorName: j['vendor_name']?.toString() ?? '',
         companyName: j['company_name']?.toString(),
+        email: j['email']?.toString(),
+        phoneNumber: j['phone_number']?.toString(),
+      );
+}
+
+class VoucherAccountingPeriod {
+  final int id;
+  final String name;
+  final DateTime? startDate;
+  final DateTime? endDate;
+  final String status;
+
+  VoucherAccountingPeriod({
+    required this.id,
+    required this.name,
+    this.startDate,
+    this.endDate,
+    required this.status,
+  });
+
+  factory VoucherAccountingPeriod.fromJson(Map<String, dynamic> j) => VoucherAccountingPeriod(
+        id: j['id'] is int ? j['id'] : int.tryParse(j['id'].toString()) ?? 0,
+        name: j['name']?.toString() ?? '',
+        startDate: DateTime.tryParse(j['start_date']?.toString() ?? ''),
+        endDate: DateTime.tryParse(j['end_date']?.toString() ?? ''),
+        status: j['status']?.toString() ?? '',
+      );
+}
+
+class VoucherApprovalLog {
+  final int id;
+  final String action; // submitted | approved | posted | rejected
+  final String? comments;
+  final VoucherUser? user;
+  final DateTime? createdAt;
+
+  VoucherApprovalLog({
+    required this.id,
+    required this.action,
+    this.comments,
+    this.user,
+    this.createdAt,
+  });
+
+  factory VoucherApprovalLog.fromJson(Map<String, dynamic> j) => VoucherApprovalLog(
+        id: j['id'] is int ? j['id'] : int.tryParse(j['id'].toString()) ?? 0,
+        action: j['action']?.toString() ?? '',
+        comments: j['comments']?.toString(),
+        user: j['user'] is Map
+            ? VoucherUser.fromJson(Map<String, dynamic>.from(j['user'] as Map))
+            : null,
+        createdAt: DateTime.tryParse(j['created_at']?.toString() ?? ''),
+      );
+}
+
+class VoucherLedgerEntry {
+  final int id;
+  final String entryNumber;
+  final DateTime? entryDate;
+  final DateTime? postedAt;
+
+  VoucherLedgerEntry({
+    required this.id,
+    required this.entryNumber,
+    this.entryDate,
+    this.postedAt,
+  });
+
+  factory VoucherLedgerEntry.fromJson(Map<String, dynamic> j) => VoucherLedgerEntry(
+        id: j['id'] is int ? j['id'] : int.tryParse(j['id'].toString()) ?? 0,
+        entryNumber: j['entry_number']?.toString() ?? '',
+        entryDate: DateTime.tryParse(j['entry_date']?.toString() ?? ''),
+        postedAt: DateTime.tryParse(j['posted_at']?.toString() ?? ''),
       );
 }
 
@@ -128,11 +229,15 @@ class VoucherModel {
   final int? vendorId;
   final int? accountingPeriodId;
   final String? rejectionReason;
+  final int? createdBy;
+  final int? approvedBy;
+  final int? rejectedBy;
   final DateTime? submittedAt;
   final DateTime? approvedAt;
   final DateTime? rejectedAt;
   final DateTime? postedAt;
   final DateTime createdAt;
+  final DateTime? updatedAt;
 
   final VoucherUser? owner;
   final VoucherUser? creator;
@@ -141,6 +246,9 @@ class VoucherModel {
   final VoucherBusiness? business;
   final VoucherCustomer? customer;
   final VoucherVendor? vendor;
+  final VoucherAccountingPeriod? accountingPeriod;
+  final VoucherLedgerEntry? ledgerEntry;
+  final List<VoucherApprovalLog> approvalLogs;
   final List<VoucherLine> lines;
 
   VoucherModel({
@@ -160,11 +268,15 @@ class VoucherModel {
     this.vendorId,
     this.accountingPeriodId,
     this.rejectionReason,
+    this.createdBy,
+    this.approvedBy,
+    this.rejectedBy,
     this.submittedAt,
     this.approvedAt,
     this.rejectedAt,
     this.postedAt,
     required this.createdAt,
+    this.updatedAt,
     this.owner,
     this.creator,
     this.approver,
@@ -172,6 +284,9 @@ class VoucherModel {
     this.business,
     this.customer,
     this.vendor,
+    this.accountingPeriod,
+    this.ledgerEntry,
+    this.approvalLogs = const [],
     this.lines = const [],
   });
 
@@ -202,11 +317,15 @@ class VoucherModel {
       vendorId: _toInt(j['vendor_id']),
       accountingPeriodId: _toInt(j['accounting_period_id']),
       rejectionReason: j['rejection_reason']?.toString(),
+      createdBy: _toInt(j['created_by']),
+      approvedBy: _toInt(j['approved_by']),
+      rejectedBy: _toInt(j['rejected_by']),
       submittedAt: _toDate(j['submitted_at']),
       approvedAt: _toDate(j['approved_at']),
       rejectedAt: _toDate(j['rejected_at']),
       postedAt: _toDate(j['posted_at']),
       createdAt: _toDate(j['created_at']) ?? DateTime.now(),
+      updatedAt: _toDate(j['updated_at']),
       owner: j['owner'] is Map
           ? VoucherUser.fromJson(Map<String, dynamic>.from(j['owner'] as Map))
           : null,
@@ -228,6 +347,18 @@ class VoucherModel {
       vendor: j['vendor'] is Map
           ? VoucherVendor.fromJson(Map<String, dynamic>.from(j['vendor'] as Map))
           : null,
+      accountingPeriod: j['accounting_period'] is Map
+          ? VoucherAccountingPeriod.fromJson(Map<String, dynamic>.from(j['accounting_period'] as Map))
+          : null,
+      ledgerEntry: j['ledger_entry'] is Map
+          ? VoucherLedgerEntry.fromJson(Map<String, dynamic>.from(j['ledger_entry'] as Map))
+          : null,
+      approvalLogs: j['approval_logs'] is List
+          ? (j['approval_logs'] as List)
+              .whereType<Map>()
+              .map((e) => VoucherApprovalLog.fromJson(Map<String, dynamic>.from(e)))
+              .toList()
+          : [],
       lines: j['lines'] is List
           ? (j['lines'] as List)
               .whereType<Map>()

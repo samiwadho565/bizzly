@@ -22,10 +22,34 @@ class VoucherController extends GetxController {
   final RxString filterStatus = 'all'.obs;
   final Rxn<DateTime> fromDate = Rxn<DateTime>();
   final Rxn<DateTime> toDate = Rxn<DateTime>();
+  final Rxn<CrmDropdownItem> filterBusiness = Rxn<CrmDropdownItem>();
+
+  // Businesses available for the filter sheet (owner may have several)
+  final RxList<CrmDropdownItem> filterBusinessList = <CrmDropdownItem>[].obs;
+  final RxBool isLoadingFilterBusinesses = false.obs;
 
   // ─── Detail ───────────────────────────────────────────────────
   final Rxn<VoucherModel> currentVoucher = Rxn<VoucherModel>();
   final RxBool isActionLoading = false.obs;
+  final RxBool isLoadingDetail = false.obs;
+
+  /// GET /api/vouchers/{id} — refreshes the detail screen with live data
+  /// instead of relying only on the (possibly stale) object passed in
+  /// from the list.
+  Future<void> fetchVoucherDetail(int id) async {
+    isLoadingDetail.value = true;
+    final ApiResponse res = await ApiService().get(
+      '${AppUrls.vouchers}/$id',
+      isAuth: true,
+    );
+    isLoadingDetail.value = false;
+
+    if (res.success && res.data is Map) {
+      currentVoucher.value = VoucherModel.fromJson(
+        Map<String, dynamic>.from(res.data as Map),
+      );
+    }
+  }
 
   // ─── Pending Approvals ────────────────────────────────────────
   final RxList<VoucherModel> pendingApprovals = <VoucherModel>[].obs;
@@ -71,18 +95,18 @@ class VoucherController extends GetxController {
   ];
 
   // ─── Computed ─────────────────────────────────────────────────
-  // Type filter is client-side; status/date filters are server-side.
-  List<VoucherModel> get filteredVouchers {
-    if (filterType.value == 'all') return vouchers;
-    return vouchers.where((v) => v.voucherType == filterType.value).toList();
-  }
+  // voucher_type, status, dates and business_id are all sent to the
+  // server (GET /api/vouchers accepts all of them), so the list returned
+  // is already filtered — no extra client-side filtering needed here.
+  List<VoucherModel> get filteredVouchers => vouchers;
 
   bool get hasActiveTypeFilter => filterType.value != 'all';
 
   bool get hasActiveServerFilters =>
       filterStatus.value != 'all' ||
       fromDate.value != null ||
-      toDate.value != null;
+      toDate.value != null ||
+      filterBusiness.value != null;
 
   bool get hasActiveFilters => hasActiveTypeFilter || hasActiveServerFilters;
 
@@ -99,14 +123,16 @@ class VoucherController extends GetxController {
   }
 
   // ─── Filters ──────────────────────────────────────────────────
-  // Type chip — client-side only, no API call
+  // Type chip — now hits the API (GET /api/vouchers?voucher_type=...)
+  // instead of only filtering whatever page was already loaded.
   void applyType(String type) {
     filterType.value = type;
+    fetchVouchers();
   }
 
-  // Client-side only clear — no API call
   void clearTypeFilter() {
     filterType.value = 'all';
+    fetchVouchers();
   }
 
   // Bottom sheet filters — hit API
@@ -121,13 +147,62 @@ class VoucherController extends GetxController {
     fetchVouchers();
   }
 
-  // Clear server filters + reset type chip + API call
+  void applyBusiness(CrmDropdownItem? business) {
+    filterBusiness.value = business;
+    fetchVouchers();
+  }
+
+  /// Applies status/business/date filters together in one API call —
+  /// used by the filter bottom sheet's "Apply" button so we don't fire
+  /// three separate requests for one user action.
+  void applyFilters({
+    required String status,
+    CrmDropdownItem? business,
+    DateTime? from,
+    DateTime? to,
+  }) {
+    filterStatus.value = status;
+    filterBusiness.value = business;
+    fromDate.value = from;
+    toDate.value = to;
+    fetchVouchers();
+  }
+
+  // Clear all filters (type, status, business, dates) + API call
   void clearServerFilters() {
     filterType.value = 'all';
     filterStatus.value = 'all';
+    filterBusiness.value = null;
     fromDate.value = null;
     toDate.value = null;
     fetchVouchers();
+  }
+
+  /// Businesses for the filter sheet's business picker — separate from
+  /// [businessList] (which is used by the create-voucher form) so the
+  /// filter sheet doesn't have to wait for the CRM dropdowns to load.
+  Future<void> fetchFilterBusinesses() async {
+    if (isLoadingFilterBusinesses.value || filterBusinessList.isNotEmpty) return;
+    isLoadingFilterBusinesses.value = true;
+
+    final ApiResponse res = await ApiService().get(AppUrls.getAllBusinesses, isAuth: true);
+
+    if (res.success) {
+      final List<dynamic> raw = res.data is List
+          ? res.data as List
+          : (res.data is Map && res.data['data'] is List ? res.data['data'] as List : []);
+      filterBusinessList.assignAll(
+        raw.whereType<Map>().map((e) {
+          final Map<String, dynamic> m = Map<String, dynamic>.from(e);
+          return CrmDropdownItem(
+            id: m['id'] is int ? m['id'] : int.tryParse(m['id'].toString()) ?? 0,
+            name: m['business_name']?.toString() ?? '',
+          );
+        }).toList(),
+      );
+    }
+
+    isLoadingFilterBusinesses.value = false;
   }
 
   // ─── Fetch ────────────────────────────────────────────────────
@@ -136,12 +211,14 @@ class VoucherController extends GetxController {
     isLoading.value = true;
     error.value = '';
 
-    // Build query string
+    // Build query string — voucher_type, status, dates and business_id
+    // are all valid server-side filters on GET /api/vouchers.
     final StringBuffer query = StringBuffer('?');
     if (filterType.value != 'all') query.write('voucher_type=${filterType.value}&');
     if (filterStatus.value != 'all') query.write('status=${filterStatus.value}&');
     if (fromDate.value != null) query.write('from_date=${DateFormat('yyyy-MM-dd').format(fromDate.value!)}&');
     if (toDate.value != null) query.write('to_date=${DateFormat('yyyy-MM-dd').format(toDate.value!)}&');
+    if (filterBusiness.value != null) query.write('business_id=${filterBusiness.value!.id}&');
 
     final String url = '${AppUrls.vouchers}${query.toString() == '?' ? '' : query.toString()}';
 

@@ -67,50 +67,30 @@ class BalanceSheetScreen extends GetView<BalanceSheetController> {
                           rightLabel: 'L + E',
                           rightValue: report.totalLiabilitiesAndEquity,
                         ),
-                        const SizedBox(height: 16),
-                        _groupCard(
-                          title: 'Current Assets',
-                          group: report.currentAssets,
-                          accent: Colors.green,
-                        ),
-                        const SizedBox(height: 12),
-                        _groupCard(
-                          title: 'Fixed Assets',
-                          group: report.fixedAssets,
-                          accent: AppColors.primary,
-                        ),
-                        const SizedBox(height: 12),
-                        _groupCard(
-                          title: 'Current Liabilities',
-                          group: report.currentLiabilities,
-                          accent: Colors.orange,
-                        ),
-                        const SizedBox(height: 12),
-                        _equityCard(report),
                         const SizedBox(height: 18),
-                        _detailSection(
-                          title: 'Cash Transactions',
-                          items: report.details.cashTransactions,
+
+                        _statementGroup(
+                          title: 'Assets',
+                          total: report.totalAssets,
+                          sections: report.assetSections,
+                          accent: const Color(0xFF2E7D32),
                         ),
-                        const SizedBox(height: 12),
-                        _detailSection(
-                          title: 'Receivables',
-                          items: report.details.receivablesTransactions,
+                        const SizedBox(height: 16),
+                        _statementGroup(
+                          title: 'Liabilities',
+                          total: report.totalLiabilities,
+                          sections: report.liabilitySections,
+                          accent: const Color(0xFFC62828),
                         ),
-                        const SizedBox(height: 12),
-                        _detailSection(
-                          title: 'Income',
-                          items: report.details.incomeTransactions,
-                        ),
-                        const SizedBox(height: 12),
-                        _detailSection(
-                          title: 'Expenses',
-                          items: report.details.expenseTransactions,
-                        ),
-                        const SizedBox(height: 12),
-                        _detailSection(
-                          title: 'Asset Records',
-                          items: report.details.assetTransactions,
+                        const SizedBox(height: 16),
+                        _statementGroup(
+                          title: 'Capital / Equity',
+                          total: report.totalCapital,
+                          sections: report.capitalSections,
+                          accent: const Color(0xFF6A1B9A),
+                          trailing: (report.currentYearEarningsLabel != null)
+                              ? _currentYearEarningsRow(report)
+                              : null,
                         ),
                       ],
                     ),
@@ -276,11 +256,19 @@ class BalanceSheetScreen extends GetView<BalanceSheetController> {
     );
   }
 
-  Widget _groupCard({
+  // ── Statement group (Assets / Liabilities / Capital) ─────────────
+  // Renders each section (with its subtotal) and every account line,
+  // including any contra accounts netted against it.
+  Widget _statementGroup({
     required String title,
-    required BalanceSheetValueGroup group,
+    required double total,
+    required List<BalanceSheetSection> sections,
     required Color accent,
+    Widget? trailing,
   }) {
+    final List<BalanceSheetSection> nonEmpty =
+        sections.where((s) => s.accounts.isNotEmpty).toList();
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -302,227 +290,185 @@ class BalanceSheetScreen extends GetView<BalanceSheetController> {
               Container(
                 width: 10,
                 height: 10,
-                decoration: BoxDecoration(
-                  color: accent,
-                  borderRadius: BorderRadius.circular(10),
-                ),
+                decoration: BoxDecoration(color: accent, borderRadius: BorderRadius.circular(10)),
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                child: Text(title,
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
               ),
               Text(
-                _formatMoney(group.total),
-                style: TextStyle(
-                  color: accent,
-                  fontWeight: FontWeight.w800,
-                ),
+                _formatMoney(total),
+                style: TextStyle(color: accent, fontWeight: FontWeight.w800),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          if (group.values.isEmpty)
-            const Text(
-              'No records',
-              style: TextStyle(color: AppColors.textSecondary),
-            )
+          if (nonEmpty.isEmpty)
+            if (trailing == null)
+              const Text('No accounts posted in this category',
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12))
+            else
+              const SizedBox.shrink()
           else
-            ...group.values.entries.map(
-              (entry) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        _humanize(entry.key),
-                        style: const TextStyle(fontWeight: FontWeight.w500),
-                      ),
+            ...nonEmpty.expand((s) => [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(2, 6, 2, 6),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            s.sectionCode.isNotEmpty
+                                ? '${s.sectionCode} · ${s.sectionName}'
+                                : s.sectionName,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.2,
+                              color: accent.withOpacity(0.75),
+                            ),
+                          ),
+                        ),
+                        Text(
+                          _formatMoney(s.netTotal),
+                          style: TextStyle(
+                              fontSize: 11, fontWeight: FontWeight.w700, color: accent.withOpacity(0.75)),
+                        ),
+                      ],
                     ),
-                    Text(
-                      _formatMoney(entry.value),
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _equityCard(BalanceSheetModel report) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Equity',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-                ),
-                SizedBox(height: 6),
-                Text(
-                  'Retained Earnings',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
                   ),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            _formatMoney(report.retainedEarnings),
-            style: TextStyle(
-              color: report.retainedEarnings < 0 ? Colors.red : AppColors.primary,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
+                  ...s.accounts.map((a) => _accountLine(a, accent)),
+                ]),
+          if (trailing != null) ...[
+            const SizedBox(height: 4),
+            const Divider(height: 20),
+            trailing,
+          ],
         ],
       ),
     );
   }
 
-  Widget _detailSection({
-    required String title,
-    required List<BalanceSheetTransaction> items,
-  }) {
+  Widget _accountLine(BalanceSheetAccount account, Color accent) {
+    final bool hasContra = account.contraAccounts.isNotEmpty;
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 12),
-          if (items.isEmpty)
-            const Text(
-              'No transactions',
-              style: TextStyle(color: AppColors.textSecondary),
-            )
-          else
-            ...items.take(8).map(_transactionTile),
-          if (items.length > 8)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                '+${items.length - 8} more records',
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _transactionTile(BalanceSheetTransaction item) {
-    final num? primaryValue =
-        item.amount ?? item.value ?? item.remainingAmount ?? item.totalAmount;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (account.accountCode.isNotEmpty) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: accent.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(account.accountCode,
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: accent)),
+                ),
+                const SizedBox(width: 8),
+              ],
               Expanded(
-                child: Text(
-                  item.description,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
+                child: Text(account.accountName,
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
               ),
-              if (primaryValue != null)
-                Text(
-                  _formatMoney(primaryValue),
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
+              Text(
+                _formatMoney(hasContra ? account.grossBalance : account.netBalance),
+                style: TextStyle(fontWeight: FontWeight.w700, color: accent),
+              ),
             ],
           ),
-          const SizedBox(height: 6),
-          Wrap(
-            spacing: 10,
-            runSpacing: 6,
-            children: [
-              if (item.date.isNotEmpty) _metaChip(_formatDate(item.date)),
-              if ((item.status ?? '').isNotEmpty) _metaChip(_humanize(item.status!)),
-              if ((item.category ?? '').isNotEmpty) _metaChip(item.category!),
-              if ((item.invoiceNumber ?? '').isNotEmpty) _metaChip(item.invoiceNumber!),
-              if ((item.referenceNumber ?? '').isNotEmpty)
-                _metaChip('Ref: ${item.referenceNumber}'),
-            ],
-          ),
-          if (item.paidAmount != null || item.remainingAmount != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                'Paid: ${_formatMoney(item.paidAmount ?? 0)}  Remaining: ${_formatMoney(item.remainingAmount ?? 0)}',
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+          if (account.normalBalance != null || account.debit > 0 || account.credit > 0) ...[
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                if (account.debit > 0 || account.credit > 0) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: (account.debit > 0 ? const Color(0xFF2E7D32) : const Color(0xFFC62828))
+                          .withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    child: Text(
+                      account.debit > 0 ? 'DR ${_formatMoney(account.debit)}' : 'CR ${_formatMoney(account.credit)}',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        color: account.debit > 0 ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                ],
+                if (account.normalBalance != null)
+                  Text(
+                    'Normal: ${account.normalBalance}',
+                    style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+                  ),
+              ],
             ),
+          ],
+          if (hasContra) ...[
+            const SizedBox(height: 6),
+            ...account.contraAccounts.map((c) => Padding(
+                  padding: const EdgeInsets.only(left: 6, bottom: 3),
+                  child: Row(
+                    children: [
+                      Icon(Icons.subdirectory_arrow_right_rounded,
+                          size: 13, color: Colors.grey.shade400),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          '${c.accountCode.isNotEmpty ? '${c.accountCode} · ' : ''}${c.accountName} (contra)',
+                          style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                        ),
+                      ),
+                      Text('- ${_formatMoney(c.netBalance)}',
+                          style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+                    ],
+                  ),
+                )),
+            const Divider(height: 12),
+            Row(
+              children: [
+                const Spacer(),
+                Text('Net: ',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: accent)),
+                Text(_formatMoney(account.netBalance),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: accent)),
+              ],
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _metaChip(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-      ),
+  Widget _currentYearEarningsRow(BalanceSheetModel report) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            report.currentYearEarningsLabel ?? 'Current Year Earnings',
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+        ),
+        Text(
+          _formatMoney(report.currentYearEarningsAmount),
+          style: TextStyle(
+            color: report.currentYearEarningsAmount < 0 ? Colors.red : AppColors.primary,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
     );
   }
 
@@ -536,20 +482,6 @@ class BalanceSheetScreen extends GetView<BalanceSheetController> {
     final bool isWhole = value % 1 == 0;
     final String text = isWhole ? value.toStringAsFixed(0) : value.toStringAsFixed(2);
     return 'PKR $text';
-  }
-
-  String _humanize(String value) {
-    final List<String> words = value
-        .replaceAll('-', ' ')
-        .replaceAll('_', ' ')
-        .split(' ')
-        .where((e) => e.trim().isNotEmpty)
-        .toList();
-    return words
-        .map(
-          (word) => '${word[0].toUpperCase()}${word.substring(1)}',
-        )
-        .join(' ');
   }
 
   void _showCustomDateSheet(BuildContext context) {

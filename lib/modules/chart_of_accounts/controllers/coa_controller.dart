@@ -18,7 +18,8 @@ class CoaController extends GetxController {
 
   final TextEditingController searchController = TextEditingController();
   final RxString searchQuery = ''.obs;
-  final RxString selectedNature = 'all'.obs; // all|asset|liability|equity|income|expense
+  final RxString selectedNature = 'all'.obs; // all|asset|liability|equity|income|expense|contra
+  final RxString selectedStatus = 'active'.obs; // all|active|inactive
 
   // Which L2 sections are expanded (by account id)
   final RxSet<int> expandedL2 = <int>{}.obs;
@@ -49,17 +50,23 @@ class CoaController extends GetxController {
   }
 
   // ─── Computed: grouped + filtered ─────────────────────────────
-  /// Returns L1 accounts with nested L2>L3 already embedded,
-  /// filtered by [selectedNature] and [searchQuery].
+  /// Returns L1 accounts with nested L2>L3, pruned recursively by
+  /// [selectedNature] (asset|liability|equity|income|expense|contra),
+  /// [selectedStatus] (active|inactive|all) and [searchQuery].
+  ///
+  /// A branch is kept if it matches directly OR any of its descendants
+  /// match — this way "contra" accounts (which sit inside e.g. an Asset
+  /// L1 but carry their own nature="contra") are still found correctly,
+  /// instead of only checking the L1's own nature.
   List<CoaModel> get filteredL1 {
     final String nature = selectedNature.value;
+    final String status = selectedStatus.value;
     final String q = searchQuery.value.toLowerCase().trim();
 
-    return allAccounts.where((l1) {
-      if (nature != 'all' && !_matchesNature(l1.nature, nature)) return false;
-      if (q.isEmpty) return true;
-      return _l1MatchesQuery(l1, q);
-    }).toList();
+    return allAccounts
+        .map((l1) => _pruneNode(l1, nature, status, q))
+        .whereType<CoaModel>()
+        .toList();
   }
 
   /// Backend sometimes uses different labels for the same nature
@@ -68,6 +75,7 @@ class CoaController extends GetxController {
   static const Map<String, List<String>> _natureSynonyms = {
     'income': ['income', 'revenue'],
     'equity': ['equity', 'capital'],
+    'contra': ['contra'],
   };
 
   bool _matchesNature(String accountNature, String selected) {
@@ -76,18 +84,45 @@ class CoaController extends GetxController {
     return accepted.contains(value);
   }
 
-  bool _l1MatchesQuery(CoaModel l1, String q) {
-    if (l1.accountName.toLowerCase().contains(q)) return true;
-    if (l1.accountCode.toLowerCase().contains(q)) return true;
-    for (final CoaModel l2 in l1.children) {
-      if (l2.accountName.toLowerCase().contains(q)) return true;
-      if (l2.accountCode.toLowerCase().contains(q)) return true;
-      for (final CoaModel l3 in l2.children) {
-        if (l3.accountName.toLowerCase().contains(q)) return true;
-        if (l3.accountCode.toLowerCase().contains(q)) return true;
-      }
+  bool _matchesStatus(bool isActive, String status) {
+    switch (status) {
+      case 'active':
+        return isActive;
+      case 'inactive':
+        return !isActive;
+      default:
+        return true; // 'all'
     }
-    return false;
+  }
+
+  bool _matchesSelf(CoaModel node, String nature, String status, String q) {
+    if (nature != 'all' && !_matchesNature(node.nature, nature)) return false;
+    if (!_matchesStatus(node.isActive, status)) return false;
+    if (q.isNotEmpty &&
+        !node.accountName.toLowerCase().contains(q) &&
+        !node.accountCode.toLowerCase().contains(q)) {
+      return false;
+    }
+    return true;
+  }
+
+  /// Recursively prunes [node]'s children, keeping [node] if it matches
+  /// directly or if any pruned child survives. Returns null if the whole
+  /// branch should be hidden.
+  CoaModel? _pruneNode(CoaModel node, String nature, String status, String q) {
+    final List<CoaModel> prunedChildren = node.children
+        .map((c) => _pruneNode(c, nature, status, q))
+        .whereType<CoaModel>()
+        .toList();
+
+    final bool selfMatches = _matchesSelf(node, nature, status, q);
+
+    if (!selfMatches && prunedChildren.isEmpty) return null;
+
+    // If this node itself matches, keep its full original children
+    // (so a matched L1/L2 still shows everything underneath it),
+    // otherwise show only the children that matched.
+    return node.withChildren(selfMatches ? node.children : prunedChildren);
   }
 
   // ─── Fetch ────────────────────────────────────────────────────
@@ -259,6 +294,27 @@ class CoaController extends GetxController {
 
   // ─── Current Detail Account (reactive, for detail screen) ────────
   final Rxn<CoaModel> currentDetailAccount = Rxn<CoaModel>();
+  final RxBool isLoadingDetail = false.obs;
+
+  /// GET /api/chart-of-accounts/{id} — refreshes the detail screen with
+  /// live data instead of relying only on the (possibly stale) object
+  /// passed in from the list.
+  Future<void> fetchAccountDetail(int id) async {
+    isLoadingDetail.value = true;
+    final ApiResponse response = await ApiService().get(
+      '${AppUrls.chartOfAccounts}/$id',
+      isAuth: true,
+    );
+    isLoadingDetail.value = false;
+
+    if (response.success && response.data is Map) {
+      final CoaModel fresh = CoaModel.fromJson(
+        Map<String, dynamic>.from(response.data as Map),
+      );
+      currentDetailAccount.value = fresh;
+      _patchActiveStatus(fresh.id, fresh.isActive);
+    }
+  }
 
   /// Immediately patches isActive in the tree without waiting for fetchAccounts()
   void _patchActiveStatus(int id, bool active) {

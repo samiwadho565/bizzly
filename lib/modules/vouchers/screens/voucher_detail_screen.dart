@@ -16,6 +16,15 @@ class VoucherDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final VoucherController c = Get.find<VoucherController>();
 
+    // Refresh with live data from GET /api/vouchers/{id} instead of
+    // relying only on the (possibly stale) object passed from the list.
+    if (c.currentVoucher.value?.id != voucher.id) {
+      c.currentVoucher.value = voucher;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        c.fetchVoucherDetail(voucher.id);
+      });
+    }
+
     return Obx(() {
       final VoucherModel v = c.currentVoucher.value ?? voucher;
       final bool loading = c.isActionLoading.value;
@@ -49,6 +58,63 @@ class VoucherDetailScreen extends StatelessWidget {
                     // ── Hero Summary Card ──────────────────────────
                     _VoucherHeroCard(v: v),
                     const SizedBox(height: 14),
+
+                    // ── Voucher Info Card ───────────────────────────
+                    _SectionCard(
+                      title: 'Voucher Info',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (v.accountingPeriod != null)
+                            _infoRow('Accounting Period', v.accountingPeriod!.name),
+                          if (v.creator != null)
+                            _infoRow('Created By', v.creator!.name),
+                          if (v.business != null && v.business!.businessEmail != null)
+                            _infoRow('Business Email', v.business!.businessEmail!),
+                          if (v.business != null && v.business!.phoneNumber != null)
+                            _infoRow('Business Phone', v.business!.phoneNumber!),
+                          if (v.ledgerEntry != null)
+                            _infoRow('Ledger Entry', v.ledgerEntry!.entryNumber),
+                          _infoRow('Created', DateFormat('MMM d, y • h:mm a').format(v.createdAt)),
+                          if (v.updatedAt != null)
+                            _infoRow('Last Updated', DateFormat('MMM d, y • h:mm a').format(v.updatedAt!)),
+                          if (v.postedAt != null)
+                            _infoRow('Posted At', DateFormat('MMM d, y • h:mm a').format(v.postedAt!)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // ── Customer / Vendor Card ──────────────────────
+                    if (v.customer != null || v.vendor != null) ...[
+                      _SectionCard(
+                        title: v.customer != null ? 'Customer' : 'Vendor',
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (v.customer != null) ...[
+                              _infoRow('Name', v.customer!.customerName),
+                              if (v.customer!.companyName != null)
+                                _infoRow('Company', v.customer!.companyName!),
+                              if (v.customer!.email != null)
+                                _infoRow('Email', v.customer!.email!),
+                              if (v.customer!.phoneNumber != null)
+                                _infoRow('Phone', v.customer!.phoneNumber!),
+                            ],
+                            if (v.vendor != null) ...[
+                              _infoRow('Name', v.vendor!.vendorName),
+                              if (v.vendor!.companyName != null)
+                                _infoRow('Company', v.vendor!.companyName!),
+                              if (v.vendor!.email != null)
+                                _infoRow('Email', v.vendor!.email!),
+                              if (v.vendor!.phoneNumber != null)
+                                _infoRow('Phone', v.vendor!.phoneNumber!),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                    ],
 
                     // ── Journal Lines ──────────────────────────────
                     _SectionCard(
@@ -137,6 +203,22 @@ class VoucherDetailScreen extends StatelessWidget {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 14),
+
+                    // ── Activity Timeline (approval_logs) ───────────
+                    if (v.approvalLogs.isNotEmpty)
+                      _SectionCard(
+                        title: 'Activity Timeline',
+                        child: Column(
+                          children: [
+                            for (int i = 0; i < v.approvalLogs.length; i++)
+                              _TimelineRow(
+                                log: v.approvalLogs[i],
+                                isLast: i == v.approvalLogs.length - 1,
+                              ),
+                          ],
+                        ),
+                      ),
                     const SizedBox(height: 18),
 
                     // ── Actions ────────────────────────────────────
@@ -722,6 +804,123 @@ class _OutlinedActionButton extends StatelessWidget {
                 color: color,
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Info Row (label/value pair) ──────────────────────────────────
+Widget _infoRow(String label, String value) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 130,
+          child: Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1A1A2E)),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+// ── Timeline Row (one approval_logs entry) ───────────────────────
+class _TimelineRow extends StatelessWidget {
+  const _TimelineRow({required this.log, required this.isLast});
+  final VoucherApprovalLog log;
+  final bool isLast;
+
+  static Color _actionColor(String action) {
+    switch (action) {
+      case 'submitted': return const Color(0xFF1565C0);
+      case 'approved':  return const Color(0xFF2E7D32);
+      case 'posted':    return const Color(0xFF43A047);
+      case 'rejected':  return const Color(0xFFC62828);
+      default:          return Colors.grey;
+    }
+  }
+
+  static IconData _actionIcon(String action) {
+    switch (action) {
+      case 'submitted': return Icons.send_rounded;
+      case 'approved':  return Icons.check_circle_rounded;
+      case 'posted':    return Icons.receipt_long_rounded;
+      case 'rejected':  return Icons.cancel_rounded;
+      default:          return Icons.circle;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final Color color = _actionColor(log.action);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Column(
+              children: [
+                Container(
+                  width: 26,
+                  height: 26,
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(_actionIcon(log.action), size: 14, color: color),
+                ),
+                if (!isLast)
+                  Expanded(
+                    child: Container(width: 2, color: Colors.grey.shade200),
+                  ),
+              ],
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      log.action.capitalize ?? log.action,
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF1A1A2E)),
+                    ),
+                    if (log.user != null)
+                      Text(
+                        'by ${log.user!.name}',
+                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                      ),
+                    if (log.comments != null && log.comments!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          log.comments!,
+                          style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontStyle: FontStyle.italic),
+                        ),
+                      ),
+                    if (log.createdAt != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          DateFormat('MMM d, y • h:mm a').format(log.createdAt!),
+                          style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ],

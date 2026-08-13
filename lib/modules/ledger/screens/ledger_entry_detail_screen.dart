@@ -126,6 +126,32 @@ class LedgerEntryDetailScreen extends GetView<LedgerController> {
                             ],
                           ),
                         ],
+                        if (e.postedAt != null || e.createdAt != null) ...[
+                          const SizedBox(height: 10),
+                          const Divider(height: 1),
+                          const SizedBox(height: 10),
+                          if (e.createdAt != null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text('Created', style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+                                  Text(_formattedDate(e.createdAt!),
+                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                                ],
+                              ),
+                            ),
+                          if (e.postedAt != null)
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('Posted', style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+                                Text(_formattedDate(e.postedAt!),
+                                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                        ],
                       ],
                     ),
                   ),
@@ -157,6 +183,23 @@ class LedgerEntryDetailScreen extends GetView<LedgerController> {
                             padding: const EdgeInsets.symmetric(vertical: 6),
                             child: Row(
                               children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  margin: const EdgeInsets.only(right: 8),
+                                  decoration: BoxDecoration(
+                                    color: (isDebit ? const Color(0xFF2E7D32) : const Color(0xFFC62828))
+                                        .withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(5),
+                                  ),
+                                  child: Text(
+                                    isDebit ? 'DR' : 'CR',
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w700,
+                                      color: isDebit ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                                    ),
+                                  ),
+                                ),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,7 +209,9 @@ class LedgerEntryDetailScreen extends GetView<LedgerController> {
                                         style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                                       ),
                                       Text(
-                                        line.accountCode,
+                                        line.normalBalance != null
+                                            ? '${line.accountCode} · Normal: ${line.normalBalance}'
+                                            : line.accountCode,
                                         style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
                                       ),
                                     ],
