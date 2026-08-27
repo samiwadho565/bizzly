@@ -50,6 +50,46 @@ class _CustomTextFieldState extends State<CustomTextField> {
   bool _obscureText = true;
 
   @override
+  void initState() {
+    super.initState();
+    widget.focusNode?.addListener(_handleFocusChange);
+  }
+
+  @override
+  void didUpdateWidget(covariant CustomTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.focusNode != widget.focusNode) {
+      oldWidget.focusNode?.removeListener(_handleFocusChange);
+      widget.focusNode?.addListener(_handleFocusChange);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.focusNode?.removeListener(_handleFocusChange);
+    super.dispose();
+  }
+
+  void _handleFocusChange() {
+    if (widget.focusNode?.hasFocus ?? false) {
+      // Wait for the keyboard to finish animating in/out and for this
+      // field's position in the (possibly resized) layout to settle,
+      // then bring it into view above the keyboard automatically.
+      Future.delayed(const Duration(milliseconds: 300), () {
+        final ctx = context;
+        if (mounted && (widget.focusNode?.hasFocus ?? false)) {
+          Scrollable.ensureVisible(
+            ctx,
+            alignment: 0.2,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return TextFormField(
       key: widget.fieldKey,

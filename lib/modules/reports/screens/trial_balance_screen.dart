@@ -123,31 +123,35 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
           DateFormat('dd MMM yyyy').format(controller.fromDate.value);
       final String to =
           DateFormat('dd MMM yyyy').format(controller.toDate.value);
+      final Color statusColor =
+          report.isBalanced ? const Color(0xFF00E676) : const Color(0xFFFF8A80);
+
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF0D47A1), Color(0xFF1565C0)],
+            colors: [Color(0xFF0D47A1), Color(0xFF1976D2)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.white.withOpacity(0.14)),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF0D47A1).withOpacity(0.28),
-              blurRadius: 14,
-              offset: const Offset(0, 5),
+              color: const Color(0xFF0D47A1).withOpacity(0.24),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
             ),
           ],
         ),
         child: Row(
           children: [
             Container(
-              width: 42,
-              height: 42,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.14),
-                borderRadius: BorderRadius.circular(12),
+                color: Colors.white.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: const Icon(Icons.balance_rounded,
                   color: Colors.white, size: 22),
@@ -169,8 +173,7 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
                   if (controller.isLoading.value)
                     const Text(
                       'Refreshing...',
-                      style: TextStyle(
-                          color: Colors.white60, fontSize: 11),
+                      style: TextStyle(color: Colors.white60, fontSize: 11),
                     ),
                 ],
               ),
@@ -179,15 +182,8 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
               padding:
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: report.isBalanced
-                    ? const Color(0xFF00E676).withOpacity(0.18)
-                    : Colors.red.withOpacity(0.18),
+                color: Colors.white.withOpacity(0.14),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: report.isBalanced
-                      ? const Color(0xFF00E676).withOpacity(0.40)
-                      : Colors.red.withOpacity(0.40),
-                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -197,18 +193,14 @@ class TrialBalanceScreen extends GetView<TrialBalanceController> {
                     height: 6,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: report.isBalanced
-                          ? const Color(0xFF00E676)
-                          : Colors.redAccent,
+                      color: statusColor,
                     ),
                   ),
                   const SizedBox(width: 5),
                   Text(
                     report.isBalanced ? 'Balanced' : 'Unbalanced',
                     style: TextStyle(
-                      color: report.isBalanced
-                          ? const Color(0xFF00E676)
-                          : Colors.redAccent,
+                      color: statusColor,
                       fontWeight: FontWeight.w700,
                       fontSize: 12,
                     ),

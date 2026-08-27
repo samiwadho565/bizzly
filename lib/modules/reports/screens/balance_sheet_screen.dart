@@ -121,28 +121,14 @@ class BalanceSheetScreen extends GetView<BalanceSheetController> {
           ),
         ],
       ),
-      child: Stack(
+      child: Row(
         children: [
-          Positioned(
-            top: -25,
-            right: -25,
-            child: Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.07),
-              ),
-            ),
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'As Of Date',
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'As Of Date',
                       style: TextStyle(color: Colors.white70, fontSize: 12),
                     ),
                     const SizedBox(height: 4),
@@ -180,8 +166,6 @@ class BalanceSheetScreen extends GetView<BalanceSheetController> {
               ),
             ],
           ),
-        ],
-      ),
     );
   }
 

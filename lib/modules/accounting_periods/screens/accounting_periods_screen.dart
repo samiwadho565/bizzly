@@ -88,7 +88,7 @@ class _CurrentPeriodCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF0D1B4B), Color(0xFF0D47A1), Color(0xFF1976D2)],
@@ -106,33 +106,40 @@ class _CurrentPeriodCard extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          // Decorative circles
+
+
+
+          // Decorative circles — same unclipped style as
+          // GradientScreenHeader's corner circles, so they render as
+          // clean full circles peeking out of the corners.
           Positioned(
-            top: -30,
-            right: -30,
+            top: -35,
+            right: -35,
             child: Container(
-              width: 120,
-              height: 120,
+              width: 130,
+              height: 130,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white.withOpacity(0.07),
+                border: Border.all(color: Colors.white.withOpacity(0.08), width: 1),
               ),
             ),
           ),
           Positioned(
             bottom: -20,
-            left: -20,
+            left: -30,
             child: Container(
-              width: 90,
-              height: 90,
+              width: 100,
+              height: 100,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white.withOpacity(0.05),
+                border: Border.all(color: Colors.white.withOpacity(0.08), width: 1),
               ),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(40),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

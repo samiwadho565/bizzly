@@ -21,6 +21,7 @@ class SignUpScreen extends GetView<SignupController> {
         statusBarIconBrightness: Brightness.light,
       ),
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: Colors.transparent,
         body: Container(
           decoration: const BoxDecoration(
@@ -150,8 +151,12 @@ class SignUpScreen extends GetView<SignupController> {
                             ],
                           ),
                           child: SingleChildScrollView(
-                            padding:
-                                const EdgeInsets.fromLTRB(28, 32, 28, 24),
+                            padding: EdgeInsets.fromLTRB(
+                              28,
+                              32,
+                              28,
+                              24 + MediaQuery.of(context).viewInsets.bottom,
+                            ),
                             child: Form(
                               key: controller.formKey,
                               child: Column(
@@ -199,6 +204,9 @@ class SignUpScreen extends GetView<SignupController> {
                                     controller: controller.nameController,
                                     focusNode: controller.nameFocusNode,
                                     textInputAction: TextInputAction.next,
+                                    onFieldSubmitted: (_) =>
+                                        controller.emailFocusNode
+                                            .requestFocus(),
                                     validator: (v) =>
                                         FormValidations.validateName(v ?? ''),
                                   ),
@@ -213,6 +221,9 @@ class SignUpScreen extends GetView<SignupController> {
                                     focusNode: controller.emailFocusNode,
                                     keyboardType: TextInputType.emailAddress,
                                     textInputAction: TextInputAction.next,
+                                    onFieldSubmitted: (_) =>
+                                        controller.passwordFocusNode
+                                            .requestFocus(),
                                     validator: (v) =>
                                         FormValidations.validateEmail(v ?? ''),
                                   ),
@@ -247,6 +258,14 @@ class SignUpScreen extends GetView<SignupController> {
                                     focusNode:
                                         controller.confirmPasswordFocusNode,
                                     textInputAction: TextInputAction.done,
+                                    onFieldSubmitted: (_) {
+                                      FocusScope.of(context).unfocus();
+                                      if (controller.formKey.currentState
+                                              ?.validate() ??
+                                          false) {
+                                        controller.signUp();
+                                      }
+                                    },
                                     validator: (v) =>
                                         FormValidations.validateConfirmPassword(
                                       controller.passwordController.text,

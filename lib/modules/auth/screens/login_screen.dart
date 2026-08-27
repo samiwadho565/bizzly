@@ -16,12 +16,16 @@ class LoginScreen extends GetView<SignInController> {
 
   @override
   Widget build(BuildContext context) {
+
+    controller.emailController.text = "mohammadwadho5@gmail.com";
+    controller.passwordController.text = "12345678";
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light,
       ),
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: Colors.transparent,
         body: Container(
           decoration: const BoxDecoration(
@@ -158,8 +162,12 @@ class LoginScreen extends GetView<SignInController> {
                             ],
                           ),
                           child: SingleChildScrollView(
-                            padding:
-                                const EdgeInsets.fromLTRB(28, 36, 28, 24),
+                            padding: EdgeInsets.fromLTRB(
+                              28,
+                              36,
+                              28,
+                              24 + MediaQuery.of(context).viewInsets.bottom,
+                            ),
                             child: Form(
                               key: controller.formKey,
                               child: Column(

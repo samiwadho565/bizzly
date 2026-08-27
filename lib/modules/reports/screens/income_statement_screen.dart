@@ -150,18 +150,20 @@ class _SummaryCard extends StatelessWidget {
         : [const Color(0xFFE53935), const Color(0xFFB71C1C)];
 
     return Container(
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: colors,
+          colors: [colors.first.withOpacity(0.88), colors.last.withOpacity(0.88)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.22), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: colors.last.withOpacity(0.35),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            color: colors.last.withOpacity(0.22),
+            blurRadius: 22,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
